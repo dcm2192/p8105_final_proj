@@ -15,6 +15,10 @@ Brooklynn McNeil, Dylan Morgan, and Tamara Pichardo
 Exploring Environmental Impacts on Elk Migration in Yellowstone National
 Park
 
+Exmaining Elk Expeditions: Migration to Yellowstone
+
+Elk on the Move
+
 ## Motivation
 
 We are motivated to study elk migration in relation to different
@@ -27,6 +31,15 @@ composition, and weather patterns that affect elk migration in
 Yellowstone.
 
 ## Intended Final Products
+
+- Website with landing page, about page, visulaizations, and dashboard
+- Map showing migration of elk over time
+- Comparison of elk migration with soil temperature
+- Exploration of riverflow in yellowstone and elk migration
+- dashboard/shiny app with interactive plots containing soil chemistry
+  information
+- plots analyzing the relationship between vegetation, elevation and
+  temperature
 
 ## Anticipated Data Sources
 
