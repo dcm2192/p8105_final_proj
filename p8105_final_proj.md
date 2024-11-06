@@ -23,3 +23,5 @@ composition, and weather patterns that affect elk migration in
 Yellowstone.
 
 ## Intended Final Projects
+
+Intended stuff.
