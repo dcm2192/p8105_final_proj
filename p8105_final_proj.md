@@ -11,4 +11,15 @@ Brooklynn McNeil, Dylan Morgan, and Tamara Pichardo
 | Dylan Morgan     | dcm2192    |
 | Tamara Pichardo  | tp2879     |
 
-## 
+## Motivation
+
+We are motivated to study elk migration in relation to different
+environmental factors. We found this data by researching information
+related to national parks and landed on datasets from Yellowstone.
+Yellowstone National Park was the very first National Park established
+in the United States and also has the lowest level of biodiversity loss.
+We plan to look at environmental factors such as soil temperature, soil
+composition, and weather patterns that affect elk migration in
+Yellowstone.
+
+## Intended Final Projects
