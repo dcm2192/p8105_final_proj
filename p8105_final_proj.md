@@ -43,6 +43,18 @@ Yellowstone.
 
 ## Anticipated Data Sources
 
+Elk Data
+<https://www.usgs.gov/data/elk-gps-collar-data-national-elk-refuge-2006-2015>
+
+Water Quality Data
+<https://catalog.data.gov/dataset/greater-yellowstone-network-published-water-quality-data-through-2023-from-the-bicawq01-g->
+
+Soil Temperature
+<https://catalog.data.gov/dataset/global-observation-research-initiative-in-alpine-environments-gloria-soil-temperature-2008>
+
+Soil Chemistry
+<https://catalog.data.gov/dataset/global-observation-research-initiative-in-alpine-environments-gloria-soil-chemistry-d-2009>
+
 ## Planned Analyses/Visualizations/Coding Challenges
 
 We plan to include an interactive map using elk collar data, as well as
