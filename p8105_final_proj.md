@@ -1,15 +1,19 @@
-p8105_final_proj
+P8105 Final Project Proposal
 ================
 Brooklynn McNeil, Dylan Morgan, and Tamara Pichardo
-2024-11-08
 
 ## Project Members
 
-| Member Name      | Member Uni |
+| Member Name      | Member UNI |
 |------------------|------------|
 | Brooklynn McNeil | brm2150    |
 | Dylan Morgan     | dcm2192    |
 | Tamara Pichardo  | tp2879     |
+
+## Tentative Project Title
+
+Exploring Environmental Impacts on Elk Migration in Yellowstone National
+Park
 
 ## Motivation
 
@@ -22,10 +26,27 @@ We plan to look at environmental factors such as soil temperature, soil
 composition, and weather patterns that affect elk migration in
 Yellowstone.
 
-## Intended Final Projects
+## Intended Final Products
 
-Intended stuff.
+## Anticipated Data Sources
 
-Edit something else.
+## Planned Analyses/Visualizations/Coding Challenges
 
-Edit even more stuff.
+We plan to include an interactive map using elk collar data, as well as
+a dashboard comparing elk data vs. soil temperature and elk data
+vs. water quality.
+
+## Planned Schedule
+
+- November 8th: Written proposal document
+- November 11th - 15th: Project review Zoom meeting
+- November 19th: Import and clean data
+- November 19th: Create an index.Rmd, about page, analysis page, report
+  page, and site.yml
+- November 21st - 25th: Create visualizations in a flexdashboard using
+  plotly, report exploratory analyses
+- December 3rd/4th: Write a detailed report of project
+- December 5th/6th: Film a 2 minute screencast to walkthrough the
+  webpage
+- December 7th: Written report of detailed project description, webpage,
+  screencast
