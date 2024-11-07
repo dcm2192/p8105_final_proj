@@ -56,22 +56,8 @@ National Park Service (NPS): Sometimes NPS offers detailed wildlife and environm
 
 **Planned Analyses/ Visualizations/ Coding Challenges**
 
-We will format the data, produce summary statistics, create geographic plots, create a dashboard, and publish a website. First, we will combine the data sets by time and geography, i.e. by time and latitude/longitude. This will allow us to answer the question: “Where were the elk at this time, and what were the environmental factors around them?” We will plot the average movement of elk by time of year. We will plot average soil and water temperature by time of year. 
+We will format the data, produce summary statistics, create geographic plots, create a dashboard, and publish a website. First, we will combine the data sets by time and geography, i.e. by time and latitude/longitude. This will allow us to answer the question: “Where were the elk at this time, and what were the environmental factors around them?” We will plot the average movement of elk by time of year in a histogram. We will plot average soil and water temperature by time of year in a line chart. We will plot the geographic movement of the elk on a map. We will plot the variation in geographic factors such as soil and water temperature and chemistry on a map. We will combine these plots to look for associations. We will publish these plots in an interactive dashboard which can filter for individual elk, years, and geographic features.
 
--   Geographic plotting. 
-
-    -   We will plot the geographic movement of the elk on a map.
-
-    -   We will plot the variation in geographic factors such as soil and water temperature and chemistry on a map.
-
-    -   We will combine these plots to look for associations
-
-```{=html}
-<!-- -->
-```
--   Dashboarding
-
-    -   We will publish these plots in an interactive dashboard which can filter for individual elk, years, and geographic features.
 
 **Planned Timeline**
 
