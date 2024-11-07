@@ -9,13 +9,14 @@ Brooklynn McNeil, Dylan Morgan, and Tamara Pichardo
 | Brooklynn McNeil | brm2150    |
 | Dylan Morgan     | dcm2192    |
 | Tamara Pichardo  | tp2879     |
+| Wayne Monical    | wem2121    |
 
 ## Tentative Project Title
 
 Exploring Environmental Impacts on Elk Migration in Yellowstone National
 Park
 
-Exmaining Elk Expeditions: Migration to Yellowstone
+Examining Elk Expeditions: Migration to Yellowstone
 
 Elk on the Move
 
@@ -23,7 +24,7 @@ Elk on the Move
 
 We are motivated to study elk migration in relation to different
 environmental factors. We found this data by researching information
-related to national parks and landed on datasets from Yellowstone.
+related to national parks and landed on data sets from Yellowstone.
 Yellowstone National Park was the very first National Park established
 in the United States and also has the lowest level of biodiversity loss.
 We plan to look at environmental factors such as soil temperature, soil
@@ -32,10 +33,10 @@ Yellowstone.
 
 ## Intended Final Products
 
-- Website with landing page, about page, visulaizations, and dashboard
+- Website with landing page, about page, visualizations, and dashboard
 - Map showing migration of elk over time
 - Comparison of elk migration with soil temperature
-- Exploration of riverflow in yellowstone and elk migration
+- Exploration of river flow in Yellowstone and elk migration
 - dashboard/shiny app with interactive plots containing soil chemistry
   information
 - plots analyzing the relationship between vegetation, elevation and
@@ -71,7 +72,7 @@ vs. water quality.
 - November 21st - 25th: Create visualizations in a flexdashboard using
   plotly, report exploratory analyses
 - December 3rd/4th: Write a detailed report of project
-- December 5th/6th: Film a 2 minute screencast to walkthrough the
+- December 5th/6th: Film a 2 minute screencast to walk through the
   webpage
 - December 7th: Written report of detailed project description, webpage,
-  screencast
+  screen cast
