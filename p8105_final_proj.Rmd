@@ -1,6 +1,6 @@
 ---
 title: "P8105 Final Project Proposal"
-author: "Brooklynn McNeil, Dylan Morgan, and Tamara Pichardo"
+author: "Brooklynn McNeil, Dylan Morgan, and Tamara Pichardo, Wayne Monical"
 output: github_document
 ---
 

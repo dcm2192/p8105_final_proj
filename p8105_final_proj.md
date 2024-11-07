@@ -1,6 +1,6 @@
 P8105 Final Project Proposal
 ================
-Brooklynn McNeil, Dylan Morgan, and Tamara Pichardo
+Brooklynn McNeil, Dylan Morgan, and Tamara Pichardo, Wayne Monical
 
 ## Project Members
 
