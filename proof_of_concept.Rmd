@@ -48,9 +48,11 @@ elk =
 
 ## Create a static map plot
 
-
-
 [using ggmap](https://www.nceas.ucsb.edu/sites/default/files/2020-04/ggmapCheatsheet.pdf)
+
+[from stack exchange](https://stackoverflow.com/questions/33942186/using-r-and-ggplot-to-draw-separate-lines-between-gps-coordinates/33944974)
+
+
 
 
 Filter for a single elk named bob. We'll use him for testing.
@@ -59,9 +61,7 @@ bob =
   elk |> 
   filter(
     elk_id == 572,
-    year == 2006,
-    month == 3,
-    day == 3
+    year %in% c(2006, 2007)
   )
 ```
 
@@ -86,16 +86,16 @@ Find the minimum and maximum latitude and longitude of Bob's journey. This will 
 ```{r}
 min_lat = bob |> pull(lat) |> min()
 max_lat = bob |> pull(lat) |> max()
-rng_lat = min_lat - max_lat
-lowerleftlat = min_lat - rng_lat * 0.5
-upperrightlat = max_lat + rng_lat * 0.5
+rng_lat = abs(min_lat - max_lat)
+lowerleftlat = min_lat 
+upperrightlat = max_lat 
 
 
 min_long = bob |> pull(long) |> min()
 max_long = bob |> pull(long) |> max()
-rng_long = min_long - max_long
-lowerleftlon = min_long - rng_long * 0.5
-upperrightlon = max_long + rng_long * 0.5
+rng_long = abs(min_long - max_long)
+lowerleftlon = min_long - rng_long 
+upperrightlon = max_long + rng_long
 ```
 
 
@@ -112,34 +112,20 @@ Define area by `c(lowerleftlon, lowerleftlat, upperrightlon, upperrightlat)`
 ```{r}
 myMap <- get_stadiamap(
   bbox=myLocation,
-  source = "stadia",  crop=FALSE)
-
-ggmap(myMap)
+  maptype = "stamen_terrain",
+  crop=FALSE)
 ```
 
-
-
-
-
-[copied from stack exchange](https://stackoverflow.com/questions/33942186/using-r-and-ggplot-to-draw-separate-lines-between-gps-coordinates/33944974)
-
+### Step 2: Plot map with elk movement
 ```{r}
-library(ggmap)
-
-
-City="Dublin, Ireland"
-
-baseMap = get_map(location = City, zoom = 11, maptype = "terrain")
-map <- ggmap(baseMap) +
-  geom_path(aes(x=LONGITUDE, y=LATITUDE, group=INDEX), data=df, alpha=0.2)
-map
+ggmap(myMap) +
+geom_path(
+  data = bob, 
+  aes(x=long, y=lat, color = month))+
+  geom_line(alpha = 0) +
+  scale_color_gradientn(colours = rainbow(12))
 ```
 
-
-
-```{r}
-bob
-```
 
 
 
