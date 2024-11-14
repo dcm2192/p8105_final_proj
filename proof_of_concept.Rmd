@@ -1,0 +1,189 @@
+---
+title: "Proof of Concept"
+author: "Wayne Monical"
+date: "2024-11-12"
+output: html_document
+---
+
+
+This document will prove that this project is doable. We will import and clean the elk migration data. We will create a static plot of the geographic elk migration data. We will create a dashboard to explore the geographic data, and publish it in a website.
+
+
+## Import Data
+
+[Data source](https://www.sciencebase.gov/catalog/item/5a9f2782e4b0b1c392e502ea)
+
+
+```{r}
+library(tidyverse)
+
+library(ggmap)
+```
+
+
+Selecting on elk id, latitude, longitude, and date variables.
+```{r}
+file_path = 'raw_data/Elk GPS collar data from National Elk Refuge 2006-2015.csv'
+
+elk = 
+  read_csv(file_path) |> 
+  janitor::clean_names() |> 
+  select(
+    elk_id,
+    dt, 
+    lat,
+    long
+  ) |> 
+  mutate(
+    year = year(dt),
+    month = month(dt),
+    day = day(dt),
+    hour = hour(dt)
+  )
+
+```
+
+
+
+
+## Create a static map plot
+
+[using ggmap](https://www.nceas.ucsb.edu/sites/default/files/2020-04/ggmapCheatsheet.pdf)
+
+[from stack exchange](https://stackoverflow.com/questions/33942186/using-r-and-ggplot-to-draw-separate-lines-between-gps-coordinates/33944974)
+
+
+
+
+Filter for a single elk named bob. We'll use him for testing.
+```{r}
+bob = 
+  elk |> 
+  filter(
+    elk_id == 572,
+    year %in% c(2006, 2007)
+  )
+```
+
+
+### Step 0: Stadia Maps API Key
+
+[Sign up here](https://client.stadiamaps.com/signup/)
+
+Register the API Key
+```{r}
+register_stadiamaps(key = '29074900-bb6e-4a71-8f91-454c28190f88',
+                    write = FALSE)
+```
+
+
+
+
+### Step 1: Download map
+
+Find the minimum and maximum latitude and longitude of Bob's journey. This will give us the range of map to download.
+
+```{r}
+min_lat = bob |> pull(lat) |> min()
+max_lat = bob |> pull(lat) |> max()
+rng_lat = abs(min_lat - max_lat)
+lowerleftlat = min_lat 
+upperrightlat = max_lat 
+
+
+min_long = bob |> pull(long) |> min()
+max_long = bob |> pull(long) |> max()
+rng_long = abs(min_long - max_long)
+lowerleftlon = min_long - rng_long 
+upperrightlon = max_long + rng_long
+```
+
+
+Define area by `c(lowerleftlon, lowerleftlat, upperrightlon, upperrightlat)`
+
+```{r}
+ myLocation <- c(left = lowerleftlon,
+                 bottom = lowerleftlat,
+                 right = upperrightlon,
+                 top = upperrightlat)
+```
+
+
+```{r}
+myMap <- get_stadiamap(
+  bbox=myLocation,
+  maptype = "stamen_terrain",
+  crop=FALSE)
+```
+
+### Step 2: Plot map with elk movement
+```{r}
+ggmap(myMap) +
+geom_path(
+  data = bob, 
+  aes(x=long, y=lat, color = month))+
+  geom_line(alpha = 0) +
+  scale_color_gradientn(colours = rainbow(12))
+```
+
+## Create geographic dashboard
+
+
+```{r}
+library(leaflet)
+```
+
+
+```{r}
+mean_lat = bob |> pull(lat) |> mean()
+mean_long = bob |> pull(long) |> mean()
+
+```
+
+
+[from the leaflet Rstudio documentation](https://rstudio.github.io/leaflet/)
+
+Basic usage
+```{r}
+m = leaflet() %>% 
+  addTiles() %>%
+  setView(mean_long, mean_lat, zoom = 13) %>%
+  addPopups(mean_long, mean_lat, 'Here is the average lat and long of bob')
+m
+```
+
+
+Adding markers
+```{r}
+leaflet(bob) %>%  addTiles() %>% addCircles(lng = ~long, lat = ~lat)
+```
+
+
+```{r}
+samp_colors = sample(colors(distinct = FALSE), 12)
+```
+
+
+
+
+Adding colors to bob's months
+```{r}
+bob = bob |> 
+  mutate(month_color = rainbow(12)[bob$month],
+         real_colors = samp_colors[bob$month]
+  )
+```
+
+
+
+
+Adding lines
+```{r}
+## I think this is what I want
+
+# leaflet(bob) %>%  addTiles() %>% addPolylines(lng = ~long, lat = ~lat, color = ~real_colors)
+
+## leaflet::addPolylines
+
+```
+
