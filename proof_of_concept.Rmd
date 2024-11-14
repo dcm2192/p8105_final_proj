@@ -126,6 +126,64 @@ geom_path(
   scale_color_gradientn(colours = rainbow(12))
 ```
 
+## Create geographic dashboard
 
 
+```{r}
+library(leaflet)
+```
+
+
+```{r}
+mean_lat = bob |> pull(lat) |> mean()
+mean_long = bob |> pull(long) |> mean()
+
+```
+
+
+[from the leaflet Rstudio documentation](https://rstudio.github.io/leaflet/)
+
+Basic usage
+```{r}
+m = leaflet() %>% 
+  addTiles() %>%
+  setView(mean_long, mean_lat, zoom = 13) %>%
+  addPopups(mean_long, mean_lat, 'Here is the average lat and long of bob')
+m
+```
+
+
+Adding markers
+```{r}
+leaflet(bob) %>%  addTiles() %>% addCircles(lng = ~long, lat = ~lat)
+```
+
+
+```{r}
+samp_colors = sample(colors(distinct = FALSE), 12)
+```
+
+
+
+
+Adding colors to bob's months
+```{r}
+bob = bob |> 
+  mutate(month_color = rainbow(12)[bob$month],
+         real_colors = samp_colors[bob$month]
+  )
+```
+
+
+
+
+Adding lines
+```{r}
+## I think this is what I want
+
+# leaflet(bob) %>%  addTiles() %>% addPolylines(lng = ~long, lat = ~lat, color = ~real_colors)
+
+## leaflet::addPolylines
+
+```
 
