@@ -23,7 +23,7 @@ library(ggmap)
 
 Selecting on elk id, latitude, longitude, and date variables.
 ```{r}
-file_path = 'raw_data/Elk GPS collar data from National Elk Refuge 2006-2015.csv'
+file_path = '../raw_data/Elk GPS collar data from National Elk Refuge 2006-2015.csv'
 
 elk = 
   read_csv(file_path) |> 
