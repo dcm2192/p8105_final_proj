@@ -1,0 +1,43 @@
+---
+title: "Data Cleaning"
+author: "Wayne Monical"
+date: "2024-11-16"
+output: html_document
+---
+
+
+```{r}
+library(tidyverse)
+```
+
+
+## Cleaning Elk Data
+```{r}
+elk = 
+  read_csv('../raw_data/Elk GPS collar data from National Elk Refuge 2006-2015.csv') |> 
+  janitor::clean_names()
+```
+
+
+## Cleaning Water Quality Data
+```{r}
+water_quality_locations = 
+  read_csv('../raw_data/water_quality/Locations.csv')|> 
+  janitor::clean_names()
+
+
+water_quality_results = 
+  read_csv('../raw_data/water_quality/Results.csv')|> 
+  janitor::clean_names()
+```
+
+
+
+
+## Cleaning Soil Temperature
+
+## Cleaning Soil Chemistry 
+
+
+## Combining Data Sets?
+
