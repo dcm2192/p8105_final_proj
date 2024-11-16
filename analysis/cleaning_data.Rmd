@@ -12,31 +12,154 @@ library(tidyverse)
 
 
 ## Cleaning Elk Data
+
+We drop the `tz` timezone variable, because it is homogenous. We drop the `utm_x` and `utm_y` variables because they are simply another kind of location tracking, and we already have latitude and longitude. Note that [only elk that migrated from the Elk reserve to Yellowstone were included in the data](https://www.sciencebase.gov/catalog/file/get/5a9f2782e4b0b1c392e502ea?f=__disk__27%2F1f%2Faa%2F271faa32dbaff38082fc4661db798fcd74908130&transform=1&allowOpen=true).
+
 ```{r}
 elk = 
   read_csv('../raw_data/Elk GPS collar data from National Elk Refuge 2006-2015.csv') |> 
-  janitor::clean_names()
+  janitor::clean_names() |> 
+  mutate(
+    day = day(dt),
+    hour = hour(dt)) |> 
+  select(
+    elk_id, 
+    year, 
+    month,
+    day,
+    hour, 
+    lat,
+    long
+  )
+
+elk |> write.csv('../clean_data/elk.csv')
 ```
 
 
+
 ## Cleaning Water Quality Data
+
+### Locations
+
+This data set gives the locations that water was sampled from. We drop the `org_code` variable because it is homogenous
 ```{r}
 water_quality_locations = 
   read_csv('../raw_data/water_quality/Locations.csv')|> 
-  janitor::clean_names()
+  janitor::clean_names() |> 
+  select(
+    location_id,
+    location_name,
+    park_code, 
+    location_type,
+    latitude,
+    longitude
+  )
+```
 
 
+### Results
+
+```{r}
 water_quality_results = 
   read_csv('../raw_data/water_quality/Results.csv')|> 
   janitor::clean_names()
+```
+
+We find the most common observations.
+```{r}
+common_obs = 
+  water_quality_results |> 
+  drop_na(result_text) |> 
+  group_by(characteristic_name) |> 
+  summarize(n = n())|> 
+  arrange(desc(n)) |> 
+  filter(
+    n > 875, 
+    characteristic_name != "Weather Comments (text)") |> 
+  pull(characteristic_name)
+```
+
+We filter for the most common observations. We filter for readings that we can use, given in the `acceptable_readings` variable. We replace non-detected values with zero. We select for the relevant columns 
+```{r}
+
+acceptable_readings = c("Detected and Quantified", "Not Detected", "Present Below Quantification Limit")
+
+water_quality_results=
+  water_quality_results |> 
+  filter(
+    characteristic_name %in% common_obs,
+    result_detection_condition %in% acceptable_readings) |> 
+  mutate(
+    result_text = stringr::str_replace(result_text, "NULL", "0"),
+    result_unit = stringr::str_replace(result_unit, "None", ""),
+    characteristic_name = paste0(characteristic_name, " ", result_unit) |> trimws()
+    ) |> 
+  select(
+    location_id,
+    activity_id,
+    activity_type,
+    activity_start_date,
+    characteristic_name,
+    result_text
+  ) 
+```
+
+
+### Combining
+
+```{r}
+water_quality = 
+  water_quality_locations |> 
+  left_join(water_quality_results)
+
+water_quality |> write.csv('../clean_data/water_quality.csv')
+```
+
+
+## Cleaning Soil Chemistry 
+```{r}
+soil_chem = 
+  read_csv('../raw_data/NPS_IMD_GLORIA_SoilChemistry_2287252_DataPackage/NPS_IMD_GLORIA_SoilChemistry_2287252-dataset.csv') |> 
+  janitor::clean_names()
+
+
+```
+
+
+```{r}
+soil_chem |> 
+  filter(
+    ! average %in% c('Insufficient sample', 'insufficient sample') 
+  ) |> 
+  mutate(
+    year = year(start_date),
+    month = month(start_date),
+    day = day(start_date),
+    parameter = paste0(parameter_dataset, " ", unit_dataset)
+  ) |> 
+  select(
+    site_name,
+    event_name,
+    year,
+    month,
+    day,
+    parameter,
+    average
+  ) |> 
+  write
 ```
 
 
 
 
 ## Cleaning Soil Temperature
+```{r}
+soil_temp = 
+  read_csv('../raw_data/NPS_IMD_GLORIA_SoilTemperature_2288176_DataPackage/NPS_IMD_GLORIA_SoilTemperature_2288176_Daily-dataset.csv') |> 
+  janitor::clean_names()
+```
 
-## Cleaning Soil Chemistry 
+
 
 
 ## Combining Data Sets?
