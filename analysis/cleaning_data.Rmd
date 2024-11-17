@@ -33,7 +33,7 @@ elk =
     long
   )
 
-elk |> write.csv('../clean_data/elk.csv')
+elk |> write.csv('../clean_data/elk.csv', row.names =  FALSE)
 ```
 
 
@@ -93,13 +93,19 @@ water_quality_results=
   mutate(
     result_text = stringr::str_replace(result_text, "NULL", "0"),
     result_unit = stringr::str_replace(result_unit, "None", ""),
-    characteristic_name = paste0(characteristic_name, " ", result_unit) |> trimws()
+    characteristic_name = paste0(characteristic_name, " ", result_unit) |> trimws(),
+    year = year(activity_start_date),
+    month = month(activity_start_date),
+    day = day(activity_start_date)
     ) |> 
   select(
     location_id,
     activity_id,
     activity_type,
     activity_start_date,
+    year,
+    month,
+    day,
     characteristic_name,
     result_text
   ) 
@@ -123,11 +129,10 @@ water_quality =
   water_quality_locations |> 
   left_join(water_quality_results)
 
-water_quality |> write.csv('../clean_data/water_quality.csv')
+water_quality |> write.csv('../clean_data/water_quality.csv', row.names = FALSE)
 ```
 
 ## Importing Yellowstone Peak Data
-
 
 
 [Definitions Pg 3](https://files.cfc.umt.edu/cesu/NPS/CSU/2010/10Stevens_ROMN_alpine%20monitoring_rpt.pdf)
@@ -147,22 +152,16 @@ summit = tibble(
 
 ## Cleaning Soil Chemistry 
 
-Where are the location coordinates though???
-
-```{r}
-soil_chem = 
-  read_csv('../raw_data/NPS_IMD_GLORIA_SoilChemistry_2287252_DataPackage/NPS_IMD_GLORIA_SoilChemistry_2287252-dataset.csv') |> 
-  janitor::clean_names()
-```
-
-
-
 What do these abbreviations mean? [Here](https://files.cfc.umt.edu/cesu/NPS/CSU/2010/10Stevens_ROMN_alpine%20monitoring_rpt.pdf)
 
 Boundary Line Peak (BLP), Stone Crop Peak (SCP), Snow Pipit Peak (SPP), and Wolf
 Scat Peak (WSP)
 
 ```{r}
+soil_chem = 
+  read_csv('../raw_data/NPS_IMD_GLORIA_SoilChemistry_2287252_DataPackage/NPS_IMD_GLORIA_SoilChemistry_2287252-dataset.csv') |> 
+  janitor::clean_names()
+
 soil_chem= 
   soil_chem |> 
   filter(
@@ -192,7 +191,7 @@ soil_chem=
     average)
   
 
-soil_chem |> write.csv('../clean_data/soil_chem.csv')
+soil_chem |> write.csv('../clean_data/soil_chem.csv', row.names = FALSE)
 ```
 
 
@@ -216,7 +215,8 @@ soil_temp =
 ```
 
 ```{r}
-soil_temp |>
+soil_temp = 
+  soil_temp |>
   inner_join(summit) |> 
   select(
     summit_code,
@@ -233,9 +233,5 @@ soil_temp |>
     daily_standard_dev
   )
 
+soil_temp |> write.csv('../clean_data/soil_temp.csv', row.names = FALSE)
 ```
-
-
-
-## Combining Data Sets?
-
