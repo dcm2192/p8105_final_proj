@@ -44,6 +44,14 @@ elk =
 ```
 
 
+finding range of migration
+```{r}
+min(elk$lat)
+max(elk$lat)
+min(elk$long)
+max(elk$long)
+```
+
 
 
 ## Create a static map plot
