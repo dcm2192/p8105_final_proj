@@ -5,11 +5,10 @@ date: "2024-11-18"
 output: github_document
 ---
 
-Let's look at the elk migration data and make a map. 
+Load packages and set options.
 
 ```{r setup, include=FALSE}
 library(tidyverse)
-library (BSDA)
 library(modelr)
 
 knitr::opts_chunk$set(
@@ -26,3 +25,12 @@ options(
 scale_colour_discrete = scale_colour_viridis_d
 scale_fill_discrete = scale_fill_viridis_d
 ```
+
+Import elk migration data.
+
+```{r}
+elk_df = read_csv("../clean_data/elk.csv")
+
+elk_df
+```
+The elk IDs are: `r unique(elk_df$elk_id)`, and we are going to follow them around Yellowstone!
