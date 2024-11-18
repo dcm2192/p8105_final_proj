@@ -40,4 +40,17 @@ elk_df
 
 The elk IDs are: 572, 595, 654, 656, 671, 706, 900, 902, 903, 907, 909,
 911, 913, 914, 916, 917, 918, and we are going to follow them around
-Yellowstone!
+Yellowstone! I found a cute picture of
+[here](https://powertraveller.com/yellowstone-winter-wildlife-safari-from-gardiner/)
+
+<img src="pics/elk.png" style="width:75%"/>
+
+## Exploratory Analysis of Elk Migration
+
+Some questions we want to answer about the elk:
+
+- Do the 17 elk move together as a pack or separately?
+- Do the migration patterns change by year?
+- Does time of year change the migration patterns?
+
+Fun stuff I want to do - Make a moving map of the elk
