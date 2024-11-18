@@ -1,29 +1,145 @@
 ---
 title: "TP_analysis"
-output: html_document
-date: "2024-11-18"
+output: github_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+
+## Load Packages
+```{r}
+library(tidyverse)
+library(ggmap)
 ```
 
-## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+## Read in Data
 
-```{r cars}
-summary(cars)
+```{r}
+elk = read_csv(file = "../clean_data/elk.csv")
+water_quality = read_csv(file = "../clean_data/water_quality.csv")
 ```
 
-## Including Plots
+## Elk Data
 
-You can also embed plots, for example:
+Each elk has an `elk_id`. The `year`, `month`, `day`, and `hour` give the time. The `lat` and `long` give the location.
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r}
+head(elk)
+```
+## Water Quality
+
+- The `year`, `month`, and `day` variables give the time. 
+- The `latitude` and `longitude` give the location. 
+- `characteristic_name` gives the type of measurement. 
+- `result_text` gives the measurement. 
+
+```{r}
+head(water_quality)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+This is an incredibly rich data set. I have only kept the 20 most common quantitative measurements, but there are so many more. I have kept this data set in the long format, because there is very spotty measuring. 
+
+```{r}
+water_quality |> 
+  group_by(characteristic_name) |> 
+  summarize(n = n()) |> 
+  arrange(desc(n))
+```
+
+
+### Water Quality pH
+
+This code chunk filters for all measurements of pH. `result_text` is a character vector, so make sure to change the vector to a numeric type if you're working with numeric data, like pH
+
+```{r}
+calcium = 
+  water_quality |> 
+  filter(characteristic_name == 'Calcium mg/l') |> 
+  mutate(calcium = as.numeric(result_text)) # turning the vector numeric
+
+
+calcium |>    
+  ggplot(aes(x = calcium)) + 
+  geom_histogram()
+```
+
+
+## Create a static map plot
+
+[using ggmap](https://www.nceas.ucsb.edu/sites/default/files/2020-04/ggmapCheatsheet.pdf)
+
+[from stack exchange](https://stackoverflow.com/questions/33942186/using-r-and-ggplot-to-draw-separate-lines-between-gps-coordinates/33944974)
+
+
+### Step 1: Download map
+
+Find the minimum and maximum latitude and longitude of elk's journey. This will give us the range of map to download.
+
+```{r}
+min_lat = elk |> pull(lat) |> min()
+max_lat = elk |> pull(lat) |> max()
+rng_lat = abs(min_lat - max_lat)
+lowerleftlat = min_lat 
+upperrightlat = max_lat 
+
+
+min_long = elk |> pull(long) |> min()
+max_long = elk |> pull(long) |> max()
+rng_long = abs(min_long - max_long)
+lowerleftlon = min_long - rng_long 
+upperrightlon = max_long + rng_long
+
+myLocation <- c(left = lowerleftlon,
+                 bottom = lowerleftlat,
+                 right = upperrightlon,
+                 top = upperrightlat)
+```
+
+
+```{r}
+register_stadiamaps(key = '29074900-bb6e-4a71-8f91-454c28190f88', write = FALSE)
+
+myMap <- get_stadiamap(
+  bbox=myLocation,
+  maptype = "stamen_terrain",
+  crop=FALSE)
+```
+
+### Step 2: Plot map with elk movement
+```{r}
+ggmap(myMap) +
+geom_path(
+  data = elk, 
+  aes(x=long, y=lat, color = month))+
+  geom_line(alpha = 0) +
+  scale_color_gradientn(colours = rainbow(12))
+```
+
+
+```{r}
+ggplot(
+  data = elk, 
+  aes(x=long, y=lat)) +
+geom_path(alpha = 0.5) +
+geom_line(alpha = 0) +
+geom_point(
+  data = calcium,
+  aes(x = longitude, y = latitude, color = 'red')
+  )
+```
+
+Add in water calcium
+```{r}
+ggmap(myMap) +
+geom_path(
+  data = elk, 
+  aes(x=long, y=lat, color = month))+
+  geom_line(alpha = 0) +
+  scale_color_gradientn(colours = rainbow(12)) +
+geom_point(
+  data = calcium,
+  aes(x = longitude, y = latitude)
+)
+```
+
+
