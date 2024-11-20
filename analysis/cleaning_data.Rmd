@@ -364,4 +364,7 @@ head(elk)
 head(land_coord_df)
 ```
 
+```{r}
+elk |> write.csv('../clean_data/elk.csv', row.names =  FALSE)
+```
 
