@@ -309,7 +309,12 @@ terra::writeRaster(small_land_coord, '../clean_data/land_cover.tif')
 ```
 
 ```{r}
-test_rast = 
+test_rast = rast('../clean_data/land_cover.tif')
+```
+
+
+```{r}
+plot(test_rast)
 ```
 
 
