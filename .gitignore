@@ -6,3 +6,4 @@ raw_data/
 clean_data/
 clean_data.zip
 raw_data.zip
+.DS_Store
