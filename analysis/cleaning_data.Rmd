@@ -9,6 +9,7 @@ output: html_document
 ```{r}
 library(tidyverse)
 library(stringr)
+library(raster)
 ```
 
 
@@ -20,10 +21,10 @@ We drop the `tz` timezone variable, because it is homogenous. We drop the `utm_x
 elk = 
   read_csv('../raw_data/Elk GPS collar data from National Elk Refuge 2006-2015.csv') |> 
   janitor::clean_names() |> 
-  mutate(
+  dplyr::mutate(
     day = day(dt),
     hour = hour(dt)) |> 
-  select(
+  dplyr::select(
     elk_id, 
     year, 
     month,
@@ -33,7 +34,9 @@ elk =
     long
   )
 
-elk |> write.csv('../clean_data/elk.csv', row.names =  FALSE)
+
+#land cover data is added below!
+# elk |> write.csv('../clean_data/elk.csv', row.names =  FALSE)
 ```
 
 
@@ -235,3 +238,130 @@ soil_temp =
 
 soil_temp |> write.csv('../clean_data/soil_temp.csv', row.names = FALSE)
 ```
+
+
+
+
+
+## Reading in Land Cover Data
+```{r}
+land_cover = raster::raster('../raw_data/land_cover/land_cover.tif')
+```
+
+
+```{r}
+plot(land_cover)
+```
+
+
+Transforming raster coordinates into latitude and longitude
+```{r}
+library(raster)
+library(sf)
+library(terra)      
+```
+
+Using the [terra package](https://bookdown.org/mcwimberly/gdswr-book/coordinate-reference-systems.html#reprojecting-raster-data)
+```{r}
+land = rast('../raw_data/land_cover/land_cover.tif')
+```
+
+
+Reprojecting in latitude and longitude
+```{r}
+land_coord = project(land, "EPSG:4326")
+```
+
+
+
+```{r}
+plot(land_coord)
+```
+
+
+
+Subset to the relevant area
+```{r}
+min_long = elk |> pull(long) |> min()
+max_long = elk |> pull(long) |> max()
+rng_long = abs(min_long - max_long)
+lowerleftlon = min_long - 0.1 * rng_long 
+upperrightlon = max_long + 0.1 * rng_long
+min_lat = elk |> pull(lat) |> min()
+max_lat = elk |> pull(lat) |> max()
+rng_lat = abs(min_lat - max_lat)
+lowerleftlat = min_lat - 0.1 * rng_lat
+upperrightlat = max_lat + 0.1 * rng_lat
+```
+
+```{r}
+small_land_coord = crop(land_coord, extent(lowerleftlon, upperrightlon, lowerleftlat, upperrightlat))
+```
+
+
+```{r}
+plot(small_land_coord)
+```
+
+
+```{r}
+terra::writeRaster(small_land_coord, '../clean_data/land_cover.tif')
+```
+
+```{r}
+test_rast = 
+```
+
+
+```{r}
+land_coord_df = as.points(small_land_coord)
+```
+
+
+```{r}
+temp_elk = 
+  elk |> 
+  mutate(
+    longitude = long,
+    latitude  = lat) |> 
+  dplyr::select(
+    longitude,
+    latitude
+  )
+```
+
+
+
+
+```{r}
+elk_land_cover = terra::extract(x = small_land_coord, y = temp_elk)
+```
+
+
+
+```{r}
+elk = 
+  elk |> 
+  mutate(land_cover = elk_land_cover$land_cover)
+```
+
+
+```{r}
+nrow(elk)
+```
+
+```{r}
+nrow(elk_land_cover)
+```
+
+
+```{r}
+head(elk)
+```
+
+
+```{r}
+head(land_coord_df)
+```
+
+
