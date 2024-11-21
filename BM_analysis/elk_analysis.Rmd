@@ -10,6 +10,7 @@ Load packages and set options.
 ```{r setup, include=FALSE}
 library(tidyverse)
 library(modelr)
+library(leaflet)
 
 knitr::opts_chunk$set(
   comment = '', fig.width = 8, fig.height = 6, out.width = "90%"
@@ -47,3 +48,19 @@ Some questions we want to answer about the elk:
 
 Fun stuff I want to do
 - Make a moving map of the elk
+
+Let's plot where the elk are on the map!
+
+```{r}
+elk_df |>
+  filter(year <= 2010) |>
+  ggplot(aes(x = lat, y = long, color = year)) +
+  geom_point(alpha = 0.3)
+
+elk_df |>
+  filter(year
+  leaftlet() |>
+  addProviderTiles(providers$CartoDB.Positron) |>
+  addCircleMarkers(~lat, ~long, radius = 0.1, color = ~pal(elk_id)
+```
+
