@@ -2,7 +2,7 @@
 title: "Elk Migration"
 author: "Brooklynn McNeil"
 date: "2024-11-18"
-output: github_document
+output: html_document
 ---
 
 Load packages and set options.
@@ -34,7 +34,7 @@ elk_df = read_csv("../clean_data/elk.csv")
 
 elk_df
 ```
-The elk IDs are: `r unique(elk_df$elk_id)`, and we are going to follow them around Yellowstone! I found a cute picture of [here](https://powertraveller.com/yellowstone-winter-wildlife-safari-from-gardiner/)
+The elk IDs are: `r unique(elk_df$elk_id)`, and we are going to follow them around Yellowstone! I found a cute picture of an elk in the snow  [here](https://powertraveller.com/yellowstone-winter-wildlife-safari-from-gardiner/)
 
 <img src="pics/elk.png" style="width:75%"/>
 
@@ -58,9 +58,9 @@ elk_df |>
   geom_point(alpha = 0.3)
 
 elk_df |>
-  filter(year
-  leaftlet() |>
+  filter(year == 2006) |>
+  leaflet() |>
   addProviderTiles(providers$CartoDB.Positron) |>
-  addCircleMarkers(~lat, ~long, radius = 0.1, color = ~pal(elk_id)
+  addCircleMarkers(~long, ~lat, radius = 0.1)
 ```
 
