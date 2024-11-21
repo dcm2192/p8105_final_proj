@@ -1,0 +1,375 @@
+---
+title: "Data Cleaning"
+author: "Wayne Monical"
+date: "2024-11-16"
+output: html_document
+---
+
+
+```{r}
+library(tidyverse)
+library(stringr)
+library(raster)
+```
+
+
+## Cleaning Elk Data
+
+We drop the `tz` timezone variable, because it is homogenous. We drop the `utm_x` and `utm_y` variables because they are simply another kind of location tracking, and we already have latitude and longitude. Note that [only elk that migrated from the Elk reserve to Yellowstone were included in the data](https://www.sciencebase.gov/catalog/file/get/5a9f2782e4b0b1c392e502ea?f=__disk__27%2F1f%2Faa%2F271faa32dbaff38082fc4661db798fcd74908130&transform=1&allowOpen=true).
+
+```{r}
+elk = 
+  read_csv('../raw_data/Elk GPS collar data from National Elk Refuge 2006-2015.csv') |> 
+  janitor::clean_names() |> 
+  dplyr::mutate(
+    day = day(dt),
+    hour = hour(dt)) |> 
+  dplyr::select(
+    elk_id, 
+    year, 
+    month,
+    day,
+    hour, 
+    lat,
+    long
+  )
+
+
+#land cover data is added below!
+# elk |> write.csv('../clean_data/elk.csv', row.names =  FALSE)
+```
+
+
+
+## Cleaning Water Quality Data
+
+### Locations
+
+This data set gives the locations that water was sampled from. We drop the `org_code` variable because it is homogenous
+```{r}
+water_quality_locations = 
+  read_csv('../raw_data/water_quality/Locations.csv')|> 
+  janitor::clean_names() |> 
+  select(
+    location_id,
+    location_name,
+    park_code, 
+    location_type,
+    latitude,
+    longitude
+  )
+```
+
+
+### Results
+
+```{r}
+water_quality_results = 
+  read_csv('../raw_data/water_quality/Results.csv')|> 
+  janitor::clean_names()
+```
+
+We find the most common observations.
+```{r}
+common_obs = 
+  water_quality_results |> 
+  drop_na(result_text) |> 
+  group_by(characteristic_name) |> 
+  summarize(n = n())|> 
+  arrange(desc(n)) |> 
+  filter(
+    n > 875, 
+    characteristic_name != "Weather Comments (text)") |> 
+  pull(characteristic_name)
+```
+
+We filter for the most common observations. We filter for readings that we can use, given in the `acceptable_readings` variable. We replace non-detected values with zero. We select for the relevant columns 
+```{r}
+
+acceptable_readings = c("Detected and Quantified", "Not Detected", "Present Below Quantification Limit")
+
+water_quality_results=
+  water_quality_results |> 
+  filter(
+    characteristic_name %in% common_obs,
+    result_detection_condition %in% acceptable_readings) |> 
+  mutate(
+    result_text = stringr::str_replace(result_text, "NULL", "0"),
+    result_unit = stringr::str_replace(result_unit, "None", ""),
+    characteristic_name = paste0(characteristic_name, " ", result_unit) |> trimws(),
+    year = year(activity_start_date),
+    month = month(activity_start_date),
+    day = day(activity_start_date)
+    ) |> 
+  select(
+    location_id,
+    activity_id,
+    activity_type,
+    activity_start_date,
+    year,
+    month,
+    day,
+    characteristic_name,
+    result_text
+  ) 
+```
+
+
+```{r}
+min(water_quality$latitude)
+max(water_quality$latitude)
+min(water_quality$longitude)
+max(water_quality$longitude)
+
+```
+
+
+
+### Combining
+
+```{r}
+water_quality = 
+  water_quality_locations |> 
+  left_join(water_quality_results)
+
+water_quality |> write.csv('../clean_data/water_quality.csv', row.names = FALSE)
+```
+
+## Importing Yellowstone Peak Data
+
+
+[Definitions Pg 3](https://files.cfc.umt.edu/cesu/NPS/CSU/2010/10Stevens_ROMN_alpine%20monitoring_rpt.pdf)
+
+```{r}
+summit = tibble(
+  summit_code = c('BLP', 'SCP', 'SPP', 'WSP'),
+  name = c('Boundary Line Peak', 'Stone Crop Peak',
+         'Snow Pipit Peak', 'Wolf Scat Peak'),
+  lat = c(44.70028, 44.69584, 44.70167, 44.69444), 
+  long = c(-109.8267, -109.8339, -109.835, -109.8364),
+  elevation_in_meters =  c(3195, 3122, 3169, 3124)
+  )
+```
+
+
+
+## Cleaning Soil Chemistry 
+
+What do these abbreviations mean? [Here](https://files.cfc.umt.edu/cesu/NPS/CSU/2010/10Stevens_ROMN_alpine%20monitoring_rpt.pdf)
+
+Boundary Line Peak (BLP), Stone Crop Peak (SCP), Snow Pipit Peak (SPP), and Wolf
+Scat Peak (WSP)
+
+```{r}
+soil_chem = 
+  read_csv('../raw_data/NPS_IMD_GLORIA_SoilChemistry_2287252_DataPackage/NPS_IMD_GLORIA_SoilChemistry_2287252-dataset.csv') |> 
+  janitor::clean_names()
+
+soil_chem= 
+  soil_chem |> 
+  filter(
+    ! average %in% c('Insufficient sample', 'insufficient sample'),
+    stringr::str_detect(site_name, "YNP")
+  ) |> 
+  mutate(
+    year = year(start_date),
+    month = month(start_date),
+    day = day(start_date),
+    parameter = paste0(parameter_dataset, " ", unit_dataset),
+    summit_code = str_sub(site_name, start = 8, end = 10)
+  ) |> 
+  inner_join(summit) |> 
+  select(
+    summit_code,
+    name,
+    lat,
+    long,
+    elevation_in_meters,
+    site_name,
+    event_name,
+    year,
+    month,
+    day,
+    parameter,
+    average)
+  
+
+soil_chem |> write.csv('../clean_data/soil_chem.csv', row.names = FALSE)
+```
+
+
+
+
+
+
+## Cleaning Soil Temperature
+
+Read in data, filter for yellowstone national park, 
+```{r}
+soil_temp = 
+  read_csv('../raw_data/NPS_IMD_GLORIA_SoilTemperature_2288176_DataPackage/NPS_IMD_GLORIA_SoilTemperature_2288176_Daily-dataset.csv') |> 
+  janitor::clean_names()  |> 
+  filter(park == 'YELL') |> 
+  mutate(
+    summit_code = summit,
+    year = year(date_time),
+    month = month(date_time),
+    day = day(date_time))
+```
+
+```{r}
+soil_temp = 
+  soil_temp |>
+  inner_join(summit) |> 
+  select(
+    summit_code,
+    name,
+    lat,
+    long,
+    elevation_in_meters,
+    plot, 
+    site_name,
+    year,
+    month,
+    day,
+    daily_mean,
+    daily_standard_dev
+  )
+
+soil_temp |> write.csv('../clean_data/soil_temp.csv', row.names = FALSE)
+```
+
+
+
+
+
+## Reading in Land Cover Data
+```{r}
+land_cover = raster::raster('../raw_data/land_cover/land_cover.tif')
+```
+
+
+```{r}
+plot(land_cover)
+```
+
+
+Transforming raster coordinates into latitude and longitude
+```{r}
+library(raster)
+library(sf)
+library(terra)      
+```
+
+Using the [terra package](https://bookdown.org/mcwimberly/gdswr-book/coordinate-reference-systems.html#reprojecting-raster-data)
+```{r}
+land = rast('../raw_data/land_cover/land_cover.tif')
+```
+
+
+Reprojecting in latitude and longitude
+```{r}
+land_coord = project(land, "EPSG:4326")
+```
+
+
+
+```{r}
+plot(land_coord)
+```
+
+
+
+Subset to the relevant area
+```{r}
+min_long = elk |> pull(long) |> min()
+max_long = elk |> pull(long) |> max()
+rng_long = abs(min_long - max_long)
+lowerleftlon = min_long - 0.1 * rng_long 
+upperrightlon = max_long + 0.1 * rng_long
+min_lat = elk |> pull(lat) |> min()
+max_lat = elk |> pull(lat) |> max()
+rng_lat = abs(min_lat - max_lat)
+lowerleftlat = min_lat - 0.1 * rng_lat
+upperrightlat = max_lat + 0.1 * rng_lat
+```
+
+```{r}
+small_land_coord = crop(land_coord, extent(lowerleftlon, upperrightlon, lowerleftlat, upperrightlat))
+```
+
+
+```{r}
+plot(small_land_coord)
+```
+
+
+```{r}
+terra::writeRaster(small_land_coord, '../clean_data/land_cover.tif')
+```
+
+```{r}
+test_rast = rast('../clean_data/land_cover.tif')
+```
+
+
+```{r}
+plot(test_rast)
+```
+
+
+```{r}
+land_coord_df = as.points(small_land_coord)
+```
+
+
+```{r}
+temp_elk = 
+  elk |> 
+  mutate(
+    longitude = long,
+    latitude  = lat) |> 
+  dplyr::select(
+    longitude,
+    latitude
+  )
+```
+
+
+
+
+```{r}
+elk_land_cover = terra::extract(x = small_land_coord, y = temp_elk)
+```
+
+
+
+```{r}
+elk = 
+  elk |> 
+  mutate(land_cover = elk_land_cover$land_cover)
+```
+
+
+```{r}
+nrow(elk)
+```
+
+```{r}
+nrow(elk_land_cover)
+```
+
+
+```{r}
+head(elk)
+```
+
+
+```{r}
+head(land_coord_df)
+```
+
+```{r}
+elk |> write.csv('../clean_data/elk.csv', row.names =  FALSE)
+```
+

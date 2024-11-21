@@ -1,0 +1,14 @@
+name: "Yay internet!"
+output_dir: "."
+navbar:
+  title: "Home"
+  right:
+    - text: "Proof of Concept"
+      href: proof_of_concept.html
+    - icon: fa-envelope fa-lg
+      href: mailto:w3monical@gmail.com
+    - icon: fa-github fa-lg
+      href: http://github.com/p8105_final_proj/
+output:
+  html_document:
+    theme: cerulean
