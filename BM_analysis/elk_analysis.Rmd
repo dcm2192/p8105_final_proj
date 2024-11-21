@@ -11,6 +11,7 @@ Load packages and set options.
 library(tidyverse)
 library(modelr)
 library(leaflet)
+library(leaflet.extras2)
 
 knitr::opts_chunk$set(
   comment = '', fig.width = 8, fig.height = 6, out.width = "90%"
@@ -30,7 +31,9 @@ scale_fill_discrete = scale_fill_viridis_d
 Import elk migration data.
 
 ```{r}
-elk_df = read_csv("../clean_data/elk.csv")
+elk_df = read_csv("../clean_data/elk.csv") |>
+  mutate(datetime = make_datetime(year, month, day, hour)) |>
+  select(elk_id, datetime, lat, long)
 
 elk_df
 ```
@@ -45,6 +48,10 @@ Some questions we want to answer about the elk:
 - Do the 17 elk move together as a pack or separately?
 - Do the migration patterns change by year?
 - Does time of year change the migration patterns?
+- what is the average total length of yearly migration? daily? monthly?
+- How wide or narrow are the migration routes?
+- Are there any areas that all of the elk go to?
+- are the elk likely to have the same paths or go elsewhere?
 
 Fun stuff I want to do
 - Make a moving map of the elk
@@ -57,10 +64,38 @@ elk_df |>
   ggplot(aes(x = lat, y = long, color = year)) +
   geom_point(alpha = 0.3)
 
-elk_df |>
-  filter(year == 2006) |>
-  leaflet() |>
-  addProviderTiles(providers$CartoDB.Positron) |>
-  addCircleMarkers(~long, ~lat, radius = 0.1)
+
 ```
+
+Elk Leaflet.
+
+```{r}
+# Let's make a custom elk icon!!
+moose_icon <- makeIcon(
+  iconUrl = "pics/elk_icon.png", # Replace with the URL of your moose image
+  iconWidth = 30, iconHeight = 30
+)
+
+elk_df |>
+  filter(year(datetime) == 2006,
+         month(datetime) == 6) |>
+  leaflet() |>
+  addProviderTiles(providers$CartoDB.Positron, group = "Base Map") |>
+  addProviderTiles(providers$Esri.NatGeoWorldMap, group = "NatGeo Map") |>
+   addMarkers(
+    lng = ~long, lat = ~lat,
+    icon = moose_icon,  # Use the custom icon
+    popup = ~paste("Elk ID:", elk_id)  # Add a popup with Elk ID
+  ) |>
+  addTimeslider(
+    data = ~elk_df$datetime,
+    options = timesliderOptions(
+      position = "topright",
+      timeAttribute = "time",
+      range = TRUE))
+    weight = 2, color = "blue"
+  )
+    
+```
+
 
