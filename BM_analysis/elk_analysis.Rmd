@@ -9,9 +9,7 @@ Load packages and set options.
 
 ```{r setup, include=FALSE}
 library(tidyverse)
-library(modelr)
-library(leaflet)
-library(leaflet.extras2)
+library(geosphere)
 
 knitr::opts_chunk$set(
   comment = '', fig.width = 8, fig.height = 6, out.width = "90%"
@@ -32,7 +30,8 @@ Import elk migration data.
 
 ```{r}
 elk_df = read_csv("../clean_data/elk.csv") |>
-  mutate(datetime = make_datetime(year, month, day, hour)) |>
+  mutate(datetime = make_datetime(year, month, day, hour),
+         elk_id = factor(elk_id)) |>
   select(elk_id, datetime, lat, long)
 
 elk_df
@@ -60,42 +59,79 @@ Let's plot where the elk are on the map!
 
 ```{r}
 elk_df |>
-  filter(year <= 2010) |>
-  ggplot(aes(x = lat, y = long, color = year)) +
-  geom_point(alpha = 0.3)
-
-
+  mutate(year = year(datetime)) |>
+  filter(year >= 2014) |>
+  ggplot(aes(x = lat, y = long, color = elk_id)) + 
+  geom_point(alpha = 0.3) +
+  facet_grid(~ year) +  
+  labs(
+    title = "Elk Migration by Year (2014 and later)",
+    x = "Latitude",
+    y = "Longitude",
+    color = "Elk ID"
+  ) +
+  theme_minimal()
 ```
 
-Elk Leaflet.
+Now let's look at how far they travel throughout the year. 
 
 ```{r}
-# Let's make a custom elk icon!!
-moose_icon <- makeIcon(
-  iconUrl = "pics/elk_icon.png", # Replace with the URL of your moose image
-  iconWidth = 30, iconHeight = 30
-)
-
-elk_df |>
-  filter(year(datetime) == 2006,
-         month(datetime) == 6) |>
-  leaflet() |>
-  addProviderTiles(providers$CartoDB.Positron, group = "Base Map") |>
-  addProviderTiles(providers$Esri.NatGeoWorldMap, group = "NatGeo Map") |>
-   addMarkers(
-    lng = ~long, lat = ~lat,
-    icon = moose_icon,  # Use the custom icon
-    popup = ~paste("Elk ID:", elk_id)  # Add a popup with Elk ID
+#calculate the distance they travel each month
+elk_seasonal <- elk_df |>
+  mutate(
+    year = year(datetime),  # Extract year
+    month = month(datetime),  # Extract month
+    season = case_when(
+      month %in% c(12, 1, 2) ~ "Winter",
+      month %in% c(3, 4, 5) ~ "Spring",
+      month %in% c(6, 7, 8) ~ "Summer",
+      month %in% c(9, 10, 11) ~ "Fall"
+    )
   ) |>
-  addTimeslider(
-    data = ~elk_df$datetime,
-    options = timesliderOptions(
-      position = "topright",
-      timeAttribute = "time",
-      range = TRUE))
-    weight = 2, color = "blue"
-  )
-    
+  arrange(elk_id, datetime)  # Ensure data is ordered
+
+# Calculate distances and group by year, season, and elk_id
+elk_distances_seasonal <- elk_seasonal |>
+  group_by(elk_id, year, season) |>
+  mutate(
+    dist = distHaversine(cbind(long, lat), cbind(lag(long), lag(lat)))  # Distance between consecutive points
+  ) |>
+  summarize(
+    total_distance_km = sum(dist, na.rm = TRUE) / 1000  # Convert to kilometers and sum
+  ) |>
+  ungroup()
+
+# View results
+elk_distances_seasonal
+```
+
+Plot the seasonal data
+
+```{r}
+elk_monthly = elk_df |>
+  mutate(
+    year = year(datetime),  # Extract year
+    month = month(datetime),  # Extract month
+  ) |>
+  arrange(elk_id, datetime)  # Ensure data is ordered
+
+# Calculate distances and group by year, season, and elk_id
+elk_distance_monthly = 
+  elk_monthly |>
+  group_by(elk_id, year, month) |>
+  mutate(
+    dist = distHaversine(cbind(long, lat), cbind(lag(long), lag(lat)))  # Distance between consecutive points
+  ) |>
+  summarize(
+    total_distance_km = sum(dist, na.rm = TRUE) / 1000  # Convert to kilometers and sum
+  ) |>
+  ungroup()
+
+
+elk_distance_monthly |>
+  ggplot(aes(x = month, y = total_distance_km, color = elk_id)) +
+  geom_point() +
+  geom_smooth( se = FALSE)
 ```
 
 
