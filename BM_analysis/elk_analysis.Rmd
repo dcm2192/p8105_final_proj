@@ -104,16 +104,32 @@ elk_distances_seasonal <- elk_seasonal |>
 # View results
 elk_distances_seasonal
 ```
+Now I am curious what the overlap of the elk are? The data collected is between 2006 and 2015, but we do not have data from all of the elk ids during that time period. It turns out that wild elk can only live up to 10-12 years, according to [worlddeer.ord](https://worlddeer.org/elk/). So let's find out what the time range is for each of these elk.
+
+```{r}
+elk_df |>
+  group_by(elk_id) |>
+  summarize(start_time = min(datetime),
+            end_time = max(datetime)) |>
+  knitr::kable()
+
+elk_df_2013.2014 = 
+  elk_df |>
+  filter(datetime >= as_date("2013-07-16") &
+         datetime <= as_date("2014-12-30"),
+         elk_id %in% c(907, 909, 911, 913, 914, 916, 917, 918))
+```
+The most overlapping data occurs between July 16th 2013 and December 30th, 2014. We have 8 elk that have data for this time range: `r unique(elk_df_2013.2014$elk_id)`. Now let's see how they move around!
 
 Plot the seasonal data
 
 ```{r}
-elk_monthly = elk_df |>
+elk_monthly = elk_df_2013.2014 |>
   mutate(
-    year = year(datetime),  # Extract year
-    month = month(datetime),  # Extract month
+    year = year(datetime),  
+    month = month(datetime, label = TRUE),  
   ) |>
-  arrange(elk_id, datetime)  # Ensure data is ordered
+  arrange(elk_id, datetime)  
 
 # Calculate distances and group by year, season, and elk_id
 elk_distance_monthly = 
@@ -125,13 +141,49 @@ elk_distance_monthly =
   summarize(
     total_distance_km = sum(dist, na.rm = TRUE) / 1000  # Convert to kilometers and sum
   ) |>
-  ungroup()
+  ungroup() 
 
 
 elk_distance_monthly |>
-  ggplot(aes(x = month, y = total_distance_km, color = elk_id)) +
+  ggplot(aes(x = as.numeric(month), y = total_distance_km, color = elk_id)) +
   geom_point() +
-  geom_smooth( se = FALSE)
+  geom_smooth(se = FALSE) +
+  scale_x_continuous(
+    breaks = 1:12,  # Numeric positions for each month
+    labels = month.name  # Use month names as labels
+  ) +
+  labs(title = "Elk Movement by Month 2013-07-16 to 2014-12-30",
+       x = "month",
+       y = "total distance (km)")
+```
+It looks like May and December are when the elk are moving around the most. 
+
+I want to check if the number of observations for each month has an impact on these trends. I'm going to see if normalizing the data based on the number of obersvations has a significant impact on the trends. 
+
+```{r}
+elk_distance_normalized = 
+  elk_monthly |>
+  group_by(elk_id, year, month) |>
+  mutate(
+    dist = distHaversine(cbind(long, lat), cbind(lag(long), lag(lat)))  # Distance between consecutive points
+  ) |>
+  summarize(
+    total_distance_km = sum(dist, na.rm = TRUE) / 1000,  # Convert to kilometers and sum
+    count = n()
+  ) |>
+  mutate(normal_distance = total_distance_km/count)
+
+elk_distance_normalized |>
+  ggplot(aes(x = as.numeric(month), y = normal_distance, color = elk_id)) +
+  geom_point() +
+  geom_smooth(se = FALSE) +
+  scale_x_continuous(
+    breaks = 1:12,  # Numeric positions for each month
+    labels = month.name  # Use month names as labels
+  ) +
+  labs(title = "Elk Movement by Month 2013-07-16 to 2014-12-30",
+       x = "month",
+       y = "normalized distance")
 ```
 
 
