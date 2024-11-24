@@ -10,6 +10,10 @@ Load packages and set options.
 ```{r setup, include=FALSE}
 library(tidyverse)
 library(geosphere)
+library(leaflet)
+library(leaflet.extras2)
+library(lubridate)
+library(RColorBrewer)
 
 knitr::opts_chunk$set(
   comment = '', fig.width = 8, fig.height = 6, out.width = "90%"
@@ -158,7 +162,7 @@ elk_distance_monthly |>
 ```
 It looks like May and December are when the elk are moving around the most. 
 
-I want to check if the number of observations for each month has an impact on these trends. I'm going to see if normalizing the data based on the number of obersvations has a significant impact on the trends. 
+I want to check if the number of observations for each month has an impact on these trends. I'm going to see if normalizing the data based on the number of observations has a significant impact on the trends. 
 
 ```{r}
 elk_distance_normalized = 
@@ -185,5 +189,114 @@ elk_distance_normalized |>
        x = "month",
        y = "normalized distance")
 ```
+The normalized data has a similar trend so we will continue with the raw data in km.
 
+Let's see where the elk are moving around in the month of May.
 
+```{r}
+# Let's make a custom elk icon!!
+elk_icon <- makeIcon(
+  iconUrl = "pics/elk_icon.png", # Replace with the URL of your moose image
+  iconWidth = 30, iconHeight = 30
+)
+
+filtered_data = elk_df_2013.2014 |>
+  filter(month(datetime) == 5)
+
+# Create a color palette (limited to 9 elk IDs for "Set1")
+elk_ids = unique(filtered_data$elk_id)  # Get unique elk IDs
+num_colors = length(elk_ids)    # Ensure we don't exceed palette limit
+path_colors = colorFactor(palette = RColorBrewer::brewer.pal(num_colors, "Set1"), domain = elk_ids)
+
+# Initialize leaflet map
+map <- filtered_data |>
+  group_by(elk_id) |>
+  summarize(start_long = first(long), start_lat = first(lat),
+            end_long = last(long), end_lat = last(lat))|>
+  ungroup() |>
+  leaflet() |>
+  addProviderTiles(providers$CartoDB.Positron, group = "Base Map") |>
+  addProviderTiles(providers$Esri.NatGeoWorldMap, group = "NatGeo Map") |>
+  addMarkers(lng = ~start_long, lat = ~start_lat, icon = elk_icon, popup = ~paste("Start Point: Elk", elk_id)) |>
+  addMarkers(lng = ~end_long, lat = ~end_lat, icon = elk_icon, popup = ~paste("End Point: Elk ", elk_id))
+
+# Add lines for each elk's path
+for (elk in elk_ids) {
+  elk_data <- filtered_data |> filter(elk_id == elk)  # Subset data for each elk
+  map <- map |>
+    addPolylines(
+      data = elk_data,
+      lng = ~long, lat = ~lat,
+      color = path_colors(elk),  # Assign unique color for each elk
+      weight = 2,
+      opacity = 0.8,
+      label = ~paste("Elk ID:", elk)  # Label showing elk ID
+    )
+}
+
+# Add a legend for the elk IDs
+map <- map |>
+  addLegend(
+    position = "topright",
+    pal = path_colors,
+    values = elk_ids,
+    title = "Elk ID"
+  )
+
+# Print the map
+map
+
+```
+
+Now let's look at the paths for December.
+
+```{r}
+filtered_data = elk_df_2013.2014 |>
+  filter(month(datetime) == 12,
+         year(datetime) == 2014)
+
+# Create a color palette (limited to 9 elk IDs for "Set1")
+elk_ids = unique(filtered_data$elk_id)  # Get unique elk IDs
+num_colors = length(elk_ids)    # Ensure we don't exceed palette limit
+path_colors = colorFactor(palette = RColorBrewer::brewer.pal(num_colors, "Set1"), domain = elk_ids)
+
+# Initialize leaflet map
+map <- filtered_data |>
+  group_by(elk_id) |>
+  summarize(start_long = first(long), start_lat = first(lat),
+            end_long = last(long), end_lat = last(lat))|>
+  ungroup() |>
+  leaflet() |>
+  addProviderTiles(providers$CartoDB.Positron, group = "Base Map") |>
+  addProviderTiles(providers$Esri.NatGeoWorldMap, group = "NatGeo Map") |>
+  addMarkers(lng = ~start_long, lat = ~start_lat, icon = elk_icon, popup = ~paste("Start Point: Elk", elk_id)) |>
+  addMarkers(lng = ~end_long, lat = ~end_lat, icon = elk_icon, popup = ~paste("End Point: Elk ", elk_id))
+
+# Add lines for each elk's path
+for (elk in elk_ids) {
+  elk_data <- filtered_data |> filter(elk_id == elk)  # Subset data for each elk
+  map <- map |>
+    addPolylines(
+      data = elk_data,
+      lng = ~long, lat = ~lat,
+      color = path_colors(elk),  # Assign unique color for each elk
+      weight = 2,
+      opacity = 0.8,
+      label = ~paste("Elk ID:", elk)  # Label showing elk ID
+    )
+}
+
+# Add a legend for the elk IDs
+map <- map |>
+  addLegend(
+    position = "topright",
+    pal = path_colors,
+    values = elk_ids,
+    title = "Elk ID"
+  )
+
+# Print the map
+map
+```
+
+## THERE IS SOMETHING WEIRD GOING ON WITH THE DECEMBER DATA
