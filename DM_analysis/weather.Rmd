@@ -1,6 +1,7 @@
 ---
-title: "weather"
+title: "weather!"
 author: "Dylan Morgan"
-date: "2024-11-19"
-output: html_document
+output: github_document
 ---
+
+weather!
