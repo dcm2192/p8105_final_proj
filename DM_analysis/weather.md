@@ -192,3 +192,9 @@ reduced_weather |>
     ## (`geom_point()`).
 
 ![](weather_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+
+Are there any differences in weather patterns observed among the
+different stations that could have influenced elk movement patterns?
+
+Take monthly avg/totals of temp, rainfall, and compare this data with
+monthly elk movement pathways
