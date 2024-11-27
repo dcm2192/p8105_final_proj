@@ -169,3 +169,26 @@ ggsave(path = "../DM_analysis/plots/",
 ```
 
     ## Saving 7 x 5 in image
+
+Reduce weather station data, explore weather data.
+
+``` r
+reduced_weather <- 
+  raw_weather |> 
+  filter(NAME %in% four_stations)
+
+reduced_weather |>
+  group_by(NAME) |> 
+  pivot_longer(
+    TAVG:TMIN, 
+    names_to = "temp_class", 
+    values_to = "temp") |> 
+  select(-c(WDF2:WT11)) |> 
+  ggplot(aes(x = DATE, y = temp, color = temp_class)) + 
+    geom_point()
+```
+
+    ## Warning: Removed 7062 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
+![](weather_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->

@@ -93,3 +93,24 @@ ggsave(path = "../DM_analysis/plots/",
        plot = four_stations_elk_mvmt_plot)
 ```
 
+Reduce weather station data, explore weather data.
+```{r}
+reduced_weather <- 
+  raw_weather |> 
+  filter(NAME %in% four_stations)
+
+reduced_weather |>
+  group_by(NAME) |> 
+  pivot_longer(
+    TAVG:TMIN, 
+    names_to = "temp_class", 
+    values_to = "temp") |> 
+  select(-c(WDF2:WT11)) |> 
+  ggplot(aes(x = DATE, y = temp, color = temp_class)) + 
+    geom_point()
+
+```
+
+
+
+
