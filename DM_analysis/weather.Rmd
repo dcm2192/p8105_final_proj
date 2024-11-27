@@ -4,4 +4,92 @@ author: "Dylan Morgan"
 output: github_document
 ---
 
-weather!
+Load packages.
+```{r}
+library(tidyverse)
+library(ggmap)
+```
+
+Elk data from Wayne.
+```{r}
+elk = read_csv("../DM_analysis/data/elk.csv")
+```
+
+Load and clean up weather data.
+```{r}
+raw_weather <- read_csv("../DM_analysis/data/raw_weather_data.csv")
+```
+
+Plot weather stations and elk migration pathways to determine which stations to use.
+```{r}
+weather_stations <-
+  raw_weather |>
+  group_by(NAME, LATITUDE, LONGITUDE) |>
+  summarize(n_obs = n())
+
+ggplot() +
+  geom_path(
+    data = elk,
+    aes(x=long, y=lat),
+    alpha = 0.5,
+    color = "red") +
+  geom_point(data = weather_stations, aes(x = LONGITUDE, y = LATITUDE))
+
+
+ggplot(data = weather_stations,
+         aes(x = LONGITUDE, y = LATITUDE)) +
+  geom_point() +
+  ggrepel::geom_label_repel(aes(label = NAME),
+                            box.padding   = 0.35,
+                            point.padding = 0.5,
+                            segment.color = 'grey50',
+                            max.overlaps = 20)
+
+potential_stations <- 
+  c("LEWIS LAKE DIVIDE, WY US", "SNAKE RIVER, WY US", "SNAKE RIVER STATION, WY US", "BASE CAMP, WY US", 
+    "MORAN 5 WNW, WY US", "JACKSON 29.9 NNE, WY US", "BURRO HILL WYOMING, WY US", "MOOSE 1 NNE, WY US", 
+    "MOOSE, WY US", "MOOSE .4 S, WY US", "JACKSON 12.3 NE, WY US", "JACKSON 12.2 NE, WY US", 
+    "JACKSON HOLE AIRPORT, WY US", "JACKSON, WY US")
+
+four_stations <- 
+  c("SNAKE RIVER STATION, WY US", "MORAN 5 WNW, WY US", "BURRO HILL WYOMING, WY US", "MOOSE 1 NNE, WY US")
+
+reduced_weather_stations <- 
+  raw_weather |> 
+  filter(NAME %in% four_stations) |> 
+  group_by(NAME, LATITUDE, LONGITUDE) |> 
+  summarize(n_obs = n()) |> 
+  arrange(desc(n_obs)) 
+
+four_stations_labels_plot <- 
+  ggplot(data = reduced_weather_stations,
+         aes(x = LONGITUDE, y = LATITUDE)) +
+  geom_point() +
+  ggrepel::geom_label_repel(aes(label = NAME),
+                            box.padding   = 0.35,
+                            point.padding = 0.5,
+                            segment.color = 'grey50',
+                            max.overlaps = 20)
+
+four_stations_labels_plot
+
+ggsave(path = "../DM_analysis/plots/", 
+       filename = "four_stations_labels_plot.png", 
+       plot = four_stations_labels_plot)
+
+four_stations_elk_mvmt_plot <- 
+  ggplot() +
+  geom_path(
+    data = elk,
+    aes(x=long, y=lat),
+    alpha = 0.5,
+    color = "red") +
+  geom_point(data = reduced_weather_stations, aes(x = LONGITUDE, y = LATITUDE))
+  
+four_stations_elk_mvmt_plot
+
+ggsave(path = "../DM_analysis/plots/", 
+       filename = "four_stations_elk_mvmt_plot.png", 
+       plot = four_stations_elk_mvmt_plot)
+```
+
