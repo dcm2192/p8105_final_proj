@@ -112,8 +112,10 @@ Column
 ### Sum of Elk Movement
 
 ```{r}
+renderPrint({
 filtered_data = elk_df |>
   filter(year(datetime) == input$year) |>
-  filter(month(datetime,) == input$month)
+  filter(month(datetime) == input$month)
+})
 ```
 

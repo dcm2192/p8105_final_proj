@@ -64,18 +64,104 @@ Let's plot where the elk are on the map!
 ```{r}
 elk_df |>
   mutate(year = year(datetime)) |>
-  filter(year >= 2014) |>
+ # filter(year >= 2014) |>
   ggplot(aes(x = lat, y = long, color = elk_id)) + 
   geom_point(alpha = 0.3) +
   facet_grid(~ year) +  
   labs(
-    title = "Elk Migration by Year (2014 and later)",
+    title = "Elk Migration by Year",
     x = "Latitude",
     y = "Longitude",
     color = "Elk ID"
   ) +
-  theme_minimal()
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 75))
 ```
+
+It looks like in 2013 the elk traveled much higher in longitude than the other years. In 2011, the elk did not go nearly as far North as in other years. Let's find out what the range was for the individual elk each year. 
+```{r}
+elk_df |>
+  group_by(elk_id, year(datetime)) |>
+  summarize(longitude_range = max(long) - min(long),
+            latitude_range = max(lat) - min(lat)) |>
+  knitr::kable()
+```
+
+Let's see how the sums across the months change.
+
+```{r}
+elk_df |>
+  group_by(elk_id, year = year(datetime), month = month(datetime, label = TRUE)) |> 
+  mutate(
+    dist = distHaversine(cbind(long, lat), cbind(lag(long), lag(lat)))  # Calculate distance
+  ) |>
+  summarize(
+    total_distance_km = sum(dist, na.rm = TRUE) / 1000  # Convert to kilometers and sum
+  ) |>
+  ggplot(aes(x = elk_id, y = total_distance_km, fill = factor(month))) +
+  geom_bar(stat = "identity") +  # Using bars to show total distance
+  facet_grid(~factor(month)) +
+  labs(
+    title = "Total Movement by Elk and Month",
+    x = "Month", 
+    y = "Total Distance (km)", 
+    fill = "Month") +
+  theme(axis.text.x = element_text(angle = 90))
+
+```
+Which elk that we have data for has moved the farthest?
+
+```{r}
+elk_df |>
+  group_by(elk_id) |>
+  mutate(
+    dist = distHaversine(cbind(long, lat), cbind(lag(long), lag(lat)))  # Distance between consecutive points
+  ) |>
+  summarize(
+    total_distance_km = sum(dist, na.rm = TRUE) / 1000  # Convert to kilometers and sum
+  ) |>
+  knitr::kable(digits = 0)
+
+# And maybe let's check how many data points we have
+
+elk_df |>
+  ggplot(aes(x = elk_id, fill = factor(year(datetime)))) +
+  geom_bar() +
+  labs(title = "Total Data Points for Each Elk",
+       x = "Elk ID",
+       y = "# of data points",
+       fill = "Year") 
+```
+Let''s look at the daily averages and how this compares for each of the elk. We are going to only look at the interquantile range so we can see what the movement is like on most days. It looks like most days they move around
+
+```{r}
+daily_median = 
+  elk_df |>
+  mutate(
+    dist = distHaversine(cbind(long, lat), cbind(lag(long), lag(lat))),
+    date = as_date(datetime)
+  ) |>
+  group_by(elk_id, date) |>
+  summarize(daily_sum = sum(dist)) |>
+  drop_na() |>
+  pull(daily_sum) |>
+  median()
+  
+elk_df |>
+  mutate(
+    dist = distHaversine(cbind(long, lat), cbind(lag(long), lag(lat))),
+    date = as_date(datetime)
+  ) |>
+  group_by(elk_id, date) |>
+  summarize(daily_sum = sum(dist)) |>
+  ggplot(aes(x = elk_id, y = daily_sum)) +
+  geom_boxplot(outliers = FALSE) +
+  geom_hline(yintercept = daily_median, color = "blue") +
+  labs(title = "Daily Averages (m)",
+       x = "Elk ID",
+       y = "Distance (m)")
+```
+
 
 Now let's look at how far they travel throughout the year. 
 
@@ -106,7 +192,9 @@ elk_distances_seasonal <- elk_seasonal |>
   ungroup()
 
 # View results
-elk_distances_seasonal
+elk_distances_seasonal |>
+  pivot_wider(names_from = season, values_from = total_distance_km) |>
+  knitr::kable()
 ```
 Now I am curious what the overlap of the elk are? The data collected is between 2006 and 2015, but we do not have data from all of the elk ids during that time period. It turns out that wild elk can only live up to 10-12 years, according to [worlddeer.ord](https://worlddeer.org/elk/). So let's find out what the time range is for each of these elk.
 
