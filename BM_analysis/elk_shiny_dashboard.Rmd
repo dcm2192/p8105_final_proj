@@ -1,0 +1,108 @@
+---
+title: "Elk Shiny Dashboard"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(tidyverse)
+library(geosphere)
+library(leaflet)
+library(leaflet.extras2)
+library(lubridate)
+library(RColorBrewer)
+```
+
+Import data.
+```{r}
+elk_df = read_csv("../clean_data/elk.csv") |>
+  mutate(datetime = make_datetime(year, month, day, hour),
+         elk_id = factor(elk_id)) |>
+  select(elk_id, datetime, lat, long)
+```
+
+Create input widgets.
+```{r}
+# sliderInput widget
+sliderInput(
+  "year", 
+  label = h3("Choose Year"), 
+  min = 2006,
+  max = 2015,
+  value = 2006,
+  step = 1)
+
+sliderInput(
+  "month", 
+  label = h3("Choose Month"), 
+  min = 1,
+  max = 12,
+  value = 5,
+  step = 1)
+```
+
+
+Column
+-----------------------------------------------------------------------
+
+### Map of Elk Movement
+
+```{r}
+renderLeaflet({# Let's make a custom elk icon!!
+elk_icon <- makeIcon(
+  iconUrl = "pics/elk_icon.png", # Replace with the URL of your moose image
+  iconWidth = 30, iconHeight = 30
+)
+
+filtered_data = elk_df |>
+  filter(year(datetime) == input$year) |>
+  filter(month(datetime,) == input$month)
+
+# Create a color palette (limited to 9 elk IDs for "Set1")
+elk_ids = unique(filtered_data$elk_id)  # Get unique elk IDs
+num_colors = length(elk_ids)    # Ensure we don't exceed palette limit
+path_colors = colorFactor(palette = RColorBrewer::brewer.pal(num_colors, "Set1"), domain = elk_ids)
+
+# Initialize leaflet map
+map <- filtered_data |>
+  group_by(elk_id) |>
+  summarize(start_long = first(long), start_lat = first(lat),
+            end_long = last(long), end_lat = last(lat))|>
+  ungroup() |>
+  leaflet() |>
+  addProviderTiles(providers$CartoDB.Positron, group = "Base Map") |>
+  addProviderTiles(providers$Esri.NatGeoWorldMap, group = "NatGeo Map") |>
+  addMarkers(lng = ~start_long, lat = ~start_lat, icon = elk_icon, popup = ~paste("Start Point: Elk", elk_id)) |>
+  addMarkers(lng = ~end_long, lat = ~end_lat, icon = elk_icon, popup = ~paste("End Point: Elk ", elk_id))
+
+# Add lines for each elk's path
+for (elk in elk_ids) {
+  elk_data <- filtered_data |> filter(elk_id == elk)  # Subset data for each elk
+  map <- map |>
+    addPolylines(
+      data = elk_data,
+      lng = ~long, lat = ~lat,
+      color = path_colors(elk),  # Assign unique color for each elk
+      weight = 2,
+      opacity = 0.8,
+      label = ~paste("Elk ID:", elk)  # Label showing elk ID
+    )
+}
+
+# Add a legend for the elk IDs
+map <- map |>
+  addLegend(
+    position = "topright",
+    pal = path_colors,
+    values = elk_ids,
+    title = "Elk ID"
+  )
+
+# Print the map
+map})
+
+```
