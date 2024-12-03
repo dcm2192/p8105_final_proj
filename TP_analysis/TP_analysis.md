@@ -27,33 +27,16 @@ library(ggmap)
     ##   OpenStreetMap's Tile Usage Policy: <https://operations.osmfoundation.org/policies/tiles/>
     ## ℹ Please cite ggmap if you use it! Use `citation("ggmap")` for details.
 
+``` r
+library(shiny)
+```
+
 ## Read in Data
 
 ``` r
-elk = read_csv(file = "../clean_data/elk.csv")
+elk = read.csv(file = "./data/elk.csv")
+water_quality = read.csv(file = "./data/water_quality.csv")
 ```
-
-    ## Rows: 104913 Columns: 7
-    ## ── Column specification ────────────────────────────────────────────────────────
-    ## Delimiter: ","
-    ## dbl (7): elk_id, year, month, day, hour, lat, long
-    ## 
-    ## ℹ Use `spec()` to retrieve the full column specification for this data.
-    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
-
-``` r
-water_quality = read_csv(file = "../clean_data/water_quality.csv")
-```
-
-    ## Rows: 23190 Columns: 14
-    ## ── Column specification ────────────────────────────────────────────────────────
-    ## Delimiter: ","
-    ## chr  (8): location_id, location_name, park_code, location_type, activity_id,...
-    ## dbl  (5): latitude, longitude, year, month, day
-    ## date (1): activity_start_date
-    ## 
-    ## ℹ Use `spec()` to retrieve the full column specification for this data.
-    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
 
 ## Elk Data
 
@@ -64,15 +47,13 @@ the time. The `lat` and `long` give the location.
 head(elk)
 ```
 
-    ## # A tibble: 6 × 7
-    ##   elk_id  year month   day  hour   lat  long
-    ##    <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>
-    ## 1    572  2006     3     1    18  43.8 -110.
-    ## 2    572  2006     3     1    20  43.8 -110.
-    ## 3    572  2006     3     1    22  43.8 -110.
-    ## 4    572  2006     3     2     0  43.8 -110.
-    ## 5    572  2006     3     2     2  43.8 -110.
-    ## 6    572  2006     3     2     4  43.8 -110.
+    ##   elk_id year month day hour      lat      long
+    ## 1    572 2006     3   1   18 43.83287 -110.3667
+    ## 2    572 2006     3   1   20 43.83255 -110.3666
+    ## 3    572 2006     3   1   22 43.83247 -110.3664
+    ## 4    572 2006     3   2    0 43.83250 -110.3662
+    ## 5    572 2006     3   2    2 43.83120 -110.3636
+    ## 6    572 2006     3   2    4 43.83040 -110.3637
 
 ## Water Quality
 
@@ -85,18 +66,27 @@ head(elk)
 head(water_quality)
 ```
 
-    ## # A tibble: 6 × 14
-    ##   location_id location_name           park_code location_type latitude longitude
-    ##   <chr>       <chr>                   <chr>     <chr>            <dbl>     <dbl>
-    ## 1 BICA_BHR1   Bighorn River near St.… BICA      River/Stream      45.3     -108.
-    ## 2 BICA_BHR1   Bighorn River near St.… BICA      River/Stream      45.3     -108.
-    ## 3 BICA_BHR1   Bighorn River near St.… BICA      River/Stream      45.3     -108.
-    ## 4 BICA_BHR1   Bighorn River near St.… BICA      River/Stream      45.3     -108.
-    ## 5 BICA_BHR1   Bighorn River near St.… BICA      River/Stream      45.3     -108.
-    ## 6 BICA_BHR1   Bighorn River near St.… BICA      River/Stream      45.3     -108.
-    ## # ℹ 8 more variables: activity_id <chr>, activity_type <chr>,
-    ## #   activity_start_date <date>, year <dbl>, month <dbl>, day <dbl>,
-    ## #   characteristic_name <chr>, result_text <chr>
+    ##   location_id                 location_name park_code location_type latitude
+    ## 1   BICA_BHR1 Bighorn River near St. Xavier      BICA  River/Stream 45.31663
+    ## 2   BICA_BHR1 Bighorn River near St. Xavier      BICA  River/Stream 45.31663
+    ## 3   BICA_BHR1 Bighorn River near St. Xavier      BICA  River/Stream 45.31663
+    ## 4   BICA_BHR1 Bighorn River near St. Xavier      BICA  River/Stream 45.31663
+    ## 5   BICA_BHR1 Bighorn River near St. Xavier      BICA  River/Stream 45.31663
+    ## 6   BICA_BHR1 Bighorn River near St. Xavier      BICA  River/Stream 45.31663
+    ##   longitude               activity_id activity_type activity_start_date year
+    ## 1 -107.9187 BICA_BHR1_051790900B01^02 Field Msr/Obs          2005-06-28 2005
+    ## 2 -107.9187    BICA_BHR1_051790910B11 Field Msr/Obs          2005-06-28 2005
+    ## 3 -107.9187    BICA_BHR1_051790910B11 Field Msr/Obs          2005-06-28 2005
+    ## 4 -107.9187    BICA_BHR1_051790910B11 Field Msr/Obs          2005-06-28 2005
+    ## 5 -107.9187    BICA_BHR1_051790910B11 Field Msr/Obs          2005-06-28 2005
+    ## 6 -107.9187 BICA_BHR1_052341240B01^02 Field Msr/Obs          2005-08-22 2005
+    ##   month day          characteristic_name  result_text
+    ## 1     6  28 Flow, severity (choice list) ABOVE NORMAL
+    ## 2     6  28                           pH         8.05
+    ## 3     6  28   Specific conductance uS/cm          939
+    ## 4     6  28     Temperature, water deg C         9.14
+    ## 5     6  28                     Flow cfs         7200
+    ## 6     8  22 Flow, severity (choice list)       NORMAL
 
 This is an incredibly rich data set. I have only kept the 20 most common
 quantitative measurements, but there are so many more. I have kept this
@@ -236,3 +226,195 @@ geom_point(
     ## (`geom_point()`).
 
 ![](TP_analysis_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+
+``` r
+arsenic = 
+  water_quality |> 
+  filter(characteristic_name == 'Arsenic mg/l') |> 
+  mutate(arsenic = as.numeric(result_text)) 
+
+
+arsenic |>    
+  ggplot(aes(x = arsenic)) + 
+  geom_histogram()
+```
+
+    ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+
+![](TP_analysis_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+
+``` r
+chloride = 
+  water_quality |> 
+  filter(characteristic_name == 'Chloride mg/l') |> 
+  mutate(chloride = as.numeric(result_text))
+
+
+chloride |>    
+  ggplot(aes(x = chloride)) + 
+  geom_histogram()
+```
+
+    ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+
+![](TP_analysis_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+
+``` r
+dissolved_oxygen = 
+  water_quality |> 
+  filter(characteristic_name == 'Dissolved oxygen (DO) mg/l') |> 
+  mutate(dissolved_oxygen = as.numeric(result_text)) 
+
+
+dissolved_oxygen |>    
+  ggplot(aes(x = dissolved_oxygen)) + 
+  geom_histogram()
+```
+
+    ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+
+![](TP_analysis_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+
+``` r
+magnesium = 
+  water_quality |> 
+  filter(characteristic_name == 'Magnesium mg/l') |> 
+  mutate(magnesium = as.numeric(result_text)) 
+
+
+magnesium |>    
+  ggplot(aes(x = magnesium)) + 
+  geom_histogram()
+```
+
+    ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+
+![](TP_analysis_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+
+``` r
+nitrogen = 
+  water_quality |> 
+  filter(characteristic_name == 'Nitrogen, ammonia as N mg/l') |> 
+  mutate(nitrogen = as.numeric(result_text)) 
+
+
+nitrogen |>    
+  ggplot(aes(x = nitrogen)) + 
+  geom_histogram()
+```
+
+    ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+
+![](TP_analysis_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+
+``` r
+phosphorus = 
+  water_quality |> 
+  filter(characteristic_name == 'Phosphorus as P mg/l') |> 
+  mutate(phosphorus = as.numeric(result_text)) 
+
+
+phosphorus |>    
+  ggplot(aes(x = phosphorus)) + 
+  geom_histogram()
+```
+
+    ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+
+![](TP_analysis_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+
+``` r
+potassium = 
+  water_quality |> 
+  filter(characteristic_name == 'Potassium mg/l') |> 
+  mutate(potassium = as.numeric(result_text)) 
+
+
+potassium |>    
+  ggplot(aes(x = potassium)) + 
+  geom_histogram()
+```
+
+    ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+
+![](TP_analysis_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+
+``` r
+sodium = 
+  water_quality |> 
+  filter(characteristic_name == 'Sodium mg/l') |> 
+  mutate(sodium = as.numeric(result_text)) 
+
+
+sodium |>    
+  ggplot(aes(x = sodium)) + 
+  geom_histogram()
+```
+
+    ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+
+![](TP_analysis_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+
+``` r
+sulfur = 
+  water_quality |> 
+  filter(characteristic_name == 'Sulfur, sulfate (SO4) as SO4 mg/l') |> 
+  mutate(sulfur = as.numeric(result_text))
+
+
+sulfur |>    
+  ggplot(aes(x = sulfur)) + 
+  geom_histogram()
+```
+
+    ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+
+![](TP_analysis_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+
+``` r
+air_temp = 
+  water_quality |> 
+  filter(characteristic_name == 'Temperature, air deg C') |> 
+  mutate(air_temp = as.numeric(result_text)) 
+
+
+air_temp |>    
+  ggplot(aes(x = air_temp)) + 
+  geom_histogram()
+```
+
+    ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+
+![](TP_analysis_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
+
+``` r
+water_temp = 
+  water_quality |> 
+  filter(characteristic_name == 'Temperature, water deg C') |> 
+  mutate(water_temp = as.numeric(result_text)) 
+
+
+water_temp |>    
+  ggplot(aes(x = water_temp)) + 
+  geom_histogram()
+```
+
+    ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+
+![](TP_analysis_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
+
+``` r
+water_ph = 
+  water_quality |> 
+  filter(characteristic_name == 'pH') |> 
+  mutate(water_ph = as.numeric(result_text)) 
+
+
+water_ph |>    
+  ggplot(aes(x = water_ph)) + 
+  geom_histogram()
+```
+
+    ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+
+![](TP_analysis_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->

@@ -16,8 +16,8 @@ library(shiny)
 ## Read in Data
 
 ```{r}
-elk = read.csv(file = "./clean_data/elk.csv")
-water_quality = read.csv(file = "./clean_data/water_quality.csv")
+elk = read.csv(file = "./data/elk.csv")
+water_quality = read.csv(file = "./data/water_quality.csv")
 ```
 
 ## Elk Data
@@ -291,52 +291,3 @@ water_ph |>
   geom_histogram()
 ```
 
-
-```{r}
-ui = fluidPage(
-  titlePanel("Elk Movement and Water Quality Over Time"),
-  
-  sidebarLayout(
-    sidebarPanel(
-      sliderInput("month_slider",
-                  "Select Month:",
-                  min = ,
-                  selected = "2023"),
-      
-      selectInput("characteristic", 
-                  "Select Water Quality Characteristic:", 
-                  choices = unique(water_quality$characteristic_name),
-                  selected = "Calcium mg/l")
-    ),
-    
-    mainPanel(
-      plotOutput("elkMap"),
-      textOutput("summary")
-    )
-  )
-)
-```
-
-```{r}
-server = function(inout, output) {}
-```
-
-
-```{r}
-output$elkMap = renderPlot({
-  data = filtered_data()
-  
-  ggplot(water_quality, aes(x = month, y = calcium)) +
-    geom_point() +
-    geom_line() +
-    labs(
-      title = paste("Water Quality in:", input$month, input$year),
-      x = "Date",
-      y = "Water Quality (calcium)"
-    )
-})
-```
-
-```{r}
-shinyApp(ui = ui, server = server)
-```
