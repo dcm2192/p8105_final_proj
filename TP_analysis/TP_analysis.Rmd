@@ -8,6 +8,7 @@ output: github_document
 ```{r}
 library(tidyverse)
 library(ggmap)
+library(shiny)
 ```
 
 
@@ -15,8 +16,8 @@ library(ggmap)
 ## Read in Data
 
 ```{r}
-elk = read_csv(file = "../clean_data/elk.csv")
-water_quality = read_csv(file = "../clean_data/water_quality.csv")
+elk = read.csv(file = "./clean_data/elk.csv")
+water_quality = read.csv(file = "./clean_data/water_quality.csv")
 ```
 
 ## Elk Data
@@ -143,3 +144,199 @@ geom_point(
 ```
 
 
+
+
+```{r}
+arsenic = 
+  water_quality |> 
+  filter(characteristic_name == 'Arsenic mg/l') |> 
+  mutate(arsenic = as.numeric(result_text)) 
+
+
+arsenic |>    
+  ggplot(aes(x = arsenic)) + 
+  geom_histogram()
+```
+
+```{r}
+chloride = 
+  water_quality |> 
+  filter(characteristic_name == 'Chloride mg/l') |> 
+  mutate(chloride = as.numeric(result_text))
+
+
+chloride |>    
+  ggplot(aes(x = chloride)) + 
+  geom_histogram()
+```
+
+```{r}
+dissolved_oxygen = 
+  water_quality |> 
+  filter(characteristic_name == 'Dissolved oxygen (DO) mg/l') |> 
+  mutate(dissolved_oxygen = as.numeric(result_text)) 
+
+
+dissolved_oxygen |>    
+  ggplot(aes(x = dissolved_oxygen)) + 
+  geom_histogram()
+```
+
+```{r}
+magnesium = 
+  water_quality |> 
+  filter(characteristic_name == 'Magnesium mg/l') |> 
+  mutate(magnesium = as.numeric(result_text)) 
+
+
+magnesium |>    
+  ggplot(aes(x = magnesium)) + 
+  geom_histogram()
+```
+
+```{r}
+nitrogen = 
+  water_quality |> 
+  filter(characteristic_name == 'Nitrogen, ammonia as N mg/l') |> 
+  mutate(nitrogen = as.numeric(result_text)) 
+
+
+nitrogen |>    
+  ggplot(aes(x = nitrogen)) + 
+  geom_histogram()
+```
+
+```{r}
+phosphorus = 
+  water_quality |> 
+  filter(characteristic_name == 'Phosphorus as P mg/l') |> 
+  mutate(phosphorus = as.numeric(result_text)) 
+
+
+phosphorus |>    
+  ggplot(aes(x = phosphorus)) + 
+  geom_histogram()
+```
+
+```{r}
+potassium = 
+  water_quality |> 
+  filter(characteristic_name == 'Potassium mg/l') |> 
+  mutate(potassium = as.numeric(result_text)) 
+
+
+potassium |>    
+  ggplot(aes(x = potassium)) + 
+  geom_histogram()
+```
+
+```{r}
+sodium = 
+  water_quality |> 
+  filter(characteristic_name == 'Sodium mg/l') |> 
+  mutate(sodium = as.numeric(result_text)) 
+
+
+sodium |>    
+  ggplot(aes(x = sodium)) + 
+  geom_histogram()
+```
+
+```{r}
+sulfur = 
+  water_quality |> 
+  filter(characteristic_name == 'Sulfur, sulfate (SO4) as SO4 mg/l') |> 
+  mutate(sulfur = as.numeric(result_text))
+
+
+sulfur |>    
+  ggplot(aes(x = sulfur)) + 
+  geom_histogram()
+```
+
+
+```{r}
+air_temp = 
+  water_quality |> 
+  filter(characteristic_name == 'Temperature, air deg C') |> 
+  mutate(air_temp = as.numeric(result_text)) 
+
+
+air_temp |>    
+  ggplot(aes(x = air_temp)) + 
+  geom_histogram()
+```
+
+```{r}
+water_temp = 
+  water_quality |> 
+  filter(characteristic_name == 'Temperature, water deg C') |> 
+  mutate(water_temp = as.numeric(result_text)) 
+
+
+water_temp |>    
+  ggplot(aes(x = water_temp)) + 
+  geom_histogram()
+```
+
+```{r}
+water_ph = 
+  water_quality |> 
+  filter(characteristic_name == 'pH') |> 
+  mutate(water_ph = as.numeric(result_text)) 
+
+
+water_ph |>    
+  ggplot(aes(x = water_ph)) + 
+  geom_histogram()
+```
+
+
+```{r}
+ui = fluidPage(
+  titlePanel("Elk Movement and Water Quality Over Time"),
+  
+  sidebarLayout(
+    sidebarPanel(
+      sliderInput("month_slider",
+                  "Select Month:",
+                  min = ,
+                  selected = "2023"),
+      
+      selectInput("characteristic", 
+                  "Select Water Quality Characteristic:", 
+                  choices = unique(water_quality$characteristic_name),
+                  selected = "Calcium mg/l")
+    ),
+    
+    mainPanel(
+      plotOutput("elkMap"),
+      textOutput("summary")
+    )
+  )
+)
+```
+
+```{r}
+server = function(inout, output) {}
+```
+
+
+```{r}
+output$elkMap = renderPlot({
+  data = filtered_data()
+  
+  ggplot(water_quality, aes(x = month, y = calcium)) +
+    geom_point() +
+    geom_line() +
+    labs(
+      title = paste("Water Quality in:", input$month, input$year),
+      x = "Date",
+      y = "Water Quality (calcium)"
+    )
+})
+```
+
+```{r}
+shinyApp(ui = ui, server = server)
+```
