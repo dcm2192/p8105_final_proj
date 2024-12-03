@@ -12,12 +12,12 @@ library(ggmap)
 
 Elk data from Wayne.
 ```{r}
-elk = read_csv("../DM_analysis/data/elk.csv")
+elk = read_csv("./data/elk.csv")
 ```
 
 Load and clean up weather data.
 ```{r}
-raw_weather <- read_csv("../DM_analysis/data/raw_weather_data.csv")
+raw_weather <- read_csv("./data/raw_weather_data.csv")
 ```
 
 Plot weather stations and elk migration pathways to determine which stations to use.
@@ -73,7 +73,7 @@ four_stations_labels_plot <-
 
 four_stations_labels_plot
 
-ggsave(path = "../DM_analysis/plots/", 
+ggsave(path = "./plots/", 
        filename = "four_stations_labels_plot.png", 
        plot = four_stations_labels_plot)
 
@@ -88,7 +88,7 @@ four_stations_elk_mvmt_plot <-
   
 four_stations_elk_mvmt_plot
 
-ggsave(path = "../DM_analysis/plots/", 
+ggsave(path = "./plots/", 
        filename = "four_stations_elk_mvmt_plot.png", 
        plot = four_stations_elk_mvmt_plot)
 ```

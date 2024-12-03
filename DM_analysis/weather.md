@@ -31,7 +31,7 @@ library(ggmap)
 Elk data from Wayne.
 
 ``` r
-elk = read_csv("../DM_analysis/data/elk.csv")
+elk = read_csv("./data/elk.csv")
 ```
 
     ## Rows: 104913 Columns: 7
@@ -45,7 +45,7 @@ elk = read_csv("../DM_analysis/data/elk.csv")
 Load and clean up weather data.
 
 ``` r
-raw_weather <- read_csv("../DM_analysis/data/raw_weather_data.csv")
+raw_weather <- read_csv("./data/raw_weather_data.csv")
 ```
 
     ## Warning: One or more parsing issues, call `problems()` on your data frame for details,
@@ -140,7 +140,7 @@ four_stations_labels_plot
 ![](weather_files/figure-gfm/unnamed-chunk-4-3.png)<!-- -->
 
 ``` r
-ggsave(path = "../DM_analysis/plots/", 
+ggsave(path = "./plots/", 
        filename = "four_stations_labels_plot.png", 
        plot = four_stations_labels_plot)
 ```
@@ -163,7 +163,7 @@ four_stations_elk_mvmt_plot
 ![](weather_files/figure-gfm/unnamed-chunk-4-4.png)<!-- -->
 
 ``` r
-ggsave(path = "../DM_analysis/plots/", 
+ggsave(path = "./plots/", 
        filename = "four_stations_elk_mvmt_plot.png", 
        plot = four_stations_elk_mvmt_plot)
 ```
