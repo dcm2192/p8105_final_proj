@@ -10,6 +10,9 @@ output: html_document
 library(tidyverse)
 library(stringr)
 library(raster)
+library(raster)
+library(sf)
+library(terra) 
 ```
 
 
@@ -55,6 +58,73 @@ elk |>
 ```
 
 
+## Land Cover Cleaning
+
+Using the [terra package](https://bookdown.org/mcwimberly/gdswr-book/coordinate-reference-systems.html#reprojecting-raster-data)
+```{r, eval=FALSE}
+land = rast('../raw_data/land_cover/land_cover.tif')
+
+# Reprojecting in latitude and longitude
+land_coord = project(land, "EPSG:4326")
+
+plot(land_coord)
+
+# Subset to the relevant area
+min_long = elk |> pull(long) |> min()
+max_long = elk |> pull(long) |> max()
+rng_long = abs(min_long - max_long)
+lowerleftlon = min_long - 0.1 * rng_long 
+upperrightlon = max_long + 0.1 * rng_long
+min_lat = elk |> pull(lat) |> min()
+max_lat = elk |> pull(lat) |> max()
+rng_lat = abs(min_lat - max_lat)
+lowerleftlat = min_lat - 0.1 * rng_lat
+upperrightlat = max_lat + 0.1 * rng_lat
+
+
+# cropping 
+small_land_coord = crop(
+  land_coord, 
+  extent(lowerleftlon, upperrightlon, lowerleftlat, upperrightlat))
+
+plot(small_land_coord)
+
+# writing raster
+# terra::writeRaster(small_land_coord, '../clean_data/land_cover.tif')
+```
+
+
+Read in saved raster
+```{r}
+small_land_coord = rast('../clean_data/land_cover.tif')
+```
+
+Convert to points
+```{r}
+land_coord_df = as.points(small_land_coord)
+```
+
+Get the land cover at the relevent points of the analysis
+```{r}
+temp_elk = 
+  elk |> 
+  mutate(
+    longitude = long,
+    latitude  = lat) |> 
+  dplyr::select(
+    longitude,
+    latitude
+  )
+
+elk_land_cover = terra::extract(x = small_land_coord, y = temp_elk)
+```
+
+Add in the data
+```{r}
+elk = 
+  elk |> 
+  mutate(land_cover = elk_land_cover$land_cover)
+```
 
 
 ## Cleaning Water Quality Data
@@ -66,7 +136,7 @@ This data set gives the locations that water was sampled from. We drop the `org_
 water_quality_locations = 
   read_csv('../raw_data/water_quality/Locations.csv')|> 
   janitor::clean_names() |> 
-  select(
+  dplyr::select(
     location_id,
     location_name,
     park_code, 
@@ -259,130 +329,9 @@ soil_temp |> write.csv('../clean_data/soil_temp.csv', row.names = FALSE)
 
 
 
-## Reading in Land Cover Data
-```{r}
-land_cover = raster::raster('../raw_data/land_cover/land_cover.tif')
-```
-
 
 ```{r}
-plot(land_cover)
-```
-
-
-Transforming raster coordinates into latitude and longitude
-```{r}
-library(raster)
-library(sf)
-library(terra)      
-```
-
-Using the [terra package](https://bookdown.org/mcwimberly/gdswr-book/coordinate-reference-systems.html#reprojecting-raster-data)
-```{r}
-land = rast('../raw_data/land_cover/land_cover.tif')
-```
-
-
-Reprojecting in latitude and longitude
-```{r}
-land_coord = project(land, "EPSG:4326")
-```
-
-
-
-```{r}
-plot(land_coord)
-```
-
-
-
-Subset to the relevant area
-```{r}
-min_long = elk |> pull(long) |> min()
-max_long = elk |> pull(long) |> max()
-rng_long = abs(min_long - max_long)
-lowerleftlon = min_long - 0.1 * rng_long 
-upperrightlon = max_long + 0.1 * rng_long
-min_lat = elk |> pull(lat) |> min()
-max_lat = elk |> pull(lat) |> max()
-rng_lat = abs(min_lat - max_lat)
-lowerleftlat = min_lat - 0.1 * rng_lat
-upperrightlat = max_lat + 0.1 * rng_lat
-```
-
-```{r}
-small_land_coord = crop(land_coord, extent(lowerleftlon, upperrightlon, lowerleftlat, upperrightlat))
-```
-
-
-```{r}
-plot(small_land_coord)
-```
-
-
-```{r}
-terra::writeRaster(small_land_coord, '../clean_data/land_cover.tif')
-```
-
-```{r}
-test_rast = rast('../clean_data/land_cover.tif')
-```
-
-
-```{r}
-plot(test_rast)
-```
-
-
-```{r}
-land_coord_df = as.points(small_land_coord)
-```
-
-
-```{r}
-temp_elk = 
-  elk |> 
-  mutate(
-    longitude = long,
-    latitude  = lat) |> 
-  dplyr::select(
-    longitude,
-    latitude
-  )
-```
-
-
-
-
-```{r}
-elk_land_cover = terra::extract(x = small_land_coord, y = temp_elk)
-```
-
-
-
-```{r}
-elk = 
-  elk |> 
-  mutate(land_cover = elk_land_cover$land_cover)
-```
-
-
-```{r}
-nrow(elk)
-```
-
-```{r}
-nrow(elk_land_cover)
-```
-
-
-```{r}
-head(elk)
-```
-
-
-```{r}
-head(land_coord_df)
+write.csv(all, '../clean_data/all_data.csv', row.names =  FALSE)
 ```
 
 ```{r}
