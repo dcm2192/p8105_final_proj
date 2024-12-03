@@ -17,27 +17,40 @@ library(raster)
 
 We drop the `tz` timezone variable, because it is homogenous. We drop the `utm_x` and `utm_y` variables because they are simply another kind of location tracking, and we already have latitude and longitude. Note that [only elk that migrated from the Elk reserve to Yellowstone were included in the data](https://www.sciencebase.gov/catalog/file/get/5a9f2782e4b0b1c392e502ea?f=__disk__27%2F1f%2Faa%2F271faa32dbaff38082fc4661db798fcd74908130&transform=1&allowOpen=true).
 
+
+
 ```{r}
 elk = 
   read_csv('../raw_data/Elk GPS collar data from National Elk Refuge 2006-2015.csv') |> 
   janitor::clean_names() |> 
   dplyr::mutate(
     day = day(dt),
-    hour = hour(dt)) |> 
+    hour = hour(dt),
+    dist = 
+      ifelse(
+        elk_id == lag(elk_id),
+        geosphere::distHaversine(cbind(long, lat), cbind(lag(long), lag(lat))),
+        NA)
+    ) |> 
   dplyr::select(
-    elk_id, 
+    elk_id,
+    dt,
     year, 
     month,
     day,
     hour, 
     lat,
-    long
+    long,
+    dist
   )
-
-
 #land cover data is added below!
 # elk |> write.csv('../clean_data/elk.csv', row.names =  FALSE)
 ```
+
+```{r}
+elk
+```
+
 
 
 
