@@ -357,13 +357,15 @@ weather = read_csv("../raw_data/raw_weather_data.csv") |>
     prcp = mean(prcp, na.rm = TRUE),
     snow = mean(snow, na.rm = TRUE),
     snwd = mean(snwd, na.rm = TRUE),
+  ) |> 
+  mutate(
+    year = year(date),
+    month = month(date),
+    day = day(date)
   )
 ```
 
 
-```{r}
-weather 
-```
 
 
 ## Combining all data
@@ -411,9 +413,12 @@ water_quality |>
 ```
 
 
+```{r}
+all = left_join(elk, weather |> dplyr::select(-date))
+```
 
 ```{r}
-write.csv(all, '../clean_data/all_data.csv', row.names =  FALSE)
+all |> write.csv('../clean_data/all_data.csv', row.names =  FALSE)
 ```
 
 
