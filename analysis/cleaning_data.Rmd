@@ -7,6 +7,7 @@ output: html_document
 
 
 ```{r}
+library(dplyr)
 library(tidyverse)
 library(stringr)
 library(raster)
@@ -46,8 +47,6 @@ elk =
     long,
     dist_km
   )
-#land cover data is added below!
-# elk |> write.csv('../clean_data/elk.csv', row.names =  FALSE)
 ```
 
 ```{r}
@@ -56,7 +55,6 @@ elk |>
   drop_na(dist_km) |> 
   ggplot(aes(x = factor(month), y = dist_km)) + geom_violin()
 ```
-
 
 ## Land Cover Cleaning
 
@@ -126,6 +124,11 @@ elk =
   mutate(land_cover = elk_land_cover$land_cover)
 ```
 
+Saving elk data
+```{r}
+elk |> write.csv('../clean_data/elk.csv', row.names =  FALSE)
+```
+
 
 ## Cleaning Water Quality Data
 
@@ -187,7 +190,7 @@ water_quality_results=
     month = month(activity_start_date),
     day = day(activity_start_date)
     ) |> 
-  select(
+  dplyr::select(
     location_id,
     activity_id,
     activity_type,
@@ -201,13 +204,6 @@ water_quality_results=
 ```
 
 
-```{r}
-min(water_quality$latitude)
-max(water_quality$latitude)
-min(water_quality$longitude)
-max(water_quality$longitude)
-
-```
 
 
 
@@ -218,7 +214,17 @@ water_quality =
   water_quality_locations |> 
   left_join(water_quality_results)
 
-water_quality |> write.csv('../clean_data/water_quality.csv', row.names = FALSE)
+# water_quality |> write.csv('../clean_data/water_quality.csv', row.names = FALSE)
+```
+
+
+
+```{r}
+min(water_quality$latitude)
+max(water_quality$latitude)
+min(water_quality$longitude)
+max(water_quality$longitude)
+
 ```
 
 ## Importing Yellowstone Peak Data
@@ -236,6 +242,8 @@ summit = tibble(
   elevation_in_meters =  c(3195, 3122, 3169, 3124)
   )
 ```
+
+
 
 
 
@@ -265,7 +273,7 @@ soil_chem=
     summit_code = str_sub(site_name, start = 8, end = 10)
   ) |> 
   inner_join(summit) |> 
-  select(
+ dplyr::select(
     summit_code,
     name,
     lat,
@@ -326,7 +334,81 @@ soil_temp |> write.csv('../clean_data/soil_temp.csv', row.names = FALSE)
 ```
 
 
+## Reading in Temperature
 
+Filter for the four closest stations, filter for the correct date range, average the temperature and snowfall across the stations. 
+
+```{r}
+# closest four stations
+four_stations <- 
+  c("SNAKE RIVER STATION, WY US", "MORAN 5 WNW, WY US", "BURRO HILL WYOMING, WY US", "MOOSE 1 NNE, WY US")
+
+weather = read_csv("../raw_data/raw_weather_data.csv") |> 
+  janitor::clean_names() |> 
+  filter(
+    name %in% four_stations,
+    date >= '2006-03-01', 
+    date <= '2015-08-25') |> 
+  group_by(date) |> 
+  summarize(
+    tavg = mean(tavg, na.rm = TRUE),
+    tmin = mean(tmin, na.rm = TRUE),
+    tmax = mean(tmin, na.rm = TRUE),
+    prcp = mean(prcp, na.rm = TRUE),
+    snow = mean(snow, na.rm = TRUE),
+    snwd = mean(snwd, na.rm = TRUE),
+  )
+```
+
+
+```{r}
+weather 
+```
+
+
+## Combining all data
+
+
+```{r}
+head(elk)
+```
+
+```{r}
+head(weather)
+```
+
+```{r}
+head(water_quality)
+```
+
+```{r}
+table(water_quality$characteristic_name)
+```
+
+```{r}
+water_quality |> 
+  group_by('location_id', 'location_name', 'latitude', 'longitude', 'activity_start_date', 'year', 'month', 'day', 'characteristic_name')
+    
+```
+
+
+
+
+```{r}
+chars = c('pH')
+
+
+water_quality |> 
+  # filter(characteristic_name  %in% chars) |> 
+   #dplyr::select(-activity_type) |>
+  # distinct() |> 
+  pivot_wider(
+    id_cols = c('location_id', 'location_name', 'latitude', 'longitude', 'activity_start_date', 'year', 'month', 'day'),
+    names_from = 'characteristic_name',
+    values_from = 'result_text'
+  ) |> 
+  unnest(cols = unique(water_quality$characteristic_name))
+```
 
 
 
@@ -334,7 +416,4 @@ soil_temp |> write.csv('../clean_data/soil_temp.csv', row.names = FALSE)
 write.csv(all, '../clean_data/all_data.csv', row.names =  FALSE)
 ```
 
-```{r}
-elk |> write.csv('../clean_data/elk.csv', row.names =  FALSE)
-```
 
