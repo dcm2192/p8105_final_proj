@@ -197,4 +197,6 @@ Are there any differences in weather patterns observed among the
 different stations that could have influenced elk movement patterns?
 
 Take monthly avg/totals of temp, rainfall, and compare this data with
-monthly elk movement pathways
+monthly elk movement pathways.
+
+Find patterns in temp, rainfall, snowfall over time.
