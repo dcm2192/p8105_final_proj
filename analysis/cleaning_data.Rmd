@@ -26,10 +26,10 @@ elk =
   dplyr::mutate(
     day = day(dt),
     hour = hour(dt),
-    dist = 
+    dist_km = 
       ifelse(
         elk_id == lag(elk_id),
-        geosphere::distHaversine(cbind(long, lat), cbind(lag(long), lag(lat))),
+        geosphere::distHaversine(cbind(long, lat), cbind(lag(long), lag(lat)))/1000,
         NA)
     ) |> 
   dplyr::select(
@@ -41,14 +41,17 @@ elk =
     hour, 
     lat,
     long,
-    dist
+    dist_km
   )
 #land cover data is added below!
 # elk |> write.csv('../clean_data/elk.csv', row.names =  FALSE)
 ```
 
 ```{r}
-elk
+# looks like we'v esolved the weird december data
+elk |> 
+  drop_na(dist_km) |> 
+  ggplot(aes(x = factor(month), y = dist_km)) + geom_violin()
 ```
 
 
