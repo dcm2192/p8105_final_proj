@@ -345,7 +345,9 @@ reduced_weather |>
   summarize(station_snowfall_total_avg = mean(station_snowfall_total, na.rm = TRUE)) |> 
   mutate(year_month = paste(year, month, sep = "-")) |> 
   ggplot(aes(x = year_month, y = station_snowfall_total_avg, fill = as.factor(year))) + 
-  geom_bar(stat = "identity")
+  geom_bar(stat = "identity") + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+  scale_x_discrete(guide = guide_axis(check.overlap = TRUE))
 ```
 
     ## `summarise()` has grouped output by 'NAME', 'year'. You can override using the
