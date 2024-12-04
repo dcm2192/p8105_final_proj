@@ -88,15 +88,15 @@ alice =
 Find the minimum and maximum latitude and longitude of Bob's journey. This will give us the range of map to download.
 
 ```{r}
-min_lat = bob |> pull(lat) |> min()
-max_lat = bob |> pull(lat) |> max()
+min_lat = alice |> pull(lat) |> min()
+max_lat = alice |> pull(lat) |> max()
 rng_lat = abs(min_lat - max_lat)
 lowerleftlat = min_lat 
 upperrightlat = max_lat 
 
 
-min_long = bob |> pull(long) |> min()
-max_long = bob |> pull(long) |> max()
+min_long = alice |> pull(long) |> min()
+max_long = alice |> pull(long) |> max()
 rng_long = abs(min_long - max_long)
 lowerleftlon = min_long - rng_long 
 upperrightlon = max_long + rng_long
@@ -121,7 +121,7 @@ myMap <- get_stadiamap(
 ```{r}
 ggmap(myMap) +
 geom_path(
-  data = bob, 
+  data = alice, 
   aes(x=long, y=lat, color = month))+
   geom_line(alpha = 0) +
   scale_color_gradientn(colours = rainbow(12))
