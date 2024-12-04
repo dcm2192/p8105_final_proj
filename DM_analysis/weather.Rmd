@@ -99,26 +99,56 @@ reduced_weather <-
   raw_weather |> 
   filter(NAME %in% four_stations)
 
-reduced_weather |>
-  group_by(NAME) |> 
-  pivot_longer(
-    TAVG:TMIN, 
-    names_to = "temp_class", 
-    values_to = "temp") |> 
-  select(-c(WDF2:WT11)) |> 
-  ggplot(aes(x = DATE, y = temp, color = temp_class)) + 
-    geom_point()
+# reduced_weather |>
+#   group_by(NAME) |> 
+#   pivot_longer(
+#     TAVG:TMIN, 
+#     names_to = "temp_class", 
+#     values_to = "temp") |> 
+#   select(-c(WDF2:WT11)) |> 
+#   ggplot(aes(x = DATE, y = temp, color = temp_class)) + 
+#     geom_point() + 
+#   facet_grid(~factor(NAME))
 
 ```
 
 Are there any differences in weather patterns observed among the different stations that could have influenced elk movement patterns?
 
-Take monthly avg/totals of temp, rainfall, and compare this data with monthly elk movement pathways.
+What kinds of monthly weather patterns were visible over this time period?
 
-Find patterns in temp, rainfall, snowfall over time. 
+Were there any extreme weather events that occurred?
+
+Find patterns in temp, rainfall, snowfall over time. Factor by month. Avg rainfall total, snowfall total, snow depth total, temp avg.
+
+*Histogram or barchart?*
+
+Histogram of total precip
+Histogram of precip by year
+Histogram of precip by month
+Compared to histogram of elk movement by month
+Histogram of total snowfall
+Histogram of snowfall by year
+Histogram of snowfall by month
+Compared to Histogram of Elk movement by month 
+Histogram of daily temperatures by year
+Histogram of daily temperatures by month
+Scatterplot of daily elk movement versus snowfall
+Scatterplot of daily elk movement versus snowdepth
+Scatterplot of daily elk movement versus temperature
+
+Total precip -- avg totals among the four stations
 ```{r}
-
+reduced_weather |> 
+  select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
+  mutate(year = format(DATE, "%Y"), 
+         month = format(DATE, "%m")) |> 
+  group_by(NAME, year, month) |> 
+  summarize(station_precip_total = sum(PRCP, na.rm = TRUE)) |> 
+  group_by(year, month) |> 
+  summarize(station_precip_total_avg = mean(station_precip_total, na.rm = TRUE)) |> 
+  mutate(year_month = paste(year, month, sep = "-")) |> 
+  ggplot(aes(x = year_month, y = station_precip_total_avg, fill = as.factor(year))) +
+  geom_bar(stat = "identity")
 ```
-
 
 
