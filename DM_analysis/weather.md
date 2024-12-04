@@ -216,6 +216,7 @@ data: faceted bar chart per year, point + line graph per year,
 year-month bar chart separated by year
 
 ``` r
+# faceted bar chart, separated by month and year
 reduced_weather |> 
   select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
   mutate(year = format(DATE, "%Y"), 
@@ -239,6 +240,7 @@ reduced_weather |>
 ![](weather_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
 
 ``` r
+# point + line, separated by month and year
 reduced_weather |> 
   select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
   mutate(year = format(DATE, "%Y"), 
@@ -261,6 +263,7 @@ reduced_weather |>
 ![](weather_files/figure-gfm/unnamed-chunk-6-2.png)<!-- -->
 
 ``` r
+# year-month totals, separated by year
 reduced_weather |> 
   select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
   mutate(year = format(DATE, "%Y"), 
@@ -280,3 +283,74 @@ reduced_weather |>
     ## `.groups` argument.
 
 ![](weather_files/figure-gfm/unnamed-chunk-6-3.png)<!-- -->
+
+Do the same for snowfall.
+
+``` r
+# faceted bar chart, separated by month and year
+reduced_weather |> 
+  select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
+  mutate(year = format(DATE, "%Y"), 
+         month = format(DATE, "%m")) |> 
+  group_by(NAME, year, month) |> 
+  summarize(station_snowfall_total = sum(SNOW, na.rm = TRUE)) |> 
+  group_by(year, month) |> 
+  summarize(station_snowfall_total_avg = mean(station_snowfall_total, na.rm = TRUE)) |> 
+  mutate(year_month = paste(year, month, sep = "-")) |> 
+  ggplot(aes(x = month, y = station_snowfall_total_avg, fill = as.factor(year))) +
+  geom_bar(stat = "identity") + 
+  facet_wrap(vars(year), ncol = 2) + 
+  theme(legend.position = "none")
+```
+
+    ## `summarise()` has grouped output by 'NAME', 'year'. You can override using the
+    ## `.groups` argument.
+    ## `summarise()` has grouped output by 'year'. You can override using the
+    ## `.groups` argument.
+
+![](weather_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+
+``` r
+# point + line
+reduced_weather |> 
+  select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
+  mutate(year = format(DATE, "%Y"), 
+         month = format(DATE, "%m")) |> 
+  group_by(NAME, year, month) |> 
+  summarize(station_snowfall_total = sum(SNOW, na.rm = TRUE)) |> 
+  group_by(year, month) |> 
+  summarize(station_snowfall_total_avg = mean(station_snowfall_total, na.rm = TRUE)) |> 
+  mutate(year_month = paste(year, month, sep = "-")) |> 
+  ggplot(aes(x = month, y = station_snowfall_total_avg, color = year, group = year)) + 
+  geom_point(size = 2) + 
+  geom_line(linewidth = 1)
+```
+
+    ## `summarise()` has grouped output by 'NAME', 'year'. You can override using the
+    ## `.groups` argument.
+    ## `summarise()` has grouped output by 'year'. You can override using the
+    ## `.groups` argument.
+
+![](weather_files/figure-gfm/unnamed-chunk-7-2.png)<!-- -->
+
+``` r
+# year-month totals by year
+reduced_weather |> 
+  select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
+  mutate(year = format(DATE, "%Y"), 
+         month = format(DATE, "%m")) |> 
+  group_by(NAME, year, month) |> 
+  summarize(station_snowfall_total = sum(SNOW, na.rm = TRUE)) |> 
+  group_by(year, month) |> 
+  summarize(station_snowfall_total_avg = mean(station_snowfall_total, na.rm = TRUE)) |> 
+  mutate(year_month = paste(year, month, sep = "-")) |> 
+  ggplot(aes(x = year_month, y = station_snowfall_total_avg, fill = as.factor(year))) + 
+  geom_bar(stat = "identity")
+```
+
+    ## `summarise()` has grouped output by 'NAME', 'year'. You can override using the
+    ## `.groups` argument.
+    ## `summarise()` has grouped output by 'year'. You can override using the
+    ## `.groups` argument.
+
+![](weather_files/figure-gfm/unnamed-chunk-7-3.png)<!-- -->
