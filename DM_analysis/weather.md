@@ -211,7 +211,54 @@ Scatterplot of daily elk movement versus snowfall Scatterplot of daily
 elk movement versus snowdepth Scatterplot of daily elk movement versus
 temperature
 
-Total precip – avg totals among the four stations
+Total precip – avg totals among the four stations. Three ways to show
+data: faceted bar chart per year, point + line graph per year,
+year-month bar chart separated by year
+
+``` r
+reduced_weather |> 
+  select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
+  mutate(year = format(DATE, "%Y"), 
+         month = format(DATE, "%m")) |> 
+  group_by(NAME, year, month) |> 
+  summarize(station_precip_total = sum(PRCP, na.rm = TRUE)) |> 
+  group_by(year, month) |> 
+  summarize(station_precip_total_avg = mean(station_precip_total, na.rm = TRUE)) |> 
+  mutate(year_month = paste(year, month, sep = "-")) |> 
+  ggplot(aes(x = month, y = station_precip_total_avg, fill = as.factor(year))) +
+  geom_bar(stat = "identity") + 
+  facet_wrap(vars(year), ncol = 2) + 
+  theme(legend.position = "none")
+```
+
+    ## `summarise()` has grouped output by 'NAME', 'year'. You can override using the
+    ## `.groups` argument.
+    ## `summarise()` has grouped output by 'year'. You can override using the
+    ## `.groups` argument.
+
+![](weather_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+
+``` r
+reduced_weather |> 
+  select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
+  mutate(year = format(DATE, "%Y"), 
+         month = format(DATE, "%m")) |> 
+  group_by(NAME, year, month) |> 
+  summarize(station_precip_total = sum(PRCP, na.rm = TRUE)) |> 
+  group_by(year, month) |> 
+  summarize(station_precip_total_avg = mean(station_precip_total, na.rm = TRUE)) |> 
+  mutate(year_month = paste(year, month, sep = "-")) |> 
+  ggplot(aes(x = month, y = station_precip_total_avg, color = year, group = year)) + 
+  geom_point(size = 2) + 
+  geom_line(linewidth = 1)
+```
+
+    ## `summarise()` has grouped output by 'NAME', 'year'. You can override using the
+    ## `.groups` argument.
+    ## `summarise()` has grouped output by 'year'. You can override using the
+    ## `.groups` argument.
+
+![](weather_files/figure-gfm/unnamed-chunk-6-2.png)<!-- -->
 
 ``` r
 reduced_weather |> 
@@ -232,4 +279,4 @@ reduced_weather |>
     ## `summarise()` has grouped output by 'year'. You can override using the
     ## `.groups` argument.
 
-![](weather_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+![](weather_files/figure-gfm/unnamed-chunk-6-3.png)<!-- -->
