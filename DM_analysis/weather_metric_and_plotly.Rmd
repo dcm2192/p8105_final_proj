@@ -46,10 +46,12 @@ reduced_weather <-
 
 all_data <- read_csv("./data/all_data.csv")
 
-daily_elk =
-  all_data |>
+daily_elk <- 
+  all_data |> 
+  mutate(year_month_day = format(dt, "%Y-%m-%d")) |> 
   group_by(
     elk_id,
+    year_month_day, 
     year,
     month,
     day,
