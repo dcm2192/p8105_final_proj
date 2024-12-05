@@ -5,7 +5,7 @@ date: "2024-11-16"
 output: html_document
 ---
 
-
+Library load
 ```{r}
 library(dplyr)
 library(tidyverse)
@@ -14,6 +14,7 @@ library(raster)
 library(raster)
 library(sf)
 library(terra) 
+library(geosphere)
 ```
 
 
@@ -102,6 +103,19 @@ Convert to points
 land_coord_df = as.points(small_land_coord)
 ```
 
+```{r}
+nrow(land_coord_df)
+```
+```{r}
+land_coord_df$
+```
+
+
+```{r}
+head(land_coord_df)
+```
+
+
 Get the land cover at the relevent points of the analysis
 ```{r}
 temp_elk = 
@@ -126,10 +140,7 @@ elk =
 
 Saving elk data
 ```{r}
-# elk |> write.csv('../clean_data/elk.csv', row.names =  FALSE)
-
-# read in the previously saved elk data
-elk = read_csv('../clean_data/elk.csv')
+elk |> write.csv('../clean_data/elk.csv', row.names =  FALSE)
 ```
 
 ## Cleaning Water Quality Data
@@ -207,23 +218,16 @@ water_quality_results=
 
 
 
-
-
-### Combining
+### Combining Water Data
 
 ```{r}
 water_quality = 
   water_quality_locations |> 
   left_join(water_quality_results)
 
-# water_quality |> write.csv('../clean_data/water_quality.csv', row.names = FALSE)
+water_quality |> write.csv('../clean_data/water_quality.csv', row.names = FALSE)
 ```
-
-```{r}
-water_quality
-```
-
-
+Looking at all water quality locations
 ```{r}
 water_quality %>% 
   dplyr::select(
@@ -234,8 +238,6 @@ water_quality %>%
   distinct() %>% 
   arrange(desc(latitude))
 ```
-
-
 
 
 ```{r}
@@ -254,120 +256,38 @@ water_quality %>%
 ```
 
 
-
+Aggregating at the month level. GRTE_SNR01 and GRTE_SNR02 are the two relevent stations to our analysis
 ```{r}
-min(water_quality$latitude)
-max(water_quality$latitude)
-min(water_quality$longitude)
-max(water_quality$longitude)
-
-```
-
-## Importing Yellowstone Peak Data
-
-
-[Definitions Pg 3](https://files.cfc.umt.edu/cesu/NPS/CSU/2010/10Stevens_ROMN_alpine%20monitoring_rpt.pdf)
-
-```{r}
-summit = tibble(
-  summit_code = c('BLP', 'SCP', 'SPP', 'WSP'),
-  name = c('Boundary Line Peak', 'Stone Crop Peak',
-         'Snow Pipit Peak', 'Wolf Scat Peak'),
-  lat = c(44.70028, 44.69584, 44.70167, 44.69444), 
-  long = c(-109.8267, -109.8339, -109.835, -109.8364),
-  elevation_in_meters =  c(3195, 3122, 3169, 3124)
-  )
-```
-
-
-
-
-
-## Cleaning Soil Chemistry 
-
-What do these abbreviations mean? [Here](https://files.cfc.umt.edu/cesu/NPS/CSU/2010/10Stevens_ROMN_alpine%20monitoring_rpt.pdf)
-
-Boundary Line Peak (BLP), Stone Crop Peak (SCP), Snow Pipit Peak (SPP), and Wolf
-Scat Peak (WSP)
-
-```{r}
-soil_chem = 
-  read_csv('../raw_data/NPS_IMD_GLORIA_SoilChemistry_2287252_DataPackage/NPS_IMD_GLORIA_SoilChemistry_2287252-dataset.csv') |> 
-  janitor::clean_names()
-
-soil_chem= 
-  soil_chem |> 
-  filter(
-    ! average %in% c('Insufficient sample', 'insufficient sample'),
-    stringr::str_detect(site_name, "YNP")
-  ) |> 
+clean_water = 
+  water_quality %>% 
+  filter(location_id %in% c('GRTE_SNR01', 'GRTE_SNR02')) %>% 
   mutate(
-    year = year(start_date),
-    month = month(start_date),
-    day = day(start_date),
-    parameter = paste0(parameter_dataset, " ", unit_dataset),
-    summit_code = str_sub(site_name, start = 8, end = 10)
+    result_text = stringr::str_replace(result_text, 'LOW', '1'),
+    result_text = stringr::str_replace(result_text, 'ABOVE NORMAL', '3'),
+    result_text = stringr::str_replace(result_text, 'NORMAL', '2'),
+    result_text = stringr::str_replace(result_text, 'FLOOD', '4'),
   ) |> 
-  inner_join(summit) |> 
- dplyr::select(
-    summit_code,
-    name,
-    lat,
-    long,
-    elevation_in_meters,
-    site_name,
-    event_name,
+  group_by(
+    location_id,
+    location_name,
     year,
     month,
-    day,
-    parameter,
-    average)
-  
-
-soil_chem |> write.csv('../clean_data/soil_chem.csv', row.names = FALSE)
-```
-
-
-
-
-
-
-## Cleaning Soil Temperature
-
-Read in data, filter for yellowstone national park, 
-```{r}
-soil_temp = 
-  read_csv('../raw_data/NPS_IMD_GLORIA_SoilTemperature_2288176_DataPackage/NPS_IMD_GLORIA_SoilTemperature_2288176_Daily-dataset.csv') |> 
-  janitor::clean_names()  |> 
-  filter(park == 'YELL') |> 
-  mutate(
-    summit_code = summit,
-    year = year(date_time),
-    month = month(date_time),
-    day = day(date_time))
-```
-
-```{r}
-soil_temp = 
-  soil_temp |>
-  inner_join(summit) |> 
-  select(
-    summit_code,
-    name,
-    lat,
-    long,
-    elevation_in_meters,
-    plot, 
-    site_name,
-    year,
-    month,
-    day,
-    daily_mean,
-    daily_standard_dev
+    characteristic_name
+  ) %>% 
+  summarize(
+    monthly_mean = mean(as.numeric(result_text),na.rm = TRUE),
+    monthly_min = min(as.numeric(result_text),na.rm = TRUE),
+    monthly_max = max(as.numeric(result_text),na.rm = TRUE)
+  ) %>% 
+  pivot_wider(
+    names_from = characteristic_name,
+    values_from = c('monthly_mean', 'monthly_min', 'monthly_max')
   )
-
-soil_temp |> write.csv('../clean_data/soil_temp.csv', row.names = FALSE)
 ```
+```{r}
+write.csv(clean_water, '../clean_data/clean_water.csv', row.names = FALSE)
+```
+
 
 
 ## Reading in Temperature
@@ -401,6 +321,10 @@ weather = read_csv("../raw_data/raw_weather_data.csv") |>
   )
 ```
 
+Saving clean weather
+```{r}
+weather |> write.csv('../clean_data/weather', row.names = FALSE)
+```
 
 
 
@@ -416,45 +340,31 @@ head(weather)
 ```
 
 ```{r}
-head(water_quality)
-```
-
-```{r}
-table(water_quality$characteristic_name)
-```
-
-```{r}
-water_quality |> 
-  group_by('location_id', 'location_name', 'latitude', 'longitude', 'activity_start_date', 'year', 'month', 'day', 'characteristic_name')
-    
-```
-
-
-
-
-```{r}
-chars = c('pH')
-
-
-water_quality |> 
-  # filter(characteristic_name  %in% chars) |> 
-   #dplyr::select(-activity_type) |>
-  # distinct() |> 
-  pivot_wider(
-    id_cols = c('location_id', 'location_name', 'latitude', 'longitude', 'activity_start_date', 'year', 'month', 'day'),
-    names_from = 'characteristic_name',
-    values_from = 'result_text'
-  ) |> 
-  unnest(cols = unique(water_quality$characteristic_name))
+head(clean_water)
 ```
 
 
 ```{r}
-all = left_join(elk, weather |> dplyr::select(-date))
+all_data = 
+  elk %>% 
+  left_join(weather |> dplyr::select(-date)) %>% 
+  mutate(
+    dist_to_GRTE_SNR01 = distHaversine(cbind(long, lat), c(-110.6716, 44.10177))/1000,
+    dist_to_GRTE_SNR02 = distHaversine(cbind(long, lat), c(-110.7159, 43.65261))/1000,
+    location_id = 
+      ifelse(dist_to_GRTE_SNR01 < dist_to_GRTE_SNR02, 'GRTE_SNR01', 'GRTE_SNR02')
+  ) %>% 
+  left_join(clean_water) %>% 
+  dplyr::select(-dist_to_GRTE_SNR01, -dist_to_GRTE_SNR02)
+```
+
+
+```{r}
+all_data  |> drop_na(location_name)
 ```
 
 ```{r}
-all |> write.csv('../clean_data/all_data.csv', row.names =  FALSE)
+all_data |> write.csv('../clean_data/all_data.csv', row.names =  FALSE)
 ```
 
 

@@ -1,0 +1,112 @@
+---
+title: "Soil Data"
+author: "Wayne Monical"
+date: "2024-12-05"
+output: html_document
+---
+
+## Importing Yellowstone Peak Data
+
+
+[Definitions Pg 3](https://files.cfc.umt.edu/cesu/NPS/CSU/2010/10Stevens_ROMN_alpine%20monitoring_rpt.pdf)
+
+```{r}
+summit = tibble(
+  summit_code = c('BLP', 'SCP', 'SPP', 'WSP'),
+  name = c('Boundary Line Peak', 'Stone Crop Peak',
+         'Snow Pipit Peak', 'Wolf Scat Peak'),
+  lat = c(44.70028, 44.69584, 44.70167, 44.69444), 
+  long = c(-109.8267, -109.8339, -109.835, -109.8364),
+  elevation_in_meters =  c(3195, 3122, 3169, 3124)
+  )
+```
+
+
+
+
+
+## Cleaning Soil Chemistry 
+
+What do these abbreviations mean? [Here](https://files.cfc.umt.edu/cesu/NPS/CSU/2010/10Stevens_ROMN_alpine%20monitoring_rpt.pdf)
+
+Boundary Line Peak (BLP), Stone Crop Peak (SCP), Snow Pipit Peak (SPP), and Wolf
+Scat Peak (WSP)
+
+```{r}
+soil_chem = 
+  read_csv('../raw_data/NPS_IMD_GLORIA_SoilChemistry_2287252_DataPackage/NPS_IMD_GLORIA_SoilChemistry_2287252-dataset.csv') |> 
+  janitor::clean_names()
+
+soil_chem= 
+  soil_chem |> 
+  filter(
+    ! average %in% c('Insufficient sample', 'insufficient sample'),
+    stringr::str_detect(site_name, "YNP")
+  ) |> 
+  mutate(
+    year = year(start_date),
+    month = month(start_date),
+    day = day(start_date),
+    parameter = paste0(parameter_dataset, " ", unit_dataset),
+    summit_code = str_sub(site_name, start = 8, end = 10)
+  ) |> 
+  inner_join(summit) |> 
+ dplyr::select(
+    summit_code,
+    name,
+    lat,
+    long,
+    elevation_in_meters,
+    site_name,
+    event_name,
+    year,
+    month,
+    day,
+    parameter,
+    average)
+  
+
+soil_chem |> write.csv('../clean_data/soil_chem.csv', row.names = FALSE)
+```
+
+
+
+
+
+
+## Cleaning Soil Temperature
+
+Read in data, filter for yellowstone national park, 
+```{r}
+soil_temp = 
+  read_csv('../raw_data/NPS_IMD_GLORIA_SoilTemperature_2288176_DataPackage/NPS_IMD_GLORIA_SoilTemperature_2288176_Daily-dataset.csv') |> 
+  janitor::clean_names()  |> 
+  filter(park == 'YELL') |> 
+  mutate(
+    summit_code = summit,
+    year = year(date_time),
+    month = month(date_time),
+    day = day(date_time))
+```
+
+```{r}
+soil_temp = 
+  soil_temp |>
+  inner_join(summit) |> 
+  select(
+    summit_code,
+    name,
+    lat,
+    long,
+    elevation_in_meters,
+    plot, 
+    site_name,
+    year,
+    month,
+    day,
+    daily_mean,
+    daily_standard_dev
+  )
+
+soil_temp |> write.csv('../clean_data/soil_temp.csv', row.names = FALSE)
+```

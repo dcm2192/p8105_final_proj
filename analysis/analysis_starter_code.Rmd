@@ -16,8 +16,27 @@ library(tidyverse)
 
 
 
-Read in main data set. Remember to set your working directory to the folder with this Rmd file! You can do this by navigating to your folder in the Rstudio `Files` tab, clicking the `gear` icon, and clicking the `Set as working directory` button
+Read in main data set. Remember to set your working directory to the folder with this Rmd file! You can do this by navigating to your folder in the Rstudio `Files` tab, clicking the `gear` icon, and clicking the `Set as working directory` button.
 ```{r}
-elk = read_csv('..)
+all_data = read_csv('../clean_data/all_data.csv')
+```
+
+
+### Analyzing elk movement 
+
+Analyze elk movement with the `dist_km` column. Remember to drop the NA's!
+```{r}
+all_data |> 
+  drop_na(dist_km) |> 
+  ggplot(aes(x = dist_km))+
+  geom_histogram()
+```
+
+
+### Analyzing all water quality data
+
+
+```{r}
+
 ```
 
