@@ -8,6 +8,8 @@ Load packages.
 ```{r}
 library(tidyverse)
 library(ggmap)
+library(geosphere)
+library(lubridate)
 ```
 
 Elk data from Wayne.
@@ -274,6 +276,73 @@ reduced_weather |>
   geom_bar(stat = "identity") + 
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 ```
+
+Scatterplot of daily elk movement versus precip
+Scatterplot of daily elk movement versus snowfall
+Scatterplot of daily elk movement versus snow depth
+Scatterplot of daily elk movement versus temperature
+
+all data df.
+```{r}
+all_data <- read_csv("./data/all_data.csv")
+```
+
+Scatterplot of daily elk movement versus precip.
+```{r}
+all_data |> 
+  ggplot(aes(x = dt, y = dist_km, color = year, group = year)) + 
+  geom_point()
+```
+
+Land cover.
+```{r}
+daily_elk =
+  all_data |>
+  group_by(
+    elk_id,
+    year,
+    month,
+    day,
+    tavg,
+    prcp,
+    snow,
+    snwd
+  ) |>
+  summarize(
+    dist_km = sum(dist_km, na.rm = TRUE), 
+    land_cover = mean(land_cover, na.rm = TRUE)
+  )
+
+daily_elk |> 
+  ggplot(aes(x = land_cover)) + 
+  geom_histogram()
+```
+
+Elk mvmt vs precip. 
+```{r}
+daily_elk |> 
+  ggplot(aes(x = prcp, y = dist_km)) + 
+  geom_point() + 
+  geom_smooth(se = FALSE)
+
+daily_elk |> 
+  ggplot(aes(x = prcp, y = dist_km, color = as.factor(year))) + 
+  geom_point() + 
+  geom_smooth(se = FALSE)
+
+daily_elk |> 
+  ggplot(aes(x = prcp, y = dist_km)) + 
+  geom_hex() + 
+  geom_smooth(se = FALSE)
+
+daily_elk |> 
+  ggplot(aes(x = prcp, y = dist_km)) + 
+  geom_hex() + 
+  geom_smooth(se = FALSE) + 
+  facet_wrap(vars(year), ncol = 5)
+```
+
+
 
 
 

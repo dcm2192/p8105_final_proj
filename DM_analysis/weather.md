@@ -28,6 +28,11 @@ library(ggmap)
     ##   OpenStreetMap's Tile Usage Policy: <https://operations.osmfoundation.org/policies/tiles/>
     ## ℹ Please cite ggmap if you use it! Use `citation("ggmap")` for details.
 
+``` r
+library(geosphere)
+library(lubridate)
+```
+
 Elk data from Wayne.
 
 ``` r
@@ -428,3 +433,139 @@ reduced_weather |>
     ## `.groups` argument.
 
 ![](weather_files/figure-gfm/unnamed-chunk-8-3.png)<!-- -->
+
+Scatterplot of daily elk movement versus precip Scatterplot of daily elk
+movement versus snowfall Scatterplot of daily elk movement versus snow
+depth Scatterplot of daily elk movement versus temperature
+
+all data df.
+
+``` r
+all_data <- read_csv("./data/all_data.csv")
+```
+
+    ## Rows: 104913 Columns: 16
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## dbl  (15): elk_id, year, month, day, hour, lat, long, dist_km, land_cover, t...
+    ## dttm  (1): dt
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+Scatterplot of daily elk movement versus precip.
+
+``` r
+all_data |> 
+  ggplot(aes(x = dt, y = dist_km, color = year, group = year)) + 
+  geom_point()
+```
+
+    ## Warning: Removed 17 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
+![](weather_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+
+Land cover.
+
+``` r
+daily_elk =
+  all_data |>
+  group_by(
+    elk_id,
+    year,
+    month,
+    day,
+    tavg,
+    prcp,
+    snow,
+    snwd
+  ) |>
+  summarize(
+    dist_km = sum(dist_km, na.rm = TRUE), 
+    land_cover = mean(land_cover, na.rm = TRUE)
+  )
+```
+
+    ## `summarise()` has grouped output by 'elk_id', 'year', 'month', 'day', 'tavg',
+    ## 'prcp', 'snow'. You can override using the `.groups` argument.
+
+``` r
+daily_elk |> 
+  ggplot(aes(x = land_cover)) + 
+  geom_histogram()
+```
+
+    ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+
+![](weather_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+
+Elk mvmt vs precip.
+
+``` r
+daily_elk |> 
+  ggplot(aes(x = prcp, y = dist_km)) + 
+  geom_point() + 
+  geom_smooth(se = FALSE)
+```
+
+    ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
+
+    ## Warning: Removed 143 rows containing non-finite outside the scale range
+    ## (`stat_smooth()`).
+
+    ## Warning: Removed 143 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
+![](weather_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+
+``` r
+daily_elk |> 
+  ggplot(aes(x = prcp, y = dist_km, color = as.factor(year))) + 
+  geom_point() + 
+  geom_smooth(se = FALSE)
+```
+
+    ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
+
+    ## Warning: Removed 143 rows containing non-finite outside the scale range
+    ## (`stat_smooth()`).
+    ## Removed 143 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
+![](weather_files/figure-gfm/unnamed-chunk-12-2.png)<!-- -->
+
+``` r
+daily_elk |> 
+  ggplot(aes(x = prcp, y = dist_km)) + 
+  geom_hex() + 
+  geom_smooth(se = FALSE)
+```
+
+    ## Warning: Removed 143 rows containing non-finite outside the scale range
+    ## (`stat_binhex()`).
+
+    ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
+
+    ## Warning: Removed 143 rows containing non-finite outside the scale range
+    ## (`stat_smooth()`).
+
+![](weather_files/figure-gfm/unnamed-chunk-12-3.png)<!-- -->
+
+``` r
+daily_elk |> 
+  ggplot(aes(x = prcp, y = dist_km)) + 
+  geom_hex() + 
+  geom_smooth(se = FALSE) + 
+  facet_wrap(vars(year), ncol = 5)
+```
+
+    ## Warning: Removed 143 rows containing non-finite outside the scale range
+    ## (`stat_binhex()`).
+
+    ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
+
+    ## Warning: Removed 143 rows containing non-finite outside the scale range
+    ## (`stat_smooth()`).
+
+![](weather_files/figure-gfm/unnamed-chunk-12-4.png)<!-- -->
