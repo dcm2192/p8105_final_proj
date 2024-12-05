@@ -24,7 +24,7 @@ Our main data set is the Elk GPS collar data from National Elk Refuge (2006-2015
 
 ## Cleaning Elk Data
 
-To clean the elk data, we we drop the `tz` timezone variable, because it is homogeneous. We drop the `utm_x` and `utm_y` variables because they are simply another kind of location tracking, and we already have latitude and longitude. We create the `dist_km` variable, which measures the distance traveled in kilometers between observed points using the `distHaversine` function from the `geosphere` package. The length of the shortest line between two points on a sphere is the Haversine distance.
+The elk data contains a unique ID for each of the 17 elk. It includes a date-time varaible and coordinates. There are To clean the elk data, we we drop the `tz` timezone variable, because it is homogeneous. We drop the `utm_x` and `utm_y` variables because they are simply another kind of location tracking, and we already have latitude and longitude. We create the `dist_km` variable, which measures the distance traveled in kilometers between observed points using the `distHaversine` function from the `geosphere` package. The length of the shortest line between two points on a sphere is the Haversine distance.
 
 ```{r}
 elk = 
@@ -71,7 +71,8 @@ path_colors = colorFactor(palette = RColorBrewer::brewer.pal(num_colors, "Set1")
 
 
 ```{r}
-filtered_data = elk |>
+filtered_data = 
+  elk |>
   filter(month == 12,
          year == 2014)
 
@@ -168,12 +169,10 @@ map
 ```{r}
 elk = 
   elk %>% 
-  filter(
-    (year != 2014)
-    & (month != 12)
-    & (day != 1)
-  )
+  filter(date(elk$dt) != '2014-12-01') %>% 
+  nrow()
 ```
+
 
 
 ## Land Cover Cleaning
@@ -319,7 +318,7 @@ water_quality_results=
 ### Combining Water Data
 
 
-We aggregate the data at the month level by taking the minimum, mean, and maximum readings. We filter for the GRTE_SNR01 and GRTE_SNR02 locations, which are the two relevant locations to our analysis. We save the water quality data in two different formats for ease of use. 
+We aggregate the data at the month level by taking the minimum, mean, and maximum readings. We filter for the GRTE_SNR01 and GRTE_SNR02 locations, which are the two relevant locations to our analysis. We save the water quality data in raw, cleaned, and wide formats for ease of use. 
 ```{r}
 water_quality = 
   water_quality_locations |> 
@@ -349,19 +348,15 @@ water_quality2 =
 
 water_quality |> write.csv('../clean_data/water_quality.csv', row.names = FALSE)
 water_quality2 |> write.csv('../clean_data/water_quality2.csv', row.names = FALSE)
-```
 
-```{r}
+
 clean_water = 
   water_quality2 %>% 
   pivot_wider(
     names_from = characteristic_name,
     values_from = c('monthly_mean', 'monthly_min', 'monthly_max')
   )
-```
 
-
-```{r}
 write.csv(clean_water, '../clean_data/clean_water.csv', row.names = FALSE)
 ```
 
@@ -369,7 +364,12 @@ write.csv(clean_water, '../clean_data/clean_water.csv', row.names = FALSE)
 
 ## Reading in Temperature
 
-Filter for the four closest stations, filter for the correct date range, average the temperature and snowfall across the stations. 
+
+To explore the relationship between temperature, precipitation, and migration, we use the Global Historical Climatology Network's data. The data is available [here](https://www.ncei.noaa.gov/products/land-based-station/global-historical-climatology-network-daily)
+
+
+
+We read in the data, we filter for the four closest stations to the elk, we filter for the correct date range, and finally we average the temperature and snowfall across the stations. Since we only have weather data at four points in the general area of the elk, we average the readings from the four stations. 
 
 ```{r}
 # closest four stations
@@ -396,10 +396,8 @@ weather = read_csv("../raw_data/raw_weather_data.csv") |>
     month = month(date),
     day = day(date)
   )
-```
 
-Saving clean weather
-```{r}
+
 weather |> write.csv('../clean_data/weather', row.names = FALSE)
 ```
 
@@ -407,19 +405,7 @@ weather |> write.csv('../clean_data/weather', row.names = FALSE)
 
 ## Combining all data
 
-
-```{r}
-head(elk)
-```
-
-```{r}
-head(weather)
-```
-
-```{r}
-head(clean_water)
-```
-
+We combine the data for ease of comparison. We begin with the elk data, then left join the weather data by date. We find the closest water quality location, then join on the relevant water quality data. We save the data. 
 
 ```{r}
 all_data = 

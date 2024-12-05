@@ -11,8 +11,28 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library load
 ```{r}
-library(tidyverse)
 library(terra)
+library(tidyverse)
+library(geosphere)
+library(leaflet)
+library(leaflet.extras2)
+library(lubridate)
+library(RColorBrewer)
+
+knitr::opts_chunk$set(
+  comment = '', fig.width = 8, fig.height = 6, out.width = "90%"
+)
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+
 ```
 
 
