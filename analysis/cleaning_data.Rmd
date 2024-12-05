@@ -1,6 +1,6 @@
 ---
-title: "Data Cleaning"
-author: "Wayne Monical"
+title: "Data Sources and Processing"
+author: "Elk Team"
 date: "2024-11-16"
 output: html_document
 ---
@@ -17,12 +17,14 @@ library(terra)
 library(geosphere)
 ```
 
+## Elk Data Source
+
+Our main data set is the Elk GPS collar data from National Elk Refuge (2006-2015) published by the Northern Rocky Mountain Science Center in 2018. The data follows 17 adult female elk captured in the National Elk Refuge in their migration to Yellowstone National Park. Elk that did not migrate to Yellowstone National Park were not included in the data set. The data is available [here](https://www.usgs.gov/data/elk-gps-collar-data-national-elk-refuge-2006-2015).
+
 
 ## Cleaning Elk Data
 
-We drop the `tz` timezone variable, because it is homogenous. We drop the `utm_x` and `utm_y` variables because they are simply another kind of location tracking, and we already have latitude and longitude. Note that [only elk that migrated from the Elk reserve to Yellowstone were included in the data](https://www.sciencebase.gov/catalog/file/get/5a9f2782e4b0b1c392e502ea?f=__disk__27%2F1f%2Faa%2F271faa32dbaff38082fc4661db798fcd74908130&transform=1&allowOpen=true).
-
-
+To clean the elk data, we we drop the `tz` timezone variable, because it is homogeneous. We drop the `utm_x` and `utm_y` variables because they are simply another kind of location tracking, and we already have latitude and longitude. We create the `dist_km` variable, which measures the distance traveled in kilometers between observed points using the `distHaversine` function from the `geosphere` package. The length of the shortest line between two points on a sphere is the Haversine distance.
 
 ```{r}
 elk = 
@@ -50,16 +52,136 @@ elk =
   )
 ```
 
+
+Now let's look at the paths for December because that was also a big movement month.
+
 ```{r}
-# looks like we'v esolved the weird december data
-elk |> 
-  drop_na(dist_km) |> 
-  ggplot(aes(x = factor(month), y = dist_km)) + geom_violin()
+elk_icon <- makeIcon(
+  iconUrl = "pics/elk_icon.png", # Replace with the URL of your moose image
+  iconWidth = 30, iconHeight = 30
+)
+
+
+# Create a color palette (limited to 9 elk IDs for "Set1")
+elk_ids = unique(filtered_data$elk_id)  # Get unique elk IDs
+num_colors = length(elk_ids)    # Ensure we don't exceed palette limit
+path_colors = colorFactor(palette = RColorBrewer::brewer.pal(num_colors, "Set1"), domain = elk_ids)
+
 ```
+
+
+```{r}
+filtered_data = elk |>
+  filter(month == 12,
+         year == 2014)
+
+# Initialize leaflet map
+map <- filtered_data |>
+  group_by(elk_id) |>
+  summarize(start_long = first(long), start_lat = first(lat),
+            end_long = last(long), end_lat = last(lat))|>
+  ungroup() |>
+  leaflet() |>
+  addProviderTiles(providers$CartoDB.Positron, group = "Base Map") |>
+  addProviderTiles(providers$Esri.NatGeoWorldMap, group = "NatGeo Map") |>
+  addMarkers(lng = ~start_long, lat = ~start_lat, icon = elk_icon, popup = ~paste("Start Point: Elk", elk_id)) |>
+  addMarkers(lng = ~end_long, lat = ~end_lat, icon = elk_icon, popup = ~paste("End Point: Elk ", elk_id))
+
+# Add lines for each elk's path
+for (id in elk_ids) {
+  elk_data <- filtered_data |> filter(elk_id == id)  # Subset data for each elk
+  map <- map |>
+    addPolylines(
+      data = elk_data,
+      lng = ~long, lat = ~lat,
+      color = path_colors(id),  # Assign unique color for each elk
+      weight = 2,
+      opacity = 0.8,
+      label = ~paste("Elk ID:", id)  # Label showing elk ID
+    )
+}
+
+# Add a legend for the elk IDs
+map <- map |>
+  addLegend(
+    position = "topright",
+    pal = path_colors,
+    values = elk_ids,
+    title = "Elk ID"
+  )
+
+# Print the map
+map
+```
+
+Now it seems obvious that there is an issue with the December data. There is something going on with the distance between the first data point of the month and the second because it seems unnatural that and elk could move that far in a matter of a few hours. Let's try to remove the first data point and take another look. After removing the first day of December we can see that the elk really did not move that much. Therefore, we will drop the data from December 1st, 2014 due to inaccuracy. 
+
+```{r}
+filtered_data = 
+  elk |>
+  filter(
+    month == 12
+    , year == 2014
+    ,day >= 2
+    ) |>
+  group_by(elk_id) 
+
+# Initialize leaflet map
+map <- filtered_data |>
+  summarize(start_long = first(long), start_lat = first(lat),
+            end_long = last(long), end_lat = last(lat))|>
+  ungroup() |>
+  leaflet() |>
+  addProviderTiles(providers$CartoDB.Positron, group = "Base Map") |>
+  addProviderTiles(providers$Esri.NatGeoWorldMap, group = "NatGeo Map") |>
+  addMarkers(lng = ~start_long, lat = ~start_lat, icon = elk_icon, popup = ~paste("Start Point: Elk", elk_id)) |>
+  addMarkers(lng = ~end_long, lat = ~end_lat, icon = elk_icon, popup = ~paste("End Point: Elk ", elk_id))
+
+# Add lines for each elk's path
+for (id in elk_ids) {
+  elk_data <- filtered_data |> filter(elk_id == id)  # Subset data for each elk
+  map <- map |>
+    addPolylines(
+      data = elk_data,
+      lng = ~long, lat = ~lat,
+      color = path_colors(id),  # Assign unique color for each elk
+      weight = 2,
+      opacity = 0.8,
+      label = ~paste("Elk ID:", id)  # Label showing elk ID
+    )
+}
+
+# Add a legend for the elk IDs
+map <- map |>
+  addLegend(
+    position = "topright",
+    pal = path_colors,
+    values = elk_ids,
+    title = "Elk ID"
+  )
+
+# Print the map
+map
+```
+
+
+```{r}
+elk = 
+  elk %>% 
+  filter(
+    (year != 2014)
+    & (month != 12)
+    & (day != 1)
+  )
+```
+
 
 ## Land Cover Cleaning
 
-Using the [terra package](https://bookdown.org/mcwimberly/gdswr-book/coordinate-reference-systems.html#reprojecting-raster-data)
+Our second data set is the land cover data in the state of Wyoming published by the GAP Analysis Project in 2019. This data set uses satellite imagery from 2011 to get land cover data accurate to thirty square meters. While our elk migration data ranges from 2006 to 2015, we make the assumption that land coverage in the form of water or vegetation stays approximately constant over time. The data is available [here](https://www.usgs.gov/programs/gap-analysis-project/science/land-cover-data-download).
+
+We use the [terra package](https://bookdown.org/mcwimberly/gdswr-book/coordinate-reference-systems.html#reprojecting-raster-data) to import and transform the data into latitude and longitude coordinates. We save a cleaned, cropped version of the land cover data. 
+
 ```{r, eval=FALSE}
 land = rast('../raw_data/land_cover/land_cover.tif')
 
@@ -89,34 +211,11 @@ small_land_coord = crop(
 plot(small_land_coord)
 
 # writing raster
-# terra::writeRaster(small_land_coord, '../clean_data/land_cover.tif')
+terra::writeRaster(small_land_coord, '../clean_data/land_cover.tif')
 ```
 
 
-Read in saved raster
-```{r}
-small_land_coord = rast('../clean_data/land_cover.tif')
-```
-
-Convert to points
-```{r}
-land_coord_df = as.points(small_land_coord)
-```
-
-```{r}
-nrow(land_coord_df)
-```
-```{r}
-land_coord_df$
-```
-
-
-```{r}
-head(land_coord_df)
-```
-
-
-Get the land cover at the relevent points of the analysis
+Using terra's `extract` function, we get the land cover at the relevant points of the analysis, i.e. the locations of the elk. 
 ```{r}
 temp_elk = 
   elk |> 
@@ -131,23 +230,22 @@ temp_elk =
 elk_land_cover = terra::extract(x = small_land_coord, y = temp_elk)
 ```
 
-Add in the data
+We add the elk land cover data to the elk data frame. We save the elk data frame. 
 ```{r}
 elk = 
   elk |> 
   mutate(land_cover = elk_land_cover$land_cover)
-```
 
-Saving elk data
-```{r}
 elk |> write.csv('../clean_data/elk.csv', row.names =  FALSE)
 ```
 
 ## Cleaning Water Quality Data
 
+The water quality data is sourced from the Greater Yellowstone Network and published by the National Park Service. The data contains readings on a variety of water quality measures including mineral composition, flow speed, and temperature. The two locations relevant to this analysis are GRTE_SNR01 and GRTE_SNR02, where the elk migrate. The data is available [here](https://catalog.data.gov/dataset/greater-yellowstone-network-published-water-quality-data-through-2023-from-the-bicawq01-g-)
+
 ### Locations
 
-This data set gives the locations that water was sampled from. We drop the `org_code` variable because it is homogenous
+This data set gives the locations that water was sampled from. We drop the `org_code` variable because it is homogenous. 
 ```{r}
 water_quality_locations = 
   read_csv('../raw_data/water_quality/Locations.csv')|> 
@@ -165,6 +263,7 @@ water_quality_locations =
 
 ### Results
 
+Here we read in the results of the water quality sampling. 
 ```{r}
 water_quality_results = 
   read_csv('../raw_data/water_quality/Results.csv')|> 
@@ -217,15 +316,10 @@ water_quality_results=
 ```
 
 
-
 ### Combining Water Data
 
 
-```{r}
-
-```
-
-Aggregating at the month level. GRTE_SNR01 and GRTE_SNR02 are the two relevent stations to our analysis
+We aggregate the data at the month level by taking the minimum, mean, and maximum readings. We filter for the GRTE_SNR01 and GRTE_SNR02 locations, which are the two relevant locations to our analysis. We save the water quality data in two different formats for ease of use. 
 ```{r}
 water_quality = 
   water_quality_locations |> 
@@ -256,8 +350,6 @@ water_quality2 =
 water_quality |> write.csv('../clean_data/water_quality.csv', row.names = FALSE)
 water_quality2 |> write.csv('../clean_data/water_quality2.csv', row.names = FALSE)
 ```
-
-
 
 ```{r}
 clean_water = 

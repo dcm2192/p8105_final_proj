@@ -32,7 +32,7 @@ elk = read_csv('../clean_data/elk.csv')
 
 
 Creating elk_daily
-```{r}
+```{r, eval = FALSE}
 all_data |> 
   group_by(
     elk_id,
@@ -252,14 +252,9 @@ water_quality2 |>
 
 ### Water Temperature
 
-
 Does water temperature effect migration?
 
 ```{r}
 unique(water_quality2$characteristic_name)
-```
-
-```{r}
-
 ```
 
