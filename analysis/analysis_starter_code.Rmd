@@ -1,0 +1,23 @@
+---
+title: "Analysis Starter Code"
+author: "Wayne Monical"
+date: "2024-12-05"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+library load
+```{r}
+library(tidyverse)
+```
+
+
+
+Read in main data set. Remember to set your working directory to the folder with this Rmd file! You can do this by navigating to your folder in the Rstudio `Files` tab, clicking the `gear` icon, and clicking the `Set as working directory` button
+```{r}
+elk = read_csv('..)
+```
+
