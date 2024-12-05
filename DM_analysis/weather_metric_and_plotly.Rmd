@@ -3,3 +3,95 @@ title: "weather and it's the same but it's all metric and plotly so it's not"
 author: "Dylan Morgan"
 output: github_document
 ---
+
+Load packages.
+```{r}
+library(tidyverse)
+library(ggmap)
+library(geosphere)
+library(lubridate)
+library(plotly)
+```
+
+Load data.
+```{r}
+elk = read_csv("./data/elk.csv")
+
+raw_weather <- read_csv("./data/raw_weather_data.csv")
+
+weather_stations <-
+  raw_weather |>
+  group_by(NAME, LATITUDE, LONGITUDE) |>
+  summarize(n_obs = n())
+
+potential_stations <- 
+  c("LEWIS LAKE DIVIDE, WY US", "SNAKE RIVER, WY US", "SNAKE RIVER STATION, WY US", "BASE CAMP, WY US", 
+    "MORAN 5 WNW, WY US", "JACKSON 29.9 NNE, WY US", "BURRO HILL WYOMING, WY US", "MOOSE 1 NNE, WY US", 
+    "MOOSE, WY US", "MOOSE .4 S, WY US", "JACKSON 12.3 NE, WY US", "JACKSON 12.2 NE, WY US", 
+    "JACKSON HOLE AIRPORT, WY US", "JACKSON, WY US")
+
+four_stations <- 
+  c("SNAKE RIVER STATION, WY US", "MORAN 5 WNW, WY US", "BURRO HILL WYOMING, WY US", "MOOSE 1 NNE, WY US")
+
+reduced_weather_stations <- 
+  raw_weather |> 
+  filter(NAME %in% four_stations) |> 
+  group_by(NAME, LATITUDE, LONGITUDE) |> 
+  summarize(n_obs = n()) |> 
+  arrange(desc(n_obs))
+
+reduced_weather <- 
+  raw_weather |> 
+  filter(NAME %in% four_stations)
+
+all_data <- read_csv("./data/all_data.csv")
+
+daily_elk =
+  all_data |>
+  group_by(
+    elk_id,
+    year,
+    month,
+    day,
+    tavg,
+    prcp,
+    snow,
+    snwd
+  ) |>
+  summarize(
+    dist_km = sum(dist_km, na.rm = TRUE), 
+    land_cover = mean(land_cover, na.rm = TRUE)
+  )
+```
+
+Precip plotly.
+```{r}
+# point + line, separated by month and year
+reduced_weather |> 
+  select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
+  mutate(year = format(DATE, "%Y"), 
+         month = format(DATE, "%m")) |> 
+  group_by(NAME, year, month) |> 
+  summarize(station_precip_total = sum(PRCP, na.rm = TRUE)) |> 
+  group_by(year, month) |> 
+  summarize(station_precip_total_avg = mean(station_precip_total, na.rm = TRUE)) |> 
+  mutate(year_month = paste(year, month, sep = "-")) |> 
+  plot_ly(
+    x = ~month, y = ~station_precip_total_avg, color = ~year, group = ~year, type = 'scatter', mode = 'lines'
+    )
+
+# year-month totals, separated by year
+reduced_weather |> 
+  select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
+  mutate(year = format(DATE, "%Y"), 
+         month = format(DATE, "%m")) |> 
+  group_by(NAME, year, month) |> 
+  summarize(station_precip_total = sum(PRCP, na.rm = TRUE)) |> 
+  group_by(year, month) |> 
+  summarize(station_precip_total_avg = mean(station_precip_total, na.rm = TRUE)) |> 
+  mutate(year_month = paste(year, month, sep = "-")) |> 
+  plot_ly(
+    x = ~year_month, y = ~station_precip_total_avg, color = ~as.factor(year), type = "bar"
+    )
+```
+
