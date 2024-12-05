@@ -134,21 +134,49 @@ ggplot() +
 WRITE ABOUT THE SOURCE
 
 ```{r}
-# wide format
-clean_water = read_csv('../clean_data/clean_water.csv')
-
 # long format
-water_quality = read_csv('../clean_data/water_quality.csv')
+water_quality2 = read_csv('../clean_data/water_quality2.csv')
 ```
 
 
 
 ```{r}
-water_quality
+water_exploration = 
+  water_quality2 |> 
+  group_by(
+    location_id,
+    characteristic_name
+  ) |> 
+  summarize(
+    all_time_mean = mean(monthly_mean, na.rm = TRUE),
+    all_time_var = var(monthly_mean, na.rm = TRUE)) |> 
+  pivot_wider(
+    names_from = location_id,
+    values_from = c(all_time_mean, all_time_var)
+  ) |> 
+  mutate(
+    standardized_difference =  abs(all_time_mean_GRTE_SNR01 - all_time_mean_GRTE_SNR02) / sqrt(all_time_var_GRTE_SNR01 + all_time_var_GRTE_SNR02)
+  )
 ```
 
+
+The site GRTE_SNR01 has higher Chloride, Sodium, Sulfur, Arsenic, and Potassium than GRTE_SNR02.
+
+To do: statistical test
+```{r}
+water_exploration |> 
+  arrange(desc(standardized_difference)) |> 
+  dplyr::select(
+    characteristic_name,
+    all_time_mean_GRTE_SNR01,
+    all_time_mean_GRTE_SNR02,
+    standardized_difference
+  ) |> 
+  head()
+```
 
 ```{r}
-names(clean_water)
+
 ```
+
 

@@ -225,12 +225,15 @@ water_quality_results=
 
 ```
 
-
+Aggregating at the month level. GRTE_SNR01 and GRTE_SNR02 are the two relevent stations to our analysis
 ```{r}
 water_quality = 
   water_quality_locations |> 
   left_join(water_quality_results) |> 
-  filter(location_id %in% c('GRTE_SNR01', 'GRTE_SNR02')) %>% 
+  filter(location_id %in% c('GRTE_SNR01', 'GRTE_SNR02'))
+
+water_quality2 = 
+  water_quality %>% 
   mutate(
     result_text = stringr::str_replace(result_text, 'LOW', '1'),
     result_text = stringr::str_replace(result_text, 'ABOVE NORMAL', '3'),
@@ -251,19 +254,21 @@ water_quality =
   ) 
 
 water_quality |> write.csv('../clean_data/water_quality.csv', row.names = FALSE)
+water_quality2 |> write.csv('../clean_data/water_quality2.csv', row.names = FALSE)
 ```
 
 
 
-Aggregating at the month level. GRTE_SNR01 and GRTE_SNR02 are the two relevent stations to our analysis
 ```{r}
 clean_water = 
-  water_quality %>% 
+  water_quality2 %>% 
   pivot_wider(
     names_from = characteristic_name,
     values_from = c('monthly_mean', 'monthly_min', 'monthly_max')
   )
 ```
+
+
 ```{r}
 write.csv(clean_water, '../clean_data/clean_water.csv', row.names = FALSE)
 ```
