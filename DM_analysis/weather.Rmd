@@ -294,12 +294,14 @@ all_data |>
   geom_point()
 ```
 
-Land cover.
+Daily elk.
 ```{r}
-daily_elk =
-  all_data |>
+daily_elk <- 
+  all_data |> 
+  mutate(year_month_day = format(dt, "%Y-%m-%d")) |> 
   group_by(
     elk_id,
+    year_month_day, 
     year,
     month,
     day,
@@ -312,7 +314,10 @@ daily_elk =
     dist_km = sum(dist_km, na.rm = TRUE), 
     land_cover = mean(land_cover, na.rm = TRUE)
   )
+```
 
+Land cover.
+```{r}
 daily_elk |> 
   ggplot(aes(x = land_cover)) + 
   geom_histogram()
@@ -326,20 +331,8 @@ daily_elk |>
   geom_smooth(se = FALSE)
 
 daily_elk |> 
-  ggplot(aes(x = prcp, y = dist_km, color = as.factor(year))) + 
-  geom_point() + 
+  ggplot(aes(x = prcp, y = dist_km, color = factor(year))) + 
   geom_smooth(se = FALSE)
-
-daily_elk |> 
-  ggplot(aes(x = prcp, y = dist_km)) + 
-  geom_hex() + 
-  geom_smooth(se = FALSE)
-
-daily_elk |> 
-  ggplot(aes(x = prcp, y = dist_km)) + 
-  geom_hex() + 
-  geom_smooth(se = FALSE) + 
-  facet_wrap(vars(year), ncol = 5)
 ```
 
 Elk mvmt vs. snowfall.
@@ -351,19 +344,7 @@ daily_elk |>
 
 daily_elk |> 
   ggplot(aes(x = snow, y = dist_km, color = as.factor(year))) + 
-  geom_point() + 
   geom_smooth(se = FALSE)
-
-daily_elk |> 
-  ggplot(aes(x = snow, y = dist_km)) + 
-  geom_hex() + 
-  geom_smooth(se = FALSE)
-
-daily_elk |> 
-  ggplot(aes(x = snow, y = dist_km)) + 
-  geom_hex() + 
-  geom_smooth(se = FALSE) + 
-  facet_wrap(vars(year), ncol = 5)
 ```
 
 Elk mvmt vs. snow depth. 
@@ -375,19 +356,7 @@ daily_elk |>
 
 daily_elk |> 
   ggplot(aes(x = snwd, y = dist_km, color = as.factor(year))) + 
-  geom_point() + 
   geom_smooth(se = FALSE)
-
-daily_elk |> 
-  ggplot(aes(x = snwd, y = dist_km)) + 
-  geom_hex() + 
-  geom_smooth(se = FALSE)
-
-daily_elk |> 
-  ggplot(aes(x = snwd, y = dist_km)) + 
-  geom_hex() + 
-  geom_smooth(se = FALSE) + 
-  facet_wrap(vars(year), ncol = 5)
 ```
 
 Elk mvmt vs avg temp.
@@ -399,19 +368,7 @@ daily_elk |>
 
 daily_elk |> 
   ggplot(aes(x = tavg, y = dist_km, color = as.factor(year))) + 
-  geom_point() + 
   geom_smooth(se = FALSE)
-
-daily_elk |> 
-  ggplot(aes(x = tavg, y = dist_km)) + 
-  geom_hex() + 
-  geom_smooth(se = FALSE)
-
-daily_elk |> 
-  ggplot(aes(x = tavg, y = dist_km)) + 
-  geom_hex() + 
-  geom_smooth(se = FALSE) + 
-  facet_wrap(vars(year), ncol = 5)
 ```
 
 
