@@ -1,17 +1,414 @@
 ---
-title: "Analysis Starter Code"
-author: "Wayne Monical"
+title: "Data Exploration"
+author: "The Herd"
 date: "2024-12-05"
-output: github_document
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+Load packages and set options.
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(geosphere)
+library(leaflet)
+library(leaflet.extras2)
+library(lubridate)
+library(RColorBrewer)
+
+knitr::opts_chunk$set(
+  comment = '', fig.width = 8, fig.height = 6, out.width = "90%"
+)
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+```
+
+## Geographic Elk Movement Analysis
+
+We begin by importing the elk data. 
+```{r}
+elk_df = read_csv("../clean_data/elk.csv") |>
+  mutate(datetime = make_datetime(year, month, day, hour),
+         elk_id = factor(elk_id)) |>
+  select(elk_id, datetime, lat, long)
+```
+The elk IDs are: `r unique(elk_df$elk_id)`, and we are going to follow them around Yellowstone! I found a cute picture of an elk in the snow  [here](https://powertraveller.com/yellowstone-winter-wildlife-safari-from-gardiner/)
+
+<img src="pics/elk.png" style="width:75%"/>
+
+## Exploratory Analysis of Elk Migration
+
+Some questions we want to answer about the elk:
+
+- Do the 17 elk move together as a pack or separately?
+- Do the migration patterns change by year?
+- Does time of year change the migration patterns?
+- what is the average total length of yearly migration? daily? monthly?
+- How wide or narrow are the migration routes?
+- Are there any areas that all of the elk go to?
+- are the elk likely to have the same paths or go elsewhere?
+
+Fun stuff I want to do
+- Make a moving map of the elk
+
+I want to get a quick look of how the elk move across the map. Let's plot where the elk are on the map for each year!
+
+```{r}
+elk_df |>
+  mutate(year = year(datetime)) |>
+  ggplot(aes(x = long, y = lat, color = elk_id)) + 
+  geom_point(alpha = 0.3) +
+  facet_grid(~ year) +  
+  labs(
+    title = "Elk Migration by Year",
+    x = "Longitude",
+    y = "Latitude",
+    color = "Elk ID"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 75))
+```
+
+In 2013 the elk traveled much farther in longitude than the other years. In 2011, the elk did not go nearly as far East as in other years. In 2010 and 2011 there was more sparse travel and it looks like the elk liked to hang out in the far North and far South spots. The data in 2006 looks like it is not as rich and there might be missing data points here.
+
+Let's find out what the range of latitude and longitude was for the individual elk each year. I want to see the top 10 elk that moved the most. First let's look at the top 10 movers for latitude.
+```{r}
+elk_df |>
+  group_by(elk_id, year(datetime)) |>
+  summarize(longitude_range = max(long) - min(long)) |>
+  arrange(desc(longitude_range)) |>
+  head(n= 10) |>
+  knitr::kable(col.names = c("Elk ID", "Year", "Longitude Range"))
+```
+We can see that our top 3 movers in terms of longitude are Elk 900, 917, and 916. Elk 917 shows up in this list 3 times for the years 2013, 2014, and 2015. This elk is exploring farther each year!
+
+Now let's look at the top movers in terms of latitiude. 
+```{r}
+elk_df |>
+  group_by(elk_id, year(datetime)) |>
+  summarize(latitude_range = max(lat) - min(lat)) |>
+  arrange(desc(latitude_range)) |>
+  head(n= 10) |>
+  knitr::kable(col.names = c("Elk ID", "Year", "Latitude Range"))
+```
+Again we see elk 917 showing up as a top move in terms of latitude for the years 2013, 2014, and 2015 with the range going up each year.This elk is quite the explorer! We can also see that this elk has very similar results to elk 916 for 2013 and 2014. Maybe they move together? We will check this out later in the maps.  
+
+Now I want to look at how the total movement of each elk changes across the months of the year. 
+
+```{r}
+elk_df |>
+  group_by(elk_id, year = year(datetime), month = month(datetime, label = TRUE)) |> 
+  mutate(
+    dist = distHaversine(cbind(long, lat), cbind(lag(long), lag(lat)))  # Calculate distance
+  ) |>
+  summarize(
+    total_distance_km = sum(dist, na.rm = TRUE) / 1000  # Convert to kilometers and sum
+  ) |>
+  ggplot(aes(x = elk_id, y = total_distance_km, fill = factor(month))) +
+  geom_bar(stat = "identity") +  # Using bars to show total distance
+  facet_grid(~factor(month)) +
+  labs(
+    title = "Total Movement by Elk and Month",
+    x = "Elk_ID", 
+    y = "Total Distance (km)", 
+    fill = "Month") +
+  theme(axis.text.x = element_text(angle = 90))
+```
+It looks like there is quite a lot of variance in the movement of different elk. What is really interesting is that December is a big moving month! And November is right behind December in terms of total movement. I wonder if this is a pattern that elk have of moving when the temperature drops, or if there is something skewing the data like this. 
+
+Let's look at the daily averages and how this compares for each of the elk. We are going to only look at the IQR so we can see what the movement is like on most days. It looks like most days they move around
+
+```{r}
+daily_median = 
+  elk_df |>
+  mutate(
+    dist = distHaversine(cbind(long, lat), cbind(lag(long), lag(lat))),
+    date = as_date(datetime)
+  ) |>
+  group_by(elk_id, date) |>
+  summarize(daily_sum = sum(dist)) |>
+  drop_na() |>
+  pull(daily_sum) |>
+  median()
+  
+elk_df |>
+  mutate(
+    dist = distHaversine(cbind(long, lat), cbind(lag(long), lag(lat))),
+    date = as_date(datetime)
+  ) |>
+  group_by(elk_id, date) |>
+  summarize(daily_sum = sum(dist)) |>
+  ggplot(aes(x = elk_id, y = daily_sum)) +
+  geom_boxplot(outliers = FALSE) +
+  geom_hline(yintercept = daily_median, color = "blue") +
+  labs(title = "Daily Averages (m)",
+       x = "Elk ID",
+       y = "Distance (m)")
+```
+
+Now let's look at how far they travel throughout the year. 
+
+```{r}
+#calculate the distance they travel each month
+elk_seasonal <- elk_df |>
+  mutate(
+    year = year(datetime),  # Extract year
+    month = month(datetime),  # Extract month
+    season = case_when(
+      month %in% c(12, 1, 2) ~ "Winter",
+      month %in% c(3, 4, 5) ~ "Spring",
+      month %in% c(6, 7, 8) ~ "Summer",
+      month %in% c(9, 10, 11) ~ "Fall"
+    )
+  ) |>
+  arrange(elk_id, datetime)  # Ensure data is ordered
+
+# Calculate distances and group by year, season, and elk_id
+elk_distances_seasonal <- elk_seasonal |>
+  group_by(elk_id, year, season) |>
+  mutate(
+    dist = distHaversine(cbind(long, lat), cbind(lag(long), lag(lat)))  # Distance between consecutive points
+  ) |>
+  summarize(
+    total_distance_km = sum(dist, na.rm = TRUE) / 1000  # Convert to kilometers and sum
+  ) |>
+  ungroup()
+
+# View results
+elk_distances_seasonal |>
+  pivot_wider(names_from = season, values_from = total_distance_km) |>
+  knitr::kable(col.names = c("Elk ID", "Year", "Fall", "Spring", "Summer", "Winter"))
+```
+Now I am curious what the overlap of the elk are? The data collected is between 2006 and 2015, but we do not have data from all of the elk ids during that time period. It turns out that wild elk can only live up to 10-12 years, according to [worlddeer.ord](https://worlddeer.org/elk/). So let's find out what the time range is for each of these elk.
+
+One thing I want to check is if the number of data points for each elk is skewing the data. Let's see how the number of data points spread across the time frame.
+
+```{r}
+elk_df |>
+  group_by(elk_id) |>
+  mutate(
+    dist = distHaversine(cbind(long, lat), cbind(lag(long), lag(lat)))  # Distance between consecutive points
+  ) |>
+  summarize(
+    total_distance_km = sum(dist, na.rm = TRUE) / 1000  # Convert to kilometers and sum
+  ) |>
+  knitr::kable(digits = 0)
+
+# And maybe let's check how many data points we have
+
+elk_df |>
+  ggplot(aes(x = elk_id, fill = factor(year(datetime)))) +
+  geom_bar() +
+  labs(title = "Total Data Points for Each Elk",
+       x = "Elk ID",
+       y = "# of data points",
+       fill = "Year") 
+```
+We can see that the data is not consistent for for all of the elk across the 2006-2015 time period. However, there is a lot of overlap for 2 groups of elk. In further analysis we will use the 8 elk that overlap in 2013 and 2014. 
+
+```{r}
+elk_df |>
+  group_by(elk_id) |>
+  summarize(start_time = min(datetime),
+            end_time = max(datetime)) |>
+  knitr::kable()
+
+elk_df_2013.2014 = 
+  elk_df |>
+  filter(datetime >= as_date("2013-07-16") &
+         datetime <= as_date("2014-12-30"),
+         elk_id %in% c(907, 909, 911, 913, 914, 916, 917, 918))
+```
+The most overlapping data occurs between July 16th 2013 and December 30th, 2014. We have 8 elk that have data for this time range: `r unique(elk_df_2013.2014$elk_id)`. Now let's see how they move around!
+
+Plot the seasonal data
+
+```{r}
+elk_monthly = elk_df_2013.2014 |>
+  mutate(
+    year = year(datetime),  
+    month = month(datetime, label = TRUE),  
+  ) |>
+  arrange(elk_id, datetime)  
+
+# Calculate distances and group by year, season, and elk_id
+elk_distance_monthly = 
+  elk_monthly |>
+  group_by(elk_id, year, month) |>
+  mutate(
+    dist = distHaversine(cbind(long, lat), cbind(lag(long), lag(lat)))  # Distance between consecutive points
+  ) |>
+  summarize(
+    total_distance_km = sum(dist, na.rm = TRUE) / 1000  # Convert to kilometers and sum
+  ) |>
+  ungroup() 
+
+
+elk_distance_monthly |>
+  ggplot(aes(x = as.numeric(month), y = total_distance_km, color = elk_id)) +
+  geom_point() +
+  geom_smooth(se = FALSE) +
+  scale_x_continuous(
+    breaks = 1:12,  # Numeric positions for each month
+    labels = month.name  # Use month names as labels
+  ) +
+  labs(title = "Elk Movement by Month 2013-07-16 to 2014-12-30",
+       x = "month",
+       y = "total distance (km)")
+```
+It looks like May and December are when the elk are moving around the most. 
+
+I want to check if the number of observations for each month has an impact on these trends. I'm going to see if normalizing the data based on the number of observations has a significant impact on the trends. 
+
+```{r}
+elk_distance_normalized = 
+  elk_monthly |>
+  group_by(elk_id, year, month) |>
+  mutate(
+    dist = distHaversine(cbind(long, lat), cbind(lag(long), lag(lat)))  # Distance between consecutive points
+  ) |>
+  summarize(
+    total_distance_km = sum(dist, na.rm = TRUE) / 1000,  # Convert to kilometers and sum
+    count = n()
+  ) |>
+  mutate(normal_distance = total_distance_km/count)
+
+elk_distance_normalized |>
+  ggplot(aes(x = as.numeric(month), y = normal_distance, color = elk_id)) +
+  geom_point() +
+  geom_smooth(se = FALSE) +
+  scale_x_continuous(
+    breaks = 1:12,  # Numeric positions for each month
+    labels = month.name  # Use month names as labels
+  ) +
+  labs(title = "Elk Movement by Month 2013-07-16 to 2014-12-30",
+       x = "month",
+       y = "normalized distance")
+```
+The normalized data has a similar trend so we will continue with the raw data in km.
+
+Let's see where the elk are moving around in the month of May. Below is the elk mapped in Yellowstone park with their start and end points.
+
+```{r}
+# Let's make a custom elk icon!!
+elk_icon <- makeIcon(
+  iconUrl = "pics/elk_icon.png", # Replace with the URL of your moose image
+  iconWidth = 30, iconHeight = 30
+)
+
+filtered_data = elk_df_2013.2014 |>
+  filter(month(datetime) == 5)
+
+# Create a color palette (limited to 9 elk IDs for "Set1")
+elk_ids = unique(filtered_data$elk_id)  # Get unique elk IDs
+num_colors = length(elk_ids)    # Ensure we don't exceed palette limit
+path_colors = colorFactor(palette = RColorBrewer::brewer.pal(num_colors, "Set1"), domain = elk_ids)
+
+# Initialize leaflet map
+map <- filtered_data |>
+  group_by(elk_id) |>
+  summarize(start_long = first(long), start_lat = first(lat),
+            end_long = last(long), end_lat = last(lat))|>
+  ungroup() |>
+  leaflet() |>
+  addProviderTiles(providers$CartoDB.Positron, group = "Base Map") |>
+  addProviderTiles(providers$Esri.NatGeoWorldMap, group = "NatGeo Map") |>
+  addMarkers(lng = ~start_long, lat = ~start_lat, icon = elk_icon, popup = ~paste("Start Point: Elk", elk_id)) |>
+  addMarkers(lng = ~end_long, lat = ~end_lat, icon = elk_icon, popup = ~paste("End Point: Elk ", elk_id))
+
+# Add lines for each elk's path
+for (elk in elk_ids) {
+  elk_data <- filtered_data |> filter(elk_id == elk)  # Subset data for each elk
+  map <- map |>
+    addPolylines(
+      data = elk_data,
+      lng = ~long, lat = ~lat,
+      color = path_colors(elk),  # Assign unique color for each elk
+      weight = 2,
+      opacity = 0.8,
+      label = ~paste("Elk ID:", elk)  # Label showing elk ID
+    )
+}
+
+# Add a legend for the elk IDs
+map <- map |>
+  addLegend(
+    position = "topright",
+    pal = path_colors,
+    values = elk_ids,
+    title = "Elk ID"
+  )
+
+# Print the map
+map
+
+```
+From the leaflet we can tell that the elk all started somewhat close together and migrated northward. They all followed a similar path up to Jackson Lake and then some started to choose different paths. Elk 916 decided they liked it and stayed close to the lake for the rest of the month. Elk 911, 914, and 917 seemed to stay together from start until end. Maybe they are in the same heard. Cute!
+
+Now let's look at the paths for December because that was also a big movement month.
+
+```{r}
+filtered_data = elk_df_2013.2014 |>
+  filter(month(datetime) == 12,
+         year(datetime) == 2014)
+
+# Initialize leaflet map
+map <- filtered_data |>
+  group_by(elk_id) |>
+  summarize(start_long = first(long), start_lat = first(lat),
+            end_long = last(long), end_lat = last(lat))|>
+  ungroup() |>
+  leaflet() |>
+  addProviderTiles(providers$CartoDB.Positron, group = "Base Map") |>
+  addProviderTiles(providers$Esri.NatGeoWorldMap, group = "NatGeo Map") |>
+  addMarkers(lng = ~start_long, lat = ~start_lat, icon = elk_icon, popup = ~paste("Start Point: Elk", elk_id)) |>
+  addMarkers(lng = ~end_long, lat = ~end_lat, icon = elk_icon, popup = ~paste("End Point: Elk ", elk_id))
+
+# Add lines for each elk's path
+for (elk in elk_ids) {
+  elk_data <- filtered_data |> filter(elk_id == elk)  # Subset data for each elk
+  map <- map |>
+    addPolylines(
+      data = elk_data,
+      lng = ~long, lat = ~lat,
+      color = path_colors(elk),  # Assign unique color for each elk
+      weight = 2,
+      opacity = 0.8,
+      label = ~paste("Elk ID:", elk)  # Label showing elk ID
+    )
+}
+
+# Add a legend for the elk IDs
+map <- map |>
+  addLegend(
+    position = "topright",
+    pal = path_colors,
+    values = elk_ids,
+    title = "Elk ID"
+  )
+
+# Print the map
+map
+```
+
+
+
 library load
 ```{r}
 library(terra)
+
+
 library(tidyverse)
 library(geosphere)
 library(leaflet)
@@ -41,6 +438,13 @@ Read in main data set. Remember to set your working directory to the folder with
 ```{r}
 all_data = read_csv('../clean_data/all_data.csv')
 ```
+
+
+
+
+
+
+
 
 
 ### Analyzing elk movement 
