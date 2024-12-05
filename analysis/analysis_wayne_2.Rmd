@@ -172,11 +172,72 @@ water_exploration |>
     all_time_mean_GRTE_SNR02,
     standardized_difference
   ) |> 
-  head()
+  head(5)
 ```
+Examinging the data more closely, we see that GRTE_SNR02 has a consistently low level of these chemicals, while GRTE_SNR01 occasionally achieves higher levels of these chemicals.
+```{r}
+water_quality2 |> 
+  filter(characteristic_name %in% c(
+    'Chloride mg/l', 'Sodium mg/l',
+    'Sulfur, sulfate (SO4) as SO4 mg/l',
+    'Potassium mg/l')) |> 
+  ggplot(aes(fill = location_id, x = monthly_mean)) + 
+  facet_wrap(.~ characteristic_name, scales = 'free_y')+
+  geom_histogram()
+```
+
+
+Examining water quality by year. There was not any significant increase or decrease of these minerals at either location. 
+```{r}
+water_quality2 |> 
+  filter(characteristic_name %in% c(
+    'Chloride mg/l', 'Sodium mg/l',
+    'Sulfur, sulfate (SO4) as SO4 mg/l',
+    'Potassium mg/l')) |> 
+  ggplot(
+    aes(x = factor(year), y = monthly_mean, fill = location_id)
+  ) + 
+  facet_wrap(. ~ characteristic_name, scales = 'free_y') +
+  geom_boxplot() + 
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+Examining water quality by month. I can't really interpret this graph due ot lack of data. 
+```{r}
+water_quality2 |> 
+  filter(characteristic_name %in% c(
+    'Chloride mg/l', 'Sodium mg/l',
+    'Sulfur, sulfate (SO4) as SO4 mg/l',
+    'Potassium mg/l')) |> 
+  ggplot(
+    aes(x = factor(month), y = monthly_mean, fill = location_id)
+  ) + 
+  facet_wrap(. ~ characteristic_name, scales = 'free_y') +
+  geom_boxplot() + 
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+
+
+```{r}
+water_qual
+```
+
+
+```{r}
+water_quality2 |> 
+  group_by(
+    location_id, 
+    year,
+    characteristic_name
+  ) |> 
+  summarize(vary = var(monthly_max, na.rm = TRUE)) |> 
+  drop_na(vary) |> 
+  arrange(desc(vary))
+```
+
 
 ```{r}
 
 ```
-
 
