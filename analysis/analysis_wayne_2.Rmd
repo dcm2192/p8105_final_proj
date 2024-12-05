@@ -31,6 +31,20 @@ elk = read_csv('../clean_data/elk.csv')
 ```
 
 
+Creating elk_daily
+```{r}
+all_data |> 
+  group_by(
+    elk_id,
+    year,
+    month,
+    day,
+
+  ) |> 
+  
+```
+
+
 Analyze elk movement with the `dist_km` column. Remember to drop the NA's!
 ```{r}
 all_data |> 
@@ -236,6 +250,14 @@ water_quality2 |>
   arrange(desc(vary))
 ```
 
+### Water Temperature
+
+
+Does water temperature effect migration?
+
+```{r}
+unique(water_quality2$characteristic_name)
+```
 
 ```{r}
 
