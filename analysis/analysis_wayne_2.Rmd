@@ -1,0 +1,139 @@
+---
+title: "Analysis Starter Code"
+author: "Wayne Monical"
+date: "2024-12-05"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+library load
+```{r}
+library(tidyverse)
+library(terra)
+```
+
+
+
+Read in main data set. Remember to set your working directory to the folder with this Rmd file! You can do this by navigating to your folder in the Rstudio `Files` tab, clicking the `gear` icon, and clicking the `Set as working directory` button.
+```{r}
+all_data = read_csv('../clean_data/all_data.csv')
+```
+
+
+### Analyzing elk movement 
+
+reading in elk movement
+```{r}
+elk = read_csv('../clean_data/elk.csv')
+```
+
+
+Analyze elk movement with the `dist_km` column. Remember to drop the NA's!
+```{r}
+all_data |> 
+  drop_na(dist_km) |> 
+  filter(dist_km < 10) |> 
+  ggplot(aes(x = dist_km))+
+  geom_histogram()
+```
+
+
+
+### Analyzing all water quality data
+
+You can analyze the orignal water quality data in a wide or a long format
+```{r}
+# wide format
+clean_water = read_csv('../clean_data/clean_water.csv')
+
+# long format
+water_quality = read_csv('../clean_data/water_quality.csv')
+```
+
+
+## Analyzing Land Cover Data
+
+We read in land cover data from satellite imaging in 2011. We do not have land cover data for every year, however we assume that land cover is correlated across years. In other words, the land cover data from 2011 will give us an indication of land cover data in other years.
+
+
+Reading in all land cover data
+```{r}
+small_land_coord = rast('../clean_data/land_cover.tif')
+```
+
+Here is the land cover data for the entire area. 
+```{r}
+plot(small_land_coord)
+```
+
+Here is the distribution of land cover data in the entire region
+```{r}
+land_coord_df = as.data.frame(small_land_coord)
+
+land_coord_df |> 
+  ggplot(aes(x = land_cover)) +
+  geom_histogram()
+```
+
+
+Here is the distribution of land cover that where elk we observed.
+```{r}
+all_data |> 
+  ggplot(aes(x = land_cover)) +
+  geom_histogram()
+```
+
+
+
+```{r}
+library(tidyterra)
+```
+
+
+```{r}
+ggplot() +
+  geom_spatraster(data = small_land_coord) 
+```
+
+
+```{r}
+alice =
+  all_data |> 
+  select(elk_id, year, month, day, hour, lat, long, dist_km, land_cover) |> 
+  filter(elk_id == 572)
+```
+
+Path of an elk
+```{r}
+ggplot(
+  data = alice, 
+  aes(x=long, y=lat)) +
+geom_path(alpha = 0.5) +
+geom_line(alpha = 0) 
+```
+
+
+
+In this plot, we see that the elk spend most of their time in the low lying, well vegetated areas of Yellowstone.
+```{r}
+ggplot() +
+  geom_spatraster(data = small_land_coord) + 
+  geom_path(data = elk, aes(x=long, y=lat, color = 'red'), alpha = 0.7)
+```
+
+
+
+
+Zooming in on the crossing, we see that the elk take one of three paths between Yellowstone national park and the Elk reserve. The first, and furthest West goes between Jackson Lake on the West and Pilgrim mountain to the East. The middle path follows Pilgrim Creek. The East path follows Pacific Creek. 
+```{r}
+ggplot() +
+  geom_spatraster(data = small_land_coord) + 
+  geom_path(data = elk, aes(x=long, y=lat, color = 'red'), alpha = 0.7) +
+  ylim(43.75 ,44.25) + 
+  xlim(-110.8, -110.2)
+```
+
+

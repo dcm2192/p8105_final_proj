@@ -28,15 +28,22 @@ Analyze elk movement with the `dist_km` column. Remember to drop the NA's!
 ```{r}
 all_data |> 
   drop_na(dist_km) |> 
+  filter(dist_km < 10) |> 
   ggplot(aes(x = dist_km))+
   geom_histogram()
 ```
 
 
+
 ### Analyzing all water quality data
 
-
+You can analyze the orignal water quality data in a wide or a long format
 ```{r}
+# wide format
+clean_water = read_csv('../clean_data/clean_water.csv')
 
+# long format
+water_quality = read_csv('../clean_data/water_quality.csv')
 ```
+
 
