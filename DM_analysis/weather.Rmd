@@ -187,7 +187,7 @@ reduced_weather |>
 
 Do the same for snowfall.
 ```{r}
-# faceted bar chart, separated by month and year
+# faceted bar chart, separated by month and year -- KEEP STATIC, USE FOR ANALYSIS PAGE
 reduced_weather |> 
   select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
   mutate(year = format(DATE, "%Y"), 
@@ -202,7 +202,7 @@ reduced_weather |>
   facet_wrap(vars(year), ncol = 2) + 
   theme(legend.position = "none")
 
-# point + line
+# point + line -- MAKE DYNAMIC, USE FOR DASHBOARD
 reduced_weather |> 
   select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
   mutate(year = format(DATE, "%Y"), 
@@ -216,7 +216,7 @@ reduced_weather |>
   geom_point(size = 2) + 
   geom_line(linewidth = 1)
 
-# year-month totals by year
+# year-month totals by year -- MAKE DYNAMIC, USE FOR DASHBOARD
 reduced_weather |> 
   select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
   mutate(year = format(DATE, "%Y"), 
@@ -233,7 +233,7 @@ reduced_weather |>
 
 Snow depth.
 ```{r}
-# faceted bar chart, separated by month and year
+# faceted bar chart, separated by month and year -- KEEP STATIC, USE FOR ANALYSIS PAGE
 reduced_weather |> 
   select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
   mutate(year = format(DATE, "%Y"), 
@@ -248,7 +248,7 @@ reduced_weather |>
   facet_wrap(vars(year), ncol = 2) + 
   theme(legend.position = "none")
 
-# point + line
+# point + line -- MAKE DYNAMIC, USE FOR DASHBOARD
 reduced_weather |> 
   select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
   mutate(year = format(DATE, "%Y"), 
@@ -262,7 +262,7 @@ reduced_weather |>
   geom_point(size = 2) + 
   geom_line(linewidth = 1)
 
-# year-month totals
+# year-month totals -- MAKE DYNAMIC, USE FOR DASHBOARD
 reduced_weather |> 
   select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
   mutate(year = format(DATE, "%Y"), 
@@ -276,6 +276,47 @@ reduced_weather |>
   geom_bar(stat = "identity") + 
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 ```
+
+Avg temp. 
+```{r}
+# faceted bar chart, separated by month and year -- KEEP STATIC, USE FOR ANALYSIS PAGE
+reduced_weather |> 
+  select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
+  mutate(year = format(DATE, "%Y"), 
+         month = format(DATE, "%m")) |> 
+  group_by(year, month) |> 
+  summarize(year_month_tavg = mean(TAVG, na.rm = TRUE)) |> 
+  mutate(year_month = paste(year, month, sep = "-")) |> 
+  ggplot(aes(x = month, y = year_month_tavg, fill = as.factor(year))) +
+  geom_bar(stat = "identity") + 
+  facet_wrap(vars(year), ncol = 2) + 
+  theme(legend.position = "none")
+
+# point + line -- MAKE DYNAMIC, USE FOR DASHBOARD
+reduced_weather |> 
+  select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
+  mutate(year = format(DATE, "%Y"), 
+         month = format(DATE, "%m")) |> 
+  group_by(year, month) |> 
+  summarize(year_month_tavg = mean(TAVG, na.rm = TRUE)) |> 
+  mutate(year_month = paste(year, month, sep = "-")) |> 
+  ggplot(aes(x = month, y = year_month_tavg, color = year, group = year)) + 
+  geom_point(size = 2) + 
+  geom_line(linewidth = 1)
+
+# year-month totals -- MAKE DYNAMIC, USE FOR DASHBOARD
+reduced_weather |> 
+  select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
+  mutate(year = format(DATE, "%Y"), 
+         month = format(DATE, "%m")) |> 
+  group_by(year, month) |> 
+  summarize(year_month_tavg = mean(TAVG, na.rm = TRUE)) |> 
+  mutate(year_month = paste(year, month, sep = "-")) |> 
+  ggplot(aes(x = year_month, y = year_month_tavg, fill = as.factor(year))) + 
+  geom_bar(stat = "identity") + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
 
 Scatterplot of daily elk movement versus precip
 Scatterplot of daily elk movement versus snowfall
@@ -308,7 +349,9 @@ daily_elk <-
     tavg,
     prcp,
     snow,
-    snwd
+    snwd,
+    tmin,
+    tmax
   ) |>
   summarize(
     dist_km = sum(dist_km, na.rm = TRUE), 
@@ -323,7 +366,10 @@ daily_elk |>
   geom_histogram()
 ```
 
-Elk mvmt vs precip. 
+
+*FOR ALL OF THE PLOTS BELOW, MAKE STATIC AND DYNAMIC, AND USE ON BOTH ANALYSIS PAGE AND DASHBOARD*
+
+Elk mvmt vs precip.
 ```{r}
 daily_elk |> 
   ggplot(aes(x = prcp, y = dist_km)) + 
@@ -369,6 +415,23 @@ daily_elk |>
 daily_elk |> 
   ggplot(aes(x = tavg, y = dist_km, color = as.factor(year))) + 
   geom_smooth(se = FALSE)
+```
+
+Elk mvmt vs tmin.
+```{r}
+daily_elk |> 
+  ggplot(aes(x = tmin, y = dist_km)) + 
+  geom_point() + 
+  geom_smooth(se = FALSE)
+
+daily_elk |> 
+  ggplot(aes(x = tmin, y = dist_km, color = as.factor(elk_id))) + 
+  geom_smooth(se = FALSE)
+```
+
+Elk mvmt vs tmax. 
+```{r}
+
 ```
 
 

@@ -293,7 +293,7 @@ reduced_weather |>
 Do the same for snowfall.
 
 ``` r
-# faceted bar chart, separated by month and year
+# faceted bar chart, separated by month and year -- KEEP STATIC, USE FOR ANALYSIS PAGE
 reduced_weather |> 
   select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
   mutate(year = format(DATE, "%Y"), 
@@ -317,7 +317,7 @@ reduced_weather |>
 ![](weather_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
 ``` r
-# point + line
+# point + line -- MAKE DYNAMIC, USE FOR DASHBOARD
 reduced_weather |> 
   select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
   mutate(year = format(DATE, "%Y"), 
@@ -340,7 +340,7 @@ reduced_weather |>
 ![](weather_files/figure-gfm/unnamed-chunk-7-2.png)<!-- -->
 
 ``` r
-# year-month totals by year
+# year-month totals by year -- MAKE DYNAMIC, USE FOR DASHBOARD
 reduced_weather |> 
   select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
   mutate(year = format(DATE, "%Y"), 
@@ -365,7 +365,7 @@ reduced_weather |>
 Snow depth.
 
 ``` r
-# faceted bar chart, separated by month and year
+# faceted bar chart, separated by month and year -- KEEP STATIC, USE FOR ANALYSIS PAGE
 reduced_weather |> 
   select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
   mutate(year = format(DATE, "%Y"), 
@@ -389,7 +389,7 @@ reduced_weather |>
 ![](weather_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
 ``` r
-# point + line
+# point + line -- MAKE DYNAMIC, USE FOR DASHBOARD
 reduced_weather |> 
   select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
   mutate(year = format(DATE, "%Y"), 
@@ -412,7 +412,7 @@ reduced_weather |>
 ![](weather_files/figure-gfm/unnamed-chunk-8-2.png)<!-- -->
 
 ``` r
-# year-month totals
+# year-month totals -- MAKE DYNAMIC, USE FOR DASHBOARD
 reduced_weather |> 
   select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
   mutate(year = format(DATE, "%Y"), 
@@ -433,6 +433,66 @@ reduced_weather |>
     ## `.groups` argument.
 
 ![](weather_files/figure-gfm/unnamed-chunk-8-3.png)<!-- -->
+
+Avg temp.
+
+``` r
+# faceted bar chart, separated by month and year -- KEEP STATIC, USE FOR ANALYSIS PAGE
+reduced_weather |> 
+  select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
+  mutate(year = format(DATE, "%Y"), 
+         month = format(DATE, "%m")) |> 
+  group_by(year, month) |> 
+  summarize(year_month_tavg = mean(TAVG, na.rm = TRUE)) |> 
+  mutate(year_month = paste(year, month, sep = "-")) |> 
+  ggplot(aes(x = month, y = year_month_tavg, fill = as.factor(year))) +
+  geom_bar(stat = "identity") + 
+  facet_wrap(vars(year), ncol = 2) + 
+  theme(legend.position = "none")
+```
+
+    ## `summarise()` has grouped output by 'year'. You can override using the
+    ## `.groups` argument.
+
+![](weather_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+
+``` r
+# point + line -- MAKE DYNAMIC, USE FOR DASHBOARD
+reduced_weather |> 
+  select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
+  mutate(year = format(DATE, "%Y"), 
+         month = format(DATE, "%m")) |> 
+  group_by(year, month) |> 
+  summarize(year_month_tavg = mean(TAVG, na.rm = TRUE)) |> 
+  mutate(year_month = paste(year, month, sep = "-")) |> 
+  ggplot(aes(x = month, y = year_month_tavg, color = year, group = year)) + 
+  geom_point(size = 2) + 
+  geom_line(linewidth = 1)
+```
+
+    ## `summarise()` has grouped output by 'year'. You can override using the
+    ## `.groups` argument.
+
+![](weather_files/figure-gfm/unnamed-chunk-9-2.png)<!-- -->
+
+``` r
+# year-month totals -- MAKE DYNAMIC, USE FOR DASHBOARD
+reduced_weather |> 
+  select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
+  mutate(year = format(DATE, "%Y"), 
+         month = format(DATE, "%m")) |> 
+  group_by(year, month) |> 
+  summarize(year_month_tavg = mean(TAVG, na.rm = TRUE)) |> 
+  mutate(year_month = paste(year, month, sep = "-")) |> 
+  ggplot(aes(x = year_month, y = year_month_tavg, fill = as.factor(year))) + 
+  geom_bar(stat = "identity") + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+    ## `summarise()` has grouped output by 'year'. You can override using the
+    ## `.groups` argument.
+
+![](weather_files/figure-gfm/unnamed-chunk-9-3.png)<!-- -->
 
 Scatterplot of daily elk movement versus precip Scatterplot of daily elk
 movement versus snowfall Scatterplot of daily elk movement versus snow
@@ -464,7 +524,7 @@ all_data |>
     ## Warning: Removed 17 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](weather_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+![](weather_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
 
 Daily elk.
 
@@ -481,7 +541,9 @@ daily_elk <-
     tavg,
     prcp,
     snow,
-    snwd
+    snwd,
+    tmin,
+    tmax
   ) |>
   summarize(
     dist_km = sum(dist_km, na.rm = TRUE), 
@@ -490,8 +552,8 @@ daily_elk <-
 ```
 
     ## `summarise()` has grouped output by 'elk_id', 'year_month_day', 'year',
-    ## 'month', 'day', 'tavg', 'prcp', 'snow'. You can override using the `.groups`
-    ## argument.
+    ## 'month', 'day', 'tavg', 'prcp', 'snow', 'snwd', 'tmin'. You can override using
+    ## the `.groups` argument.
 
 Land cover.
 
@@ -503,7 +565,10 @@ daily_elk |>
 
     ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
 
-![](weather_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+![](weather_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+
+*FOR ALL OF THE PLOTS BELOW, MAKE STATIC AND DYNAMIC, AND USE ON BOTH
+ANALYSIS PAGE AND DASHBOARD*
 
 Elk mvmt vs precip.
 
@@ -522,7 +587,7 @@ daily_elk |>
     ## Warning: Removed 143 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](weather_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+![](weather_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
 
 ``` r
 daily_elk |> 
@@ -535,7 +600,7 @@ daily_elk |>
     ## Warning: Removed 143 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
 
-![](weather_files/figure-gfm/unnamed-chunk-13-2.png)<!-- -->
+![](weather_files/figure-gfm/unnamed-chunk-14-2.png)<!-- -->
 
 Elk mvmt vs. snowfall.
 
@@ -554,7 +619,7 @@ daily_elk |>
     ## Warning: Removed 1296 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](weather_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+![](weather_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
 
 ``` r
 daily_elk |> 
@@ -567,7 +632,7 @@ daily_elk |>
     ## Warning: Removed 1296 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
 
-![](weather_files/figure-gfm/unnamed-chunk-14-2.png)<!-- -->
+![](weather_files/figure-gfm/unnamed-chunk-15-2.png)<!-- -->
 
 Elk mvmt vs. snow depth.
 
@@ -586,7 +651,7 @@ daily_elk |>
     ## Warning: Removed 185 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](weather_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+![](weather_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
 ``` r
 daily_elk |> 
@@ -599,7 +664,7 @@ daily_elk |>
     ## Warning: Removed 185 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
 
-![](weather_files/figure-gfm/unnamed-chunk-15-2.png)<!-- -->
+![](weather_files/figure-gfm/unnamed-chunk-16-2.png)<!-- -->
 
 Elk mvmt vs avg temp.
 
@@ -618,7 +683,7 @@ daily_elk |>
     ## Warning: Removed 143 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](weather_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+![](weather_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
 
 ``` r
 daily_elk |> 
@@ -631,4 +696,38 @@ daily_elk |>
     ## Warning: Removed 143 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
 
-![](weather_files/figure-gfm/unnamed-chunk-16-2.png)<!-- -->
+![](weather_files/figure-gfm/unnamed-chunk-17-2.png)<!-- -->
+
+Elk mvmt vs tmin.
+
+``` r
+daily_elk |> 
+  ggplot(aes(x = tmin, y = dist_km)) + 
+  geom_point() + 
+  geom_smooth(se = FALSE)
+```
+
+    ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
+
+    ## Warning: Removed 143 rows containing non-finite outside the scale range
+    ## (`stat_smooth()`).
+
+    ## Warning: Removed 143 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
+![](weather_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+
+``` r
+daily_elk |> 
+  ggplot(aes(x = tmin, y = dist_km, color = as.factor(elk_id))) + 
+  geom_smooth(se = FALSE)
+```
+
+    ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
+
+    ## Warning: Removed 143 rows containing non-finite outside the scale range
+    ## (`stat_smooth()`).
+
+![](weather_files/figure-gfm/unnamed-chunk-18-2.png)<!-- -->
+
+Elk mvmt vs tmax.
