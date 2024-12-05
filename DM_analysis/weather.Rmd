@@ -366,6 +366,29 @@ daily_elk |>
   facet_wrap(vars(year), ncol = 5)
 ```
 
+Elk mvmt vs. snow depth. 
+```{r}
+daily_elk |> 
+  ggplot(aes(x = snwd, y = dist_km)) + 
+  geom_point() + 
+  geom_smooth(se = FALSE)
+
+daily_elk |> 
+  ggplot(aes(x = snwd, y = dist_km, color = as.factor(year))) + 
+  geom_point() + 
+  geom_smooth(se = FALSE)
+
+daily_elk |> 
+  ggplot(aes(x = snwd, y = dist_km)) + 
+  geom_hex() + 
+  geom_smooth(se = FALSE)
+
+daily_elk |> 
+  ggplot(aes(x = snwd, y = dist_km)) + 
+  geom_hex() + 
+  geom_smooth(se = FALSE) + 
+  facet_wrap(vars(year), ncol = 5)
+```
 
 
 

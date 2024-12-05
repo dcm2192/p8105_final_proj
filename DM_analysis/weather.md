@@ -639,3 +639,73 @@ daily_elk |>
     ## (`stat_smooth()`).
 
 ![](weather_files/figure-gfm/unnamed-chunk-13-4.png)<!-- -->
+
+Elk mvmt vs. snow depth.
+
+``` r
+daily_elk |> 
+  ggplot(aes(x = snwd, y = dist_km)) + 
+  geom_point() + 
+  geom_smooth(se = FALSE)
+```
+
+    ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
+
+    ## Warning: Removed 184 rows containing non-finite outside the scale range
+    ## (`stat_smooth()`).
+
+    ## Warning: Removed 184 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
+![](weather_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+
+``` r
+daily_elk |> 
+  ggplot(aes(x = snwd, y = dist_km, color = as.factor(year))) + 
+  geom_point() + 
+  geom_smooth(se = FALSE)
+```
+
+    ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
+
+    ## Warning: Removed 184 rows containing non-finite outside the scale range
+    ## (`stat_smooth()`).
+    ## Removed 184 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
+![](weather_files/figure-gfm/unnamed-chunk-14-2.png)<!-- -->
+
+``` r
+daily_elk |> 
+  ggplot(aes(x = snwd, y = dist_km)) + 
+  geom_hex() + 
+  geom_smooth(se = FALSE)
+```
+
+    ## Warning: Removed 184 rows containing non-finite outside the scale range
+    ## (`stat_binhex()`).
+
+    ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
+
+    ## Warning: Removed 184 rows containing non-finite outside the scale range
+    ## (`stat_smooth()`).
+
+![](weather_files/figure-gfm/unnamed-chunk-14-3.png)<!-- -->
+
+``` r
+daily_elk |> 
+  ggplot(aes(x = snwd, y = dist_km)) + 
+  geom_hex() + 
+  geom_smooth(se = FALSE) + 
+  facet_wrap(vars(year), ncol = 5)
+```
+
+    ## Warning: Removed 184 rows containing non-finite outside the scale range
+    ## (`stat_binhex()`).
+
+    ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
+
+    ## Warning: Removed 184 rows containing non-finite outside the scale range
+    ## (`stat_smooth()`).
+
+![](weather_files/figure-gfm/unnamed-chunk-14-4.png)<!-- -->
