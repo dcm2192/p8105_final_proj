@@ -157,7 +157,7 @@ daily_elk =
     ## `summarise()` has grouped output by 'elk_id', 'year', 'month', 'day', 'tavg',
     ## 'prcp', 'snow'. You can override using the `.groups` argument.
 
-Precip plotly.
+Precip plotly
 
 ``` r
 # point + line, separated by month and year

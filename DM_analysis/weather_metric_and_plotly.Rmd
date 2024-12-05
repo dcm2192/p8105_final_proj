@@ -64,7 +64,7 @@ daily_elk =
   )
 ```
 
-Precip plotly.
+Precip plotly
 ```{r}
 # point + line, separated by month and year
 reduced_weather |> 
