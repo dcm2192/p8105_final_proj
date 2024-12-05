@@ -466,13 +466,15 @@ all_data |>
 
 ![](weather_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
-Land cover.
+Daily elk.
 
 ``` r
-daily_elk =
-  all_data |>
+daily_elk <- 
+  all_data |> 
+  mutate(year_month_day = format(dt, "%Y-%m-%d")) |> 
   group_by(
     elk_id,
+    year_month_day, 
     year,
     month,
     day,
@@ -487,8 +489,11 @@ daily_elk =
   )
 ```
 
-    ## `summarise()` has grouped output by 'elk_id', 'year', 'month', 'day', 'tavg',
-    ## 'prcp', 'snow'. You can override using the `.groups` argument.
+    ## `summarise()` has grouped output by 'elk_id', 'year_month_day', 'year',
+    ## 'month', 'day', 'tavg', 'prcp', 'snow'. You can override using the `.groups`
+    ## argument.
+
+Land cover.
 
 ``` r
 daily_elk |> 
@@ -498,7 +503,7 @@ daily_elk |>
 
     ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
 
-![](weather_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+![](weather_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
 
 Elk mvmt vs precip.
 
@@ -517,12 +522,11 @@ daily_elk |>
     ## Warning: Removed 143 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](weather_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+![](weather_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
 
 ``` r
 daily_elk |> 
-  ggplot(aes(x = prcp, y = dist_km, color = as.factor(year))) + 
-  geom_point() + 
+  ggplot(aes(x = prcp, y = dist_km, color = factor(year))) + 
   geom_smooth(se = FALSE)
 ```
 
@@ -530,45 +534,8 @@ daily_elk |>
 
     ## Warning: Removed 143 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
-    ## Removed 143 rows containing missing values or values outside the scale range
-    ## (`geom_point()`).
 
-![](weather_files/figure-gfm/unnamed-chunk-12-2.png)<!-- -->
-
-``` r
-daily_elk |> 
-  ggplot(aes(x = prcp, y = dist_km)) + 
-  geom_hex() + 
-  geom_smooth(se = FALSE)
-```
-
-    ## Warning: Removed 143 rows containing non-finite outside the scale range
-    ## (`stat_binhex()`).
-
-    ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
-
-    ## Warning: Removed 143 rows containing non-finite outside the scale range
-    ## (`stat_smooth()`).
-
-![](weather_files/figure-gfm/unnamed-chunk-12-3.png)<!-- -->
-
-``` r
-daily_elk |> 
-  ggplot(aes(x = prcp, y = dist_km)) + 
-  geom_hex() + 
-  geom_smooth(se = FALSE) + 
-  facet_wrap(vars(year), ncol = 5)
-```
-
-    ## Warning: Removed 143 rows containing non-finite outside the scale range
-    ## (`stat_binhex()`).
-
-    ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
-
-    ## Warning: Removed 143 rows containing non-finite outside the scale range
-    ## (`stat_smooth()`).
-
-![](weather_files/figure-gfm/unnamed-chunk-12-4.png)<!-- -->
+![](weather_files/figure-gfm/unnamed-chunk-13-2.png)<!-- -->
 
 Elk mvmt vs. snowfall.
 
@@ -581,64 +548,26 @@ daily_elk |>
 
     ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
 
-    ## Warning: Removed 1274 rows containing non-finite outside the scale range
+    ## Warning: Removed 1296 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
 
-    ## Warning: Removed 1274 rows containing missing values or values outside the scale range
+    ## Warning: Removed 1296 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](weather_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+![](weather_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
 
 ``` r
 daily_elk |> 
   ggplot(aes(x = snow, y = dist_km, color = as.factor(year))) + 
-  geom_point() + 
   geom_smooth(se = FALSE)
 ```
 
     ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
 
-    ## Warning: Removed 1274 rows containing non-finite outside the scale range
-    ## (`stat_smooth()`).
-    ## Removed 1274 rows containing missing values or values outside the scale range
-    ## (`geom_point()`).
-
-![](weather_files/figure-gfm/unnamed-chunk-13-2.png)<!-- -->
-
-``` r
-daily_elk |> 
-  ggplot(aes(x = snow, y = dist_km)) + 
-  geom_hex() + 
-  geom_smooth(se = FALSE)
-```
-
-    ## Warning: Removed 1274 rows containing non-finite outside the scale range
-    ## (`stat_binhex()`).
-
-    ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
-
-    ## Warning: Removed 1274 rows containing non-finite outside the scale range
+    ## Warning: Removed 1296 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
 
-![](weather_files/figure-gfm/unnamed-chunk-13-3.png)<!-- -->
-
-``` r
-daily_elk |> 
-  ggplot(aes(x = snow, y = dist_km)) + 
-  geom_hex() + 
-  geom_smooth(se = FALSE) + 
-  facet_wrap(vars(year), ncol = 5)
-```
-
-    ## Warning: Removed 1274 rows containing non-finite outside the scale range
-    ## (`stat_binhex()`).
-
-    ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
-
-    ## Warning: Removed 1274 rows containing non-finite outside the scale range
-    ## (`stat_smooth()`).
-
-![](weather_files/figure-gfm/unnamed-chunk-13-4.png)<!-- -->
+![](weather_files/figure-gfm/unnamed-chunk-14-2.png)<!-- -->
 
 Elk mvmt vs. snow depth.
 
@@ -651,64 +580,26 @@ daily_elk |>
 
     ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
 
-    ## Warning: Removed 184 rows containing non-finite outside the scale range
+    ## Warning: Removed 185 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
 
-    ## Warning: Removed 184 rows containing missing values or values outside the scale range
+    ## Warning: Removed 185 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](weather_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+![](weather_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
 
 ``` r
 daily_elk |> 
   ggplot(aes(x = snwd, y = dist_km, color = as.factor(year))) + 
-  geom_point() + 
   geom_smooth(se = FALSE)
 ```
 
     ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
 
-    ## Warning: Removed 184 rows containing non-finite outside the scale range
-    ## (`stat_smooth()`).
-    ## Removed 184 rows containing missing values or values outside the scale range
-    ## (`geom_point()`).
-
-![](weather_files/figure-gfm/unnamed-chunk-14-2.png)<!-- -->
-
-``` r
-daily_elk |> 
-  ggplot(aes(x = snwd, y = dist_km)) + 
-  geom_hex() + 
-  geom_smooth(se = FALSE)
-```
-
-    ## Warning: Removed 184 rows containing non-finite outside the scale range
-    ## (`stat_binhex()`).
-
-    ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
-
-    ## Warning: Removed 184 rows containing non-finite outside the scale range
+    ## Warning: Removed 185 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
 
-![](weather_files/figure-gfm/unnamed-chunk-14-3.png)<!-- -->
-
-``` r
-daily_elk |> 
-  ggplot(aes(x = snwd, y = dist_km)) + 
-  geom_hex() + 
-  geom_smooth(se = FALSE) + 
-  facet_wrap(vars(year), ncol = 5)
-```
-
-    ## Warning: Removed 184 rows containing non-finite outside the scale range
-    ## (`stat_binhex()`).
-
-    ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
-
-    ## Warning: Removed 184 rows containing non-finite outside the scale range
-    ## (`stat_smooth()`).
-
-![](weather_files/figure-gfm/unnamed-chunk-14-4.png)<!-- -->
+![](weather_files/figure-gfm/unnamed-chunk-15-2.png)<!-- -->
 
 Elk mvmt vs avg temp.
 
@@ -727,12 +618,11 @@ daily_elk |>
     ## Warning: Removed 143 rows containing missing values or values outside the scale range
     ## (`geom_point()`).
 
-![](weather_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+![](weather_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
 ``` r
 daily_elk |> 
   ggplot(aes(x = tavg, y = dist_km, color = as.factor(year))) + 
-  geom_point() + 
   geom_smooth(se = FALSE)
 ```
 
@@ -740,42 +630,5 @@ daily_elk |>
 
     ## Warning: Removed 143 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
-    ## Removed 143 rows containing missing values or values outside the scale range
-    ## (`geom_point()`).
 
-![](weather_files/figure-gfm/unnamed-chunk-15-2.png)<!-- -->
-
-``` r
-daily_elk |> 
-  ggplot(aes(x = tavg, y = dist_km)) + 
-  geom_hex() + 
-  geom_smooth(se = FALSE)
-```
-
-    ## Warning: Removed 143 rows containing non-finite outside the scale range
-    ## (`stat_binhex()`).
-
-    ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
-
-    ## Warning: Removed 143 rows containing non-finite outside the scale range
-    ## (`stat_smooth()`).
-
-![](weather_files/figure-gfm/unnamed-chunk-15-3.png)<!-- -->
-
-``` r
-daily_elk |> 
-  ggplot(aes(x = tavg, y = dist_km)) + 
-  geom_hex() + 
-  geom_smooth(se = FALSE) + 
-  facet_wrap(vars(year), ncol = 5)
-```
-
-    ## Warning: Removed 143 rows containing non-finite outside the scale range
-    ## (`stat_binhex()`).
-
-    ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
-
-    ## Warning: Removed 143 rows containing non-finite outside the scale range
-    ## (`stat_smooth()`).
-
-![](weather_files/figure-gfm/unnamed-chunk-15-4.png)<!-- -->
+![](weather_files/figure-gfm/unnamed-chunk-16-2.png)<!-- -->
