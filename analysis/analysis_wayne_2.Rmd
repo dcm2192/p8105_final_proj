@@ -42,17 +42,6 @@ all_data |>
 
 
 
-### Analyzing all water quality data
-
-You can analyze the orignal water quality data in a wide or a long format
-```{r}
-# wide format
-clean_water = read_csv('../clean_data/clean_water.csv')
-
-# long format
-water_quality = read_csv('../clean_data/water_quality.csv')
-```
-
 
 ## Analyzing Land Cover Data
 
@@ -136,4 +125,30 @@ ggplot() +
   xlim(-110.8, -110.2)
 ```
 
+
+
+
+### Analyzing Water Quality
+
+
+WRITE ABOUT THE SOURCE
+
+```{r}
+# wide format
+clean_water = read_csv('../clean_data/clean_water.csv')
+
+# long format
+water_quality = read_csv('../clean_data/water_quality.csv')
+```
+
+
+
+```{r}
+water_quality
+```
+
+
+```{r}
+names(clean_water)
+```
 

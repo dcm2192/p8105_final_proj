@@ -220,46 +220,16 @@ water_quality_results=
 
 ### Combining Water Data
 
+
+```{r}
+
+```
+
+
 ```{r}
 water_quality = 
   water_quality_locations |> 
-  left_join(water_quality_results)
-
-water_quality |> write.csv('../clean_data/water_quality.csv', row.names = FALSE)
-```
-Looking at all water quality locations
-```{r}
-water_quality %>% 
-  dplyr::select(
-    location_id,
-    longitude,
-    latitude
-  ) %>%
-  distinct() %>% 
-  arrange(desc(latitude))
-```
-
-
-```{r}
-water_quality %>% 
-  dplyr::select(
-    location_id,
-    longitude,
-    latitude
-  ) %>% 
-  ggplot(aes(x = longitude, y = latitude))+
-  geom_point() + 
-  geom_point(
-    data = elk,
-    aes(x = long, y = lat, color = 'red'), alpha = 0.01
-  )
-```
-
-
-Aggregating at the month level. GRTE_SNR01 and GRTE_SNR02 are the two relevent stations to our analysis
-```{r}
-clean_water = 
-  water_quality %>% 
+  left_join(water_quality_results) |> 
   filter(location_id %in% c('GRTE_SNR01', 'GRTE_SNR02')) %>% 
   mutate(
     result_text = stringr::str_replace(result_text, 'LOW', '1'),
@@ -278,7 +248,17 @@ clean_water =
     monthly_mean = mean(as.numeric(result_text),na.rm = TRUE),
     monthly_min = min(as.numeric(result_text),na.rm = TRUE),
     monthly_max = max(as.numeric(result_text),na.rm = TRUE)
-  ) %>% 
+  ) 
+
+water_quality |> write.csv('../clean_data/water_quality.csv', row.names = FALSE)
+```
+
+
+
+Aggregating at the month level. GRTE_SNR01 and GRTE_SNR02 are the two relevent stations to our analysis
+```{r}
+clean_water = 
+  water_quality %>% 
   pivot_wider(
     names_from = characteristic_name,
     values_from = c('monthly_mean', 'monthly_min', 'monthly_max')
