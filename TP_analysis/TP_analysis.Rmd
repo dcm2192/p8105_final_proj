@@ -1,6 +1,7 @@
 ---
-title: "TP_analysis"
-output: github_document
+title: "Water Quality Analysis"
+author: "Tamara Pichardo"
+output: html_document
 ---
 
 
@@ -8,25 +9,42 @@ output: github_document
 ```{r}
 library(tidyverse)
 library(ggmap)
-library(shiny)
+library(plotly)
 ```
 
+```{r}
+knitr::opts_chunk$set(
+        echo = TRUE,
+        warning = FALSE,
+  fig.width = 6,
+  fig.asp = .6,
+  out.width = "90%"
+)
+
+theme_set(theme_minimal() +theme(legend.position = "bottom"))
+
+options(
+  ggplot2.continuous.color = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_color_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+```
 
 
 ## Read in Data
 
 ```{r}
-elk = read.csv(file = "./data/elk.csv")
-water_quality = read.csv(file = "./data/water_quality.csv")
+elk = read.csv(file = "./data/elk.csv") |> 
+  mutate(date = as.Date(paste(year, month, day, sep = "-")))
+
+water_quality = read.csv(file = "./data/water_quality.csv") |> 
+  mutate(date = as.Date(paste(year, month, day, sep = "-"))) |> 
+  filter(location_id %in% c("GRTE_SNR01", "GRTE_SNR02", "YELL_LM000.5M", "YELL_YS549.7M", "YELL_MD133.2T", "YELL_MDR"))
 ```
 
-## Elk Data
 
-Each elk has an `elk_id`. The `year`, `month`, `day`, and `hour` give the time. The `lat` and `long` give the location.
-
-```{r}
-head(elk)
-```
 ## Water Quality
 
 - The `year`, `month`, and `day` variables give the time. 
@@ -153,9 +171,13 @@ arsenic =
   mutate(arsenic = as.numeric(result_text)) 
 
 
-arsenic |>    
-  ggplot(aes(x = arsenic)) + 
-  geom_histogram()
+ggplot(arsenic, aes(x = date, y = arsenic, color = location_id)) +
+  geom_point(alpha = 0.6) +
+  labs(
+    title = "Scatter Plot of Arsenic Levels Over Time", 
+    x = "Date", 
+    y = "Arsenic (mg/l)") +
+  theme(legend.position = "right")
 ```
 
 ```{r}
@@ -165,9 +187,13 @@ chloride =
   mutate(chloride = as.numeric(result_text))
 
 
-chloride |>    
-  ggplot(aes(x = chloride)) + 
-  geom_histogram()
+ggplot(chloride, aes(x = date, y = chloride, color = location_id)) +
+  geom_point(alpha = 0.6) +
+  labs(
+    title = "Scatter Plot of Chloride Levels Over Time", 
+    x = "Date", 
+    y = "Chloride (mg/l)") +
+  theme(legend.position = "right")
 ```
 
 ```{r}
@@ -177,9 +203,13 @@ dissolved_oxygen =
   mutate(dissolved_oxygen = as.numeric(result_text)) 
 
 
-dissolved_oxygen |>    
-  ggplot(aes(x = dissolved_oxygen)) + 
-  geom_histogram()
+ggplot(dissolved_oxygen, aes(x = date, y = dissolved_oxygen, color = location_id)) +
+  geom_point(alpha = 0.6) +
+  labs(
+    title = "Scatter Plot of Dissolved Oxygen Levels Over Time", 
+    x = "Date", 
+    y = "Dissolved Oxygen (DO) mg/l") +
+  theme(legend.position = "right")
 ```
 
 ```{r}
@@ -189,9 +219,13 @@ magnesium =
   mutate(magnesium = as.numeric(result_text)) 
 
 
-magnesium |>    
-  ggplot(aes(x = magnesium)) + 
-  geom_histogram()
+ggplot(magnesium, aes(x = date, y = magnesium, color = location_id)) +
+  geom_point(alpha = 0.6) +
+  labs(
+    title = "Scatter Plot of Magnesium Levels Over Time", 
+    x = "Date", 
+    y = "Magnesium (mg/l)") +
+  theme(legend.position = "right")
 ```
 
 ```{r}
@@ -201,9 +235,13 @@ nitrogen =
   mutate(nitrogen = as.numeric(result_text)) 
 
 
-nitrogen |>    
-  ggplot(aes(x = nitrogen)) + 
-  geom_histogram()
+ggplot(nitrogen, aes(x = date, y = nitrogen, color = location_id)) +
+  geom_point(alpha = 0.6) +
+  labs(
+    title = "Scatter Plot of Nitrogen Levels Over Time", 
+    x = "Date", 
+    y = "Nitrogen (mg/l)") +
+  theme(legend.position = "right")
 ```
 
 ```{r}
@@ -213,9 +251,13 @@ phosphorus =
   mutate(phosphorus = as.numeric(result_text)) 
 
 
-phosphorus |>    
-  ggplot(aes(x = phosphorus)) + 
-  geom_histogram()
+ggplot(phosphorus, aes(x = date, y = phosphorus, color = location_id)) +
+  geom_point(alpha = 0.6) +
+  labs(
+    title = "Scatter Plot of Phosphorus Levels Over Time", 
+    x = "Date", 
+    y = "Phosphorus (mg/l)") +
+  theme(legend.position = "right")
 ```
 
 ```{r}
@@ -225,9 +267,13 @@ potassium =
   mutate(potassium = as.numeric(result_text)) 
 
 
-potassium |>    
-  ggplot(aes(x = potassium)) + 
-  geom_histogram()
+ggplot(potassium, aes(x = date, y = potassium, color = location_id)) +
+  geom_point(alpha = 0.6) +
+  labs(
+    title = "Scatter Plot of Potassium Levels Over Time", 
+    x = "Date", 
+    y = "Potassium (mg/l)") +
+  theme(legend.position = "right")
 ```
 
 ```{r}
@@ -237,9 +283,13 @@ sodium =
   mutate(sodium = as.numeric(result_text)) 
 
 
-sodium |>    
-  ggplot(aes(x = sodium)) + 
-  geom_histogram()
+ggplot(sodium, aes(x = date, y = sodium, color = location_id)) +
+  geom_point(alpha = 0.6) +
+  labs(
+    title = "Scatter Plot of Sodium Levels Over Time", 
+    x = "Date", 
+    y = "Sodium (mg/l)") +
+  theme(legend.position = "right")
 ```
 
 ```{r}
@@ -249,23 +299,15 @@ sulfur =
   mutate(sulfur = as.numeric(result_text))
 
 
-sulfur |>    
-  ggplot(aes(x = sulfur)) + 
-  geom_histogram()
+ggplot(sulfur, aes(x = date, y = sulfur, color = location_id)) +
+  geom_point(alpha = 0.6) +
+  labs(
+    title = "Scatter Plot of Sulfur Levels Over Time", 
+    x = "Date", 
+    y = "Sulfur (mg/l)") +
+  theme(legend.position = "right")
 ```
 
-
-```{r}
-air_temp = 
-  water_quality |> 
-  filter(characteristic_name == 'Temperature, air deg C') |> 
-  mutate(air_temp = as.numeric(result_text)) 
-
-
-air_temp |>    
-  ggplot(aes(x = air_temp)) + 
-  geom_histogram()
-```
 
 ```{r}
 water_temp = 
@@ -274,9 +316,15 @@ water_temp =
   mutate(water_temp = as.numeric(result_text)) 
 
 
-water_temp |>    
-  ggplot(aes(x = water_temp)) + 
-  geom_histogram()
+ggplot(water_temp, aes(x = date, y = water_temp, color = location_id)) +
+  geom_point(alpha = 0.6) +
+  labs(
+    title = "Scatter Plot of Water Temperature Levels Over Time", 
+    x = "Date", 
+    y = "Water Temperature deg C") +
+  theme(legend.position = "right")
+
+
 ```
 
 ```{r}
@@ -286,8 +334,45 @@ water_ph =
   mutate(water_ph = as.numeric(result_text)) 
 
 
-water_ph |>    
-  ggplot(aes(x = water_ph)) + 
-  geom_histogram()
+ggplot(water_ph, aes(x = date, y = water_ph, color = location_id)) +
+  geom_point(alpha = 0.6) +
+  labs(
+    title = "Scatter Plot of pH Levels Over Time", 
+    x = "Date", 
+    y = "pH") +
+  theme(legend.position = "right")
+
+water_ph |> 
+  mutate(text_label = str_c("Location: ", location_name, "pH Level: ", result_text)) |> 
+  plot_ly(
+    x = ~latitude, 
+    y = ~longitude, 
+    type = "scatter", 
+    mode = "markers",
+    color = ~location_name, 
+    text = ~text_label, 
+    alpha = 0.5, 
+    hoverinfo = "text")
 ```
+
+
+Water Quality Characteristics Over Time
+```{r}
+location_data = water_quality |> 
+  filter(characteristic_name %in% c("Arsenic mg/l", "Chloride mg/l", "Dissolved oxygen (DO) mg/l", "Magnesium mg/l", "Nitrogen, ammonia as N mg/l", "Phosphorus as P mg/l", "Potassium mg/l", "Sodium mg/l", "Sulfur, sulfate (SO4) as SO4 mg/l", "pH", "Temperature, water deg C")) |> 
+  mutate(result_text = as.numeric(result_text))
+```
+
+```{r}
+ggplot(location_data, aes(x = date, y = result_text)) +
+  geom_line(aes(color = location_id), size = 0.5) +
+  facet_wrap(~ characteristic_name, scales = "free_y") +
+  labs(
+    title = "Water Quality Over Time",
+    x = "Date",
+    y = "Characteristic"
+  ) +
+  scale_colour_viridis_d()
+```
+
 
