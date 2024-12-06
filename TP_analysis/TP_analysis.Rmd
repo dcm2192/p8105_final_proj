@@ -171,9 +171,13 @@ Snake River at Old Flagg Ranch 1000 Below Bridge and the Yellowstone River at Co
 
 Between all locations, Madison River 1.21km West of MT/WY State Boundary and Madison River near West Yellowstone, MT had the highest levels of chloride ranging from 0-74.5 mg/l and 0-73 mg/l, respectively. 
 
-### Dissolved Oxygen
+### Dissolved Oxygen (DO)
 
-Next up is dissolved oxygen. Dissolved oxygen refers to 
+Next up is dissolved oxygen. Dissolved oxygen refers to the amount of oxygen gas present water, or oxygen molecules that have been absorbed from the atmosphere and are free floating in water. This is often used as an indicator of water quality, as low levels can be detrimental to aquatic life and high levels are considered good for drinking, improving taste and supporting aquatic life. 
+
+For the elk, cosnidering they receive their main drinking water from rivers surrounding Yellowstone National Park, a healthy range for dissolved oxygen is 6.5-8 mg/l. 
+
+It is typically seen that colder water will have high DO levels than water water, which means DO is usually higher in winter than summer. 
 
 ```{r}
 dissolved_oxygen = 
@@ -194,6 +198,12 @@ interactive_do = ggplotly(plot_do)
 
 interactive_do
 ```
+
+According to the plot, the Lamar River at USGS Gage near Ranger Station, Madison River 1.21km West of MT/WY State Boundary,  Madison River near West Yellowstone, MT and Yellowstone River at Corwin Springs had similar levels of dissolved oxygen ranging between 6.5-14.6 mg/l. This is very close to the ideal range of dissolved oxygen mentioned previously. Additionally, the plot shows the dissolved oxygen levels increasing during winter months and decreasing during summer months, which is a commonly reported trend. 
+
+Aside from these four locations, Snake River at Old Flagg Ranch 1000 Below Bridge and Snake River Below Site of New Visitor's Center had very similar trends, each ranging relatively between 1.220-13.170 mg/l and -0.020-12.410 mg/l, respectively. However, in the summer of 2009, each area reported a spike to 52.5 mg/l, followed by a sharp fall the next month. 
+
+To note, a negative dissolved oxygen reading indicates an issue with the device used to measure the water. Near-zero conditions can also produce negative readings, which means the device should be recalibrated or replaced entirely.
 
 ```{r}
 magnesium = 
