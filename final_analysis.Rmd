@@ -2,14 +2,19 @@
 title: "Data Exploration"
 author: "The Herd"
 date: "2024-12-05"
-output: html_document
+output: 
+  html_document:
+    code_folding: hide
+    toc: true
+    toc_float: true
 ---
 
 
 Load packages and set options.
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE, messages=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(message = FALSE)
 
 library(geosphere)
 library(leaflet)
@@ -35,37 +40,24 @@ options(
 
 scale_colour_discrete = scale_colour_viridis_d
 scale_fill_discrete = scale_fill_viridis_d
+
+options(warn=-1)
 ```
 
-## Geographic Elk Movement Analysis
 
-We begin by importing the elk data. 
-```{r}
+```{r, messages=FALSE}
 elk = read_csv("clean_data/elk.csv") |>
   mutate(elk_id = factor(elk_id)) 
 ```
-The elk IDs are: `r unique(elk$elk_id)`, and we are going to follow them around Yellowstone! I found a cute picture of an elk in the snow  [here](https://powertraveller.com/yellowstone-winter-wildlife-safari-from-gardiner/)
 
-<img src="pics/elk.png" style="width:75%"/>
+![elk]("pics/elk.png")
 
-## Exploratory Analysis of Elk Migration
+## Exploring Geographic Elk Movement
 
-Some questions we want to answer about the elk:
 
-- Do the 17 elk move together as a pack or separately?
-- Do the migration patterns change by year?
-- Does time of year change the migration patterns?
-- what is the average total length of yearly migration? daily? monthly?
-- How wide or narrow are the migration routes?
-- Are there any areas that all of the elk go to?
-- are the elk likely to have the same paths or go elsewhere?
+In 2013 the elk traveled much farther in longitude than the other years. In 2011, the elk did not go nearly as far East as in other years. In 2010 and 2011 there was more sparse travel and it looks like the elk liked to hang out in the far North and far South spots. The data in 2006 looks like it is not as rich and there might be missing data points here.
 
-Fun stuff I want to do
-- Make a moving map of the elk
-
-I want to get a quick look of how the elk move across the map. Let's plot where the elk are on the map for each year!
-
-```{r}
+```{r, messages=FALSE}
 elk |>
   ggplot(aes(x = long, y = lat, color = elk_id)) + 
   geom_point(alpha = 0.3) +
@@ -80,10 +72,9 @@ elk |>
   theme(axis.text.x = element_text(angle = 75))
 ```
 
-In 2013 the elk traveled much farther in longitude than the other years. In 2011, the elk did not go nearly as far East as in other years. In 2010 and 2011 there was more sparse travel and it looks like the elk liked to hang out in the far North and far South spots. The data in 2006 looks like it is not as rich and there might be missing data points here.
 
-Let's find out what the range of latitude and longitude was for the individual elk each year. I want to see the top 10 elk that moved the most. First let's look at the top 10 movers for latitude.
-```{r}
+Let's find out what the range of latitude and longitude was for the individual elk each year. I want to see the top 10 elk that moved the most. First let's look at the top 10 movers for latitude. We can see that our top 3 movers in terms of longitude are Elk 900, 917, and 916. Elk 917 shows up in this list 3 times for the years 2013, 2014, and 2015. This elk is exploring farther each year!
+```{r, messages=FALSE}
 elk |>
   group_by(elk_id, year) |>
   summarize(longitude_range = max(long) - min(long)) |>
@@ -91,10 +82,11 @@ elk |>
   head(n= 10) |>
   knitr::kable(col.names = c("Elk ID", "Year", "longitude Range"))
 ```
-We can see that our top 3 movers in terms of longitude are Elk 900, 917, and 916. Elk 917 shows up in this list 3 times for the years 2013, 2014, and 2015. This elk is exploring farther each year!
 
-Now let's look at the top movers in terms of latitiude. 
-```{r}
+
+Now let's look at the top movers in terms of latitiude. Again we see elk 917 showing up as a top move in terms of latitude for the years 2013, 2014, and 2015 with the range going up each year.This elk is quite the explorer! We can also see that this elk has very similar results to elk 916 for 2013 and 2014. Maybe they move together? We will check this out later in the maps.  
+
+```{r, messages=FALSE}
 elk |>
   group_by(elk_id, year) |>
   summarize(latitude_range = max(lat) - min(lat)) |>
@@ -102,33 +94,35 @@ elk |>
   head(n= 10) |>
   knitr::kable(col.names = c("Elk ID", "Year", "latitude Range"))
 ```
-Again we see elk 917 showing up as a top move in terms of latitude for the years 2013, 2014, and 2015 with the range going up each year.This elk is quite the explorer! We can also see that this elk has very similar results to elk 916 for 2013 and 2014. Maybe they move together? We will check this out later in the maps.  
 
-Now I want to look at how the total movement of each elk changes across the months of the year. 
-
-```{r}
+Looking at total elk movement by month, we see see a clear relationship. The months of May through October see consistent monthly travel of approximately 100 kilometers. The months of March, April, November, and December see highly varied travel distances, ranging from tens of kilometers to over three hundred. 
+```{r, messages=FALSE}
 elk |>
   mutate(month = month(dt, label = TRUE)) |> 
   group_by(elk_id, year, month) |> 
   summarize(
     total_distance_km = sum(dist_km, na.rm = TRUE)
   ) |>
-  ggplot(aes(x = elk_id, y = total_distance_km, fill = factor(month))) +
-  geom_bar(stat = "identity") +  # Using bars to show total distance
-  facet_grid(~factor(month)) +
+  ggplot(aes(x = factor(month), y = total_distance_km, fill = factor(month))) +
+  geom_violin() + 
   labs(
-    title = "Total Movement by Elk and Month",
-    x = "Elk_ID", 
-    y = "Total Distance (km)", 
+    title = "Total Movement by Month",
+    x = "Month", 
+    y = "Total Distance Traveled (km)", 
     fill = "Month") +
-  theme(axis.text.x = element_text(angle = 90)) +
   theme(legend.position = 'none')
 ```
+
+```{r}
+
+```
+
+
 It looks like there is quite a lot of variance in the movement of different elk. What is really interesting is that December is a big moving month! And November is right behind December in terms of total movement. I wonder if this is a pattern that elk have of moving when the temperature drops, or if there is something skewing the data like this. 
 
 Let's look at the daily averages and how this compares for each of the elk. We are going to only look at the IQR so we can see what the movement is like on most days. It looks like most days they move around
 
-```{r}
+```{r, messages=FALSE}
 daily_median = 
   elk |>
   mutate(date = date(dt)) |> 
@@ -145,14 +139,14 @@ elk |>
   ggplot(aes(x = elk_id, y = daily_sum)) +
   geom_boxplot(outliers = FALSE) +
   geom_hline(yintercept = daily_median, color = "blue") +
-  labs(title = "Daily Averages (m)",
+  labs(title = "Daily Averages (km)",
        x = "Elk ID",
-       y = "Distance (m)")
+       y = "Distance (km)")
 ```
 
 Now let's look at how far they travel throughout the year. 
 
-```{r}
+```{r, messages=FALSE}
 #calculate the distance they travel each month
 elk_seasonal = 
   elk |>
@@ -184,7 +178,7 @@ Now I am curious what the overlap of the elk are? The data collected is between 
 
 One thing I want to check is if the number of data points for each elk is skewing the data. Let's see how the number of data points spread across the time frame.
 
-```{r}
+```{r, messages=FALSE}
 elk |>
   group_by(elk_id) |>
   summarize(
@@ -204,7 +198,7 @@ elk |>
 ```
 We can see that the data is not consistent for for all of the elk across the 2006-2015 time period. However, there is a lot of overlap for 2 groups of elk. In further analysis we will use the 8 elk that overlap in 2013 and 2014. 
 
-```{r}
+```{r, messages=FALSE}
 elk |>
   group_by(elk_id) |>
   summarize(start_time = min(dt),
@@ -221,7 +215,7 @@ The most overlapping data occurs between July 16th 2013 and December 30th, 2014.
 
 Plot the seasonal data
 
-```{r}
+```{r, messages=FALSE}
 elk_monthly = elk_df_2013.2014 |>
   mutate(
     month = month(dt, label = TRUE),  
@@ -254,7 +248,7 @@ It looks like May and December are when the elk are moving around the most.
 
 I want to check if the number of observations for each month has an impact on these trends. I'm going to see if normalizing the data based on the number of observations has a significant impact on the trends. 
 
-```{r}
+```{r, messages=FALSE}
 elk_distance_normalized = 
   elk_monthly |>
   group_by(elk_id, year, month) |>
@@ -280,7 +274,7 @@ The normalized data has a similar trend so we will continue with the raw data in
 
 Let's see where the elk are moving around in the month of May. Below is the elk mapped in Yellowstone park with their start and end points.
 
-```{r}
+```{r, messages=FALSE}
 # Let's make a custom elk icon!!
 elk_icon <- makeIcon(
   iconUrl = "pics/elk_icon.png", # Replace with the URL of your moose image
@@ -332,13 +326,12 @@ map <- map |>
 
 # Print the map
 map
-
 ```
 From the leaflet we can tell that the elk all started somewhat close together and migrated northward. They all followed a similar path up to Jackson Lake and then some started to choose different paths. Elk 916 decided they liked it and stayed close to the lake for the rest of the month. Elk 911, 914, and 917 seemed to stay together from start until end. Maybe they are in the same heard. Cute!
 
 Now let's look at the paths for December because that was also a big movement month. There appears to be one elk, elk id 911 that traveled between Yellowstone National Park and the National elk refuge, whereas no other elk made the same journey in that month. 
 
-```{r}
+```{r, messages=FALSE}
 filtered_data = elk_df_2013.2014 |>
   filter(month == 12,
          year == 2014)
@@ -386,20 +379,20 @@ map
 # Land Cover Analysis
 
 We read in the combined data set from `all_data.csv`. This data set contains the same geographic data as the `elk.csv` data along with land cover data, temperature, and water quality readings in that same geographic area. The data processing steps to create this file can be found in the data cleaning page. T 
-```{r}
+```{r, messages=FALSE}
 all_data = read_csv('clean_data/all_data.csv')
 ```
 
 
 We also read in the land cover data for the entire region. The yellow regions of the map are fully covered, many cases by water or snow. The large yellow regions represent Jackson lake, Yellowstone Lake, and Heart Lake. The green areas represent land covered by an abundance of foliage or smaller bodies of water, such as creeks. The dark blue and purple regions represent land with scant foliage cover, such as large rocks. 
-```{r}
+```{r, messages=FALSE}
 small_land_coord = rast('clean_data/land_cover.tif')
 
 plot(small_land_coord)
 ```
 
 Below is a histogram of the distribution of land cover in the entire region. The most common land cover value is 137, representing sparse vegetation. The second most common value is 500, representing thick vegetation or grasses. The maximum value of 583 represents land covered by water.
-```{r}
+```{r, messages=FALSE}
 land_coord_df = as.data.frame(small_land_coord)
 
 land_coord_df |> 
@@ -409,14 +402,14 @@ land_coord_df |>
 
 
 Here is the distribution of land cover where elk were observed. It is clear that elk spend more of their time in land with cover between 300 and 500, but this plot is confounded by the distribution of land cover data in the region. In other words, there is much low-cover land, and elk may be forced to spend more time there than they would otherwise prefer. 
-```{r}
+```{r, messages=FALSE}
 all_data |> 
   ggplot(aes(x = land_cover)) +
   geom_histogram()
 ```
 
 In order to get a better understanding of the elk's habits, we will plot the relative frequency of the time that they spend at each land cover value. We begin by binning each land cover value for the region and the elk to find the densities. We divide the elk density by the regional density of each bin. Plotting, we see that elk prefer to spend their time in the regions of middling land cover.  
-```{r}
+```{r, messages=FALSE}
 # Define bin breaks
 land_cover_bins <- seq(min(land_coord_df$land_cover), max(land_coord_df$land_cover), length.out = 30)
 
@@ -442,13 +435,13 @@ ggplot( aes(x = land_cover_bins, y = density_elk)) +
 
 
 
-```{r}
+```{r, messages=FALSE}
 library(tidyterra)
 ```
 
 
 
-```{r}
+```{r, messages=FALSE}
 alice =
   all_data |> 
   select(elk_id, year, month, day, hour, lat, long, dist_km, land_cover) |> 
@@ -459,7 +452,7 @@ alice =
 
 scale_color_gradient
 
-```{r}
+```{r, messages=FALSE}
 ggplot() +
   geom_spatraster(data = small_land_coord) +
   scale_fill_gradient2(low="white", high="darkgrey", guide="colorbar")
@@ -468,7 +461,7 @@ ggplot() +
 
 
 In this plot, we see that the elk spend most of their time in the low lying, well vegetated areas of Yellowstone.
-```{r}
+```{r, messages=FALSE}
 ggplot() +
   geom_spatraster(data = small_land_coord) + 
   scale_fill_gradient2(low="white", high="darkgrey", guide="colorbar") + 
@@ -478,7 +471,7 @@ ggplot() +
 
 
 Zooming in on the crossing, we see that the elk take one of three paths between Yellowstone national park and the Elk reserve. The first, and furthest West goes between Jackson Lake on the West and Pilgrim mountain to the East. The middle path follows Pilgrim Creek. The East path follows Pacific Creek. 
-```{r}
+```{r, messages=FALSE}
 ggplot() +
   geom_spatraster(data = small_land_coord) + 
   geom_path(data = elk, aes(x=long, y=lat, color = 'red'), alpha = 0.7) +
@@ -487,7 +480,7 @@ ggplot() +
   xlim(-110.8, -110.2)
 ```
 
-### Analyzing Weather
+# Analyzing Weather
 
 We read in the weather data and aggregate the elk data by day. 
 ```{r data, message = FALSE, include = FALSE}
@@ -843,19 +836,19 @@ ggplotly(elk_avgtemp_distkm_smooth)
 
 
 
-### Analyzing Water Quality
+# Analyzing Water Quality
 
 
 WRITE ABOUT THE SOURCE
 
-```{r}
+```{r, messages=FALSE}
 # long format
 water_quality2 = read_csv('clean_data/water_quality2.csv')
 ```
 
 
 
-```{r}
+```{r, messages=FALSE}
 water_exploration = 
   water_quality2 |> 
   group_by(
@@ -878,7 +871,7 @@ water_exploration =
 The site GRTE_SNR01 has higher Chloride, Sodium, Sulfur, Arsenic, and Potassium than GRTE_SNR02.
 
 To do: statistical test
-```{r}
+```{r, messages=FALSE}
 water_exploration |> 
   arrange(desc(standardized_difference)) |> 
   dplyr::select(
@@ -890,7 +883,7 @@ water_exploration |>
   head(5)
 ```
 Examinging the data more closely, we see that GRTE_SNR02 has a consistently low level of these chemicals, while GRTE_SNR01 occasionally achieves higher levels of these chemicals.
-```{r}
+```{r, messages=FALSE}
 water_quality2 |> 
   filter(characteristic_name %in% c(
     'Chloride mg/l', 'Sodium mg/l',
@@ -903,7 +896,7 @@ water_quality2 |>
 
 
 Examining water quality by year. There was not any significant increase or decrease of these minerals at either location. 
-```{r}
+```{r, messages=FALSE}
 water_quality2 |> 
   filter(characteristic_name %in% c(
     'Chloride mg/l', 'Sodium mg/l',
@@ -918,7 +911,7 @@ water_quality2 |>
 ```
 
 Examining water quality by month. I can't really interpret this graph due ot lack of data. 
-```{r}
+```{r, messages=FALSE}
 water_quality2 |> 
   filter(characteristic_name %in% c(
     'Chloride mg/l', 'Sodium mg/l',
@@ -934,7 +927,7 @@ water_quality2 |>
 
 
 
-```{r}
+```{r, messages=FALSE}
 water_quality2 |> 
   group_by(
     location_id, 
@@ -946,11 +939,11 @@ water_quality2 |>
   arrange(desc(vary))
 ```
 
-### Water Temperature
+## Water Temperature
 
 Does water temperature effect migration?
 
-```{r}
+```{r, messages=FALSE}
 unique(water_quality2$characteristic_name)
 ```
 
