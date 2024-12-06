@@ -10,6 +10,8 @@ output: html_document
 library(tidyverse)
 library(ggmap)
 library(plotly)
+library(leaflet)
+library(sp)
 ```
 
 ```{r}
@@ -66,9 +68,7 @@ water_quality |>
 ```
 
 
-### Water Quality pH
-
-This code chunk filters for all measurements of pH. `result_text` is a character vector, so make sure to change the vector to a numeric type if you're working with numeric data, like pH
+## Scatterplot of Each Water Characteristic
 
 ```{r}
 calcium = 
@@ -77,92 +77,14 @@ calcium =
   mutate(calcium = as.numeric(result_text)) # turning the vector numeric
 
 
-calcium |>    
-  ggplot(aes(x = calcium)) + 
-  geom_histogram()
+ggplot(calcium, aes(x = date, y = calcium, color = location_id)) +
+  geom_point(alpha = 0.6) +
+  labs(
+    title = "Scatter Plot of Calcium Levels Over Time", 
+    x = "Date", 
+    y = "Calcium (mg/l)") +
+  theme(legend.position = "right")
 ```
-
-
-## Create a static map plot
-
-[using ggmap](https://www.nceas.ucsb.edu/sites/default/files/2020-04/ggmapCheatsheet.pdf)
-
-[from stack exchange](https://stackoverflow.com/questions/33942186/using-r-and-ggplot-to-draw-separate-lines-between-gps-coordinates/33944974)
-
-
-### Step 1: Download map
-
-Find the minimum and maximum latitude and longitude of elk's journey. This will give us the range of map to download.
-
-```{r}
-min_lat = elk |> pull(lat) |> min()
-max_lat = elk |> pull(lat) |> max()
-rng_lat = abs(min_lat - max_lat)
-lowerleftlat = min_lat 
-upperrightlat = max_lat 
-
-
-min_long = elk |> pull(long) |> min()
-max_long = elk |> pull(long) |> max()
-rng_long = abs(min_long - max_long)
-lowerleftlon = min_long - rng_long 
-upperrightlon = max_long + rng_long
-
-myLocation <- c(left = lowerleftlon,
-                 bottom = lowerleftlat,
-                 right = upperrightlon,
-                 top = upperrightlat)
-```
-
-
-```{r}
-register_stadiamaps(key = '29074900-bb6e-4a71-8f91-454c28190f88', write = FALSE)
-
-myMap <- get_stadiamap(
-  bbox=myLocation,
-  maptype = "stamen_terrain",
-  crop=FALSE)
-```
-
-### Step 2: Plot map with elk movement
-```{r}
-ggmap(myMap) +
-geom_path(
-  data = elk, 
-  aes(x=long, y=lat, color = month))+
-  geom_line(alpha = 0) +
-  scale_color_gradientn(colours = rainbow(12))
-```
-
-
-```{r}
-ggplot(
-  data = elk, 
-  aes(x=long, y=lat)) +
-geom_path(alpha = 0.5) +
-geom_line(alpha = 0) +
-geom_point(
-  data = calcium,
-  aes(x = longitude, y = latitude, color = 'red')
-  )
-```
-
-Add in water calcium
-```{r}
-ggmap(myMap) +
-geom_path(
-  data = elk, 
-  aes(x=long, y=lat, color = month))+
-  geom_line(alpha = 0) +
-  scale_color_gradientn(colours = rainbow(12)) +
-geom_point(
-  data = calcium,
-  aes(x = longitude, y = latitude)
-)
-```
-
-
-
 
 ```{r}
 arsenic = 
@@ -356,7 +278,7 @@ water_ph |>
 ```
 
 
-Water Quality Characteristics Over Time
+## Water Quality Characteristics Over Time
 ```{r}
 location_data = water_quality |> 
   filter(characteristic_name %in% c("Arsenic mg/l", "Chloride mg/l", "Dissolved oxygen (DO) mg/l", "Magnesium mg/l", "Nitrogen, ammonia as N mg/l", "Phosphorus as P mg/l", "Potassium mg/l", "Sodium mg/l", "Sulfur, sulfate (SO4) as SO4 mg/l", "pH", "Temperature, water deg C")) |> 
@@ -375,4 +297,198 @@ ggplot(location_data, aes(x = date, y = result_text)) +
   scale_colour_viridis_d()
 ```
 
+```{r}
+characteristic_markers = function(map, water_quality, characteristic_name, pal, popup_info) {
+  map |> 
+    addCircleMarkers(
+      data = water_quality,
+      lng = ~longitude,
+      lat = ~latitude,
+      radius = 6,
+      color = ~pal(water_quality[[characteristic_name]]),
+      stroke = FALSE,
+      fillOpacity = 0.7,
+      popup = ~paste("Location: ", location_id,
+                     "<br>", characteristic_name, ": ", water_quality[[characteristic_name]], "mg/l"),
+      group = characteristic_name
+    )
+  return(map)
+}
+```
+
+```{r}
+leaflet_map = leaflet() |> 
+  addTiles()
+```
+
+```{r}
+pal_calcium = colorNumeric(palette = "Reds", domain = calcium$calcium)
+
+pal_arsenic = colorNumeric(palette = "Oranges", domain = arsenic$arsenic)
+
+pal_chloride = colorNumeric(palette = "Yellows", domain = chloride$chloride)
+
+pal_do = colorNumeric(palette = "Greens", domain = dissolved_oxygen$dissolved_oxygen)
+
+pal_magnesium = colorNumeric(palette = "Blues", domain = magnesium$magnesium)
+
+pal_nitrogen = colorNumeric(palette = "Purples", domain = nitrogen$nitrogen)
+
+pal_phosphorus = colorNumeric(palette = "Greys", domain = phosphorus$phosphorus)
+
+pal_potassium = colorNumeric(palette = "Accent", domain = potassium$potassium)
+
+pal_sodium = colorNumeric(palette = "Spectral", domain = sodium$sodium)
+
+pal_sulfur = colorNumeric(palette = "Pastel1", domain = sulfur$sulfur)
+
+pal_water = colorNumeric(palette = "BrBG", domain = water_temp$water_temp)
+```
+
+
+```{r}
+leaflet_map = leaflet_map |> 
+  
+characteristic_markers(calcium, "calcium", pal_calcium, "Calcium mg/l") |> 
+  
+characteristic_markers(arsenic, "arsenic", pal_arsenic, "Arsenic mg/l") |> 
+  
+characteristic_markers(chloride, "chloride", pal_chloride, "Chloride mg/l") |> 
+  
+characteristic_markers(dissolved_oxygen, "dissolved oxygen", pal_do, "Dissolved Oxygen (DO) mg/l") |> 
+  
+characteristic_markers(magnesium, "magnesium", pal_magnesium, "Magnesium mg/l") |> 
+  
+characteristic_markers(nitrogen, "nitrogen", pal_nitrogen, "Nitrogen mg/l") |> 
+  
+characteristic_markers(phosphorus, "phosphorus", pal_phosphorus, "Phosphorus mg/l") |> 
+  
+characteristic_markers(potassium, "potassium", pal_potassium, "Potassium mg/l") |> 
+  
+characteristic_markers(sodium, "sodium", pal_sodium, "Sodium mg/l") |> 
+  
+characteristic_markers(sulfur, "sulfur", pal_sulfur, "Sulfur mg/l") |> 
+  
+characteristic_markers(water_temp, "water temperature", pal_water, "Temperature, water deg C")
+```
+
+```{r}
+leaflet_map = leaflet_map |> 
+addLegend(position = "bottomright", pal = pal_calcium, values = ~calcium, title = "Calcium Concentration (mg/l)") |> 
+  
+addLegend(position = "bottomright", pal = pal_arsenic, values = ~arsenic, title = "Arsenic Concentration (mg/l)") |> 
+  
+addLegend(position = "bottomright", pal = pal_chloride, values = ~chloride, title = "Chloride Concentration (mg/l)") |> 
+  
+addLegend(position = "bottomright", pal = pal_do, values = ~dissolved_oxygen, title = "Dissolved Oxygen Concentration (DO) mg/l") |> 
+  
+addLegend(position = "bottomright", pal = pal_magnesium, values = ~magnesium, title = "Magnesium Concentration (mg/l)") |> 
+  
+addLegend(position = "bottomright", pal = pal_nitrogen, values = ~nitrogen, title = "Nitrogen Concentration (mg/l)") |> 
+  
+addLegend(position = "bottomright", pal = pal_phosphorus, values = ~phosphorus, title = "Phosphorus Concentration (mg/l)") |> 
+  
+addLegend(position = "bottomright", pal = pal_potassium, values = ~potassium, title = "Potassium Concentration (mg/l)") |> 
+  
+addLegend(position = "bottomright", pal = pal_sodium, values = ~sodium, title = "Sodium Concentration (mg/l)") |> 
+  
+addLegend(position = "bottomright", pal = pal_sulfur, values = ~sulfur, title = "Sulfur Concentration (mg/l)") |> 
+  
+addLegend(position = "bottomright", pal = pal_water, values = ~water_temp, title = "Water Temperature (deg C)")
+```
+
+```{r}
+leaflet_map
+```
+
+## Create a static map plot
+
+[using ggmap](https://www.nceas.ucsb.edu/sites/default/files/2020-04/ggmapCheatsheet.pdf)
+
+[from stack exchange](https://stackoverflow.com/questions/33942186/using-r-and-ggplot-to-draw-separate-lines-between-gps-coordinates/33944974)
+
+
+### Download the map
+
+Find the minimum and maximum latitude and longitude of elk's journey. This will give us the range of map to download.
+
+```{r}
+min_lat = elk |> pull(lat) |> min()
+max_lat = elk |> pull(lat) |> max()
+rng_lat = abs(min_lat - max_lat)
+lowerleftlat = min_lat 
+upperrightlat = max_lat 
+
+
+min_long = elk |> pull(long) |> min()
+max_long = elk |> pull(long) |> max()
+rng_long = abs(min_long - max_long)
+lowerleftlon = min_long - rng_long 
+upperrightlon = max_long + rng_long
+
+myLocation <- c(left = lowerleftlon,
+                 bottom = lowerleftlat,
+                 right = upperrightlon,
+                 top = upperrightlat)
+```
+
+
+```{r}
+register_stadiamaps(key = '29074900-bb6e-4a71-8f91-454c28190f88', write = FALSE)
+
+myMap <- get_stadiamap(
+  bbox=myLocation,
+  maptype = "stamen_terrain",
+  crop=FALSE)
+```
+
+
+
+# Ploting Map with Elk Movement
+```{r}
+ggmap(myMap) +
+geom_path(
+  data = elk, 
+  aes(x=long, y=lat, color = month))+
+  geom_line(alpha = 0) +
+  scale_color_gradientn(colours = rainbow(12))
+```
+
+
+```{r}
+ggplot(
+  data = elk, 
+  aes(x=long, y=lat)) +
+geom_path(alpha = 0.5) +
+geom_line(alpha = 0) +
+geom_point(
+  data = calcium,
+  aes(x = longitude, y = latitude, color = 'red')
+  )
+```
+
+
+```{r}
+ggmap(myMap) +
+geom_path(
+  data = elk, 
+  aes(x=long, y=lat, color = month))+
+  geom_line(alpha = 0) +
+  scale_color_gradientn(colours = rainbow(12)) +
+geom_point(
+  data = calcium,
+  aes(x = longitude, y = latitude)
+)
+```
+
+
+```{r}
+leaflet(data = elk) |> 
+  addTiles() |> 
+  addPolylines(~long, ~lat, color = "blue", weight = 2, opacity = 0.7) |> 
+  addCircleMarkers(data = water_quality, ~longitude, ~latitude,
+                   radius = 2, color = "red", fill = TRUE, fillOpacity = 0.5,
+                   popup = ~paste("Characteristic: ", characteristic_name)) |> 
+  addLegend(position = "bottomright", colors = c("blue", "red"), labels = c("Elk Path", "Characteristic Locations"))
+```
 
