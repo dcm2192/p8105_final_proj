@@ -74,8 +74,7 @@ leaflet(data = elk) |>
   addTiles() |> 
   addPolylines(~long, ~lat, color = "blue", weight = 2, opacity = 0.7) |> 
   addCircleMarkers(data = water_quality, ~longitude, ~latitude,
-                   radius = 2, color = "red", fill = TRUE, fillOpacity = 0.5,
-                   popup = ~paste("Characteristic: ", characteristic_name)) |> 
+                   radius = 2, color = "red", fill = TRUE, fillOpacity = 0.5) |> 
   addLegend(position = "bottomright", colors = c("blue", "red"), labels = c("Elk Path", "Characteristic Locations"))
 ```
 
@@ -154,7 +153,7 @@ Lastly, Madison River near West Yellowstone, MT has consistently reported signif
 
 ### Chloride
 
-Next up is chloride. Chloride is an electrolyte commonly found in blood. It keeps the proper balance of body fluids and maintains the bosy'd acid-base balance. Consumption of chloride is typically not harmful, however, if chloride is found in water, that typically means contaminants such as bacteria, nitrates, or even lead may be found as well. 
+Next up is chloride. Chloride is an electrolyte commonly found in blood. It keeps the proper balance of body fluids and maintains the body's acid-base balance. Consumption of chloride is typically not harmful, however, if chloride is found in water, that typically means contaminants such as bacteria, nitrates, or even lead may be found as well. 
 
 In the case of elk, chloride levels can be safe between 0-44 mg/l, however, levels above 133 are potentially harmful is consumed for long periods of time and can lead to death. 
 
@@ -220,7 +219,7 @@ To note, a negative dissolved oxygen reading indicates an issue with the device 
 
 ### Magnesium
 
-
+Next up is magnesium. Magnesium is mineral that is essential for healthy muscles, nerves, bones and blood sugar levels
 
 ```{r}
 magnesium = 
