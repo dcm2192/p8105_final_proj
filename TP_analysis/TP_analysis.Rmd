@@ -67,6 +67,19 @@ water_quality |>
   arrange(desc(n))
 ```
 
+
+
+```{r}
+leaflet(data = elk) |> 
+  addTiles() |> 
+  addPolylines(~long, ~lat, color = "blue", weight = 2, opacity = 0.7) |> 
+  addCircleMarkers(data = water_quality, ~longitude, ~latitude,
+                   radius = 2, color = "red", fill = TRUE, fillOpacity = 0.5,
+                   popup = ~paste("Characteristic: ", characteristic_name)) |> 
+  addLegend(position = "bottomright", colors = c("blue", "red"), labels = c("Elk Path", "Characteristic Locations"))
+```
+
+
 ## Exploring Water Quality Near Elk Movement
 Of the many different locations the data set provides, there are six distinct locations surrounding Yellowstone National Park. I examined rivers and streams generally along the borders of the park and specifically at Snake River at Old Flagg Ranch 1000 Below Bridge and Snake River Below Site of New Visitor's Center as these two locations are at the heart of elk movement. 
 
@@ -204,6 +217,10 @@ According to the plot, the Lamar River at USGS Gage near Ranger Station, Madison
 Aside from these four locations, Snake River at Old Flagg Ranch 1000 Below Bridge and Snake River Below Site of New Visitor's Center had very similar trends, each ranging relatively between 1.220-13.170 mg/l and -0.020-12.410 mg/l, respectively. However, in the summer of 2009, each area reported a spike to 52.5 mg/l, followed by a sharp fall the next month. 
 
 To note, a negative dissolved oxygen reading indicates an issue with the device used to measure the water. Near-zero conditions can also produce negative readings, which means the device should be recalibrated or replaced entirely.
+
+### Magnesium
+
+
 
 ```{r}
 magnesium = 
@@ -353,25 +370,17 @@ water_ph =
   mutate(water_ph = as.numeric(result_text)) 
 
 
-ggplot(water_ph, aes(x = date, y = water_ph, color = location_id)) +
-  geom_point(alpha = 0.6) +
+plot_ph = ggplot(water_ph, aes(x = date, y = water_ph, color = location_id)) +
+  geom_line(alpha = 0.6) +
   labs(
-    title = "Scatter Plot of pH Levels Over Time", 
+    title = "Scatter Plot of pH Over Time", 
     x = "Date", 
     y = "pH") +
   theme(legend.position = "right")
 
-water_ph |> 
-  mutate(text_label = str_c("Location: ", location_name, "pH Level: ", result_text)) |> 
-  plot_ly(
-    x = ~latitude, 
-    y = ~longitude, 
-    type = "scatter", 
-    mode = "markers",
-    color = ~location_name, 
-    text = ~text_label, 
-    alpha = 0.5, 
-    hoverinfo = "text")
+interactive_ph = ggplotly(plot_ph)
+
+interactive_ph
 ```
 
 
@@ -383,16 +392,21 @@ location_data = water_quality |>
 ```
 
 ```{r}
-ggplot(location_data, aes(x = date, y = result_text)) +
+plot_characteristics = ggplot(location_data, aes(x = date, y = result_text)) +
   geom_line(aes(color = location_id), size = 0.5) +
   facet_wrap(~ characteristic_name, scales = "free_y") +
   labs(
     title = "Water Quality Over Time",
     x = "Date",
     y = "Characteristic"
-  ) +
-  scale_colour_viridis_d()
+  )
+
+interactive_char = ggplotly(plot_characteristics)
+
+interactive_char
 ```
+
+### Creating a Function for Leaflet Mapping
 
 ```{r}
 characteristic_markers = function(map, water_quality, characteristic_name, pal, popup_info) {
@@ -578,14 +592,4 @@ geom_point(
 )
 ```
 
-
-```{r}
-leaflet(data = elk) |> 
-  addTiles() |> 
-  addPolylines(~long, ~lat, color = "blue", weight = 2, opacity = 0.7) |> 
-  addCircleMarkers(data = water_quality, ~longitude, ~latitude,
-                   radius = 2, color = "red", fill = TRUE, fillOpacity = 0.5,
-                   popup = ~paste("Characteristic: ", characteristic_name)) |> 
-  addLegend(position = "bottomright", colors = c("blue", "red"), labels = c("Elk Path", "Characteristic Locations"))
-```
 
