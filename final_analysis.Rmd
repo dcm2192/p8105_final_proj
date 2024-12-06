@@ -9,9 +9,6 @@ output:
     toc_float: true
 ---
 
-
-Load packages and set options.
-
 ```{r setup, include=FALSE, messages=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_chunk$set(message = FALSE)
@@ -73,7 +70,7 @@ elk |>
 ```
 
 
-Let's find out what the range of latitude and longitude was for the individual elk each year. I want to see the top 10 elk that moved the most. First let's look at the top 10 movers for latitude. We can see that our top 3 movers in terms of longitude are Elk 900, 917, and 916. Elk 917 shows up in this list 3 times for the years 2013, 2014, and 2015. This elk is exploring farther each year!
+We examine the latitude and longitude for the individual elk each year. We find the elk the furthest ranging longitude. We can see that our top 3 movers in terms of longitude are Elk 900, 917, and 916. Elk 917 shows up in this list 3 times for the years 2013, 2014, and 2015. This elk is exploring farther each year!
 ```{r, messages=FALSE}
 elk |>
   group_by(elk_id, year) |>
@@ -84,7 +81,7 @@ elk |>
 ```
 
 
-Now let's look at the top movers in terms of latitiude. Again we see elk 917 showing up as a top move in terms of latitude for the years 2013, 2014, and 2015 with the range going up each year.This elk is quite the explorer! We can also see that this elk has very similar results to elk 916 for 2013 and 2014. Maybe they move together? We will check this out later in the maps.  
+Now we look at the top movers in terms of latitude. Again we see elk 917 showing up as a top move in terms of latitude for the years 2013, 2014, and 2015 with the range going up each year.This elk is quite the explorer! We can also see that this elk has very similar results to elk 916 for 2013 and 2014. 
 
 ```{r, messages=FALSE}
 elk |>
@@ -111,10 +108,6 @@ elk |>
     y = "Total Distance Traveled (km)", 
     fill = "Month") +
   theme(legend.position = 'none')
-```
-
-```{r}
-
 ```
 
 
@@ -946,4 +939,153 @@ Does water temperature effect migration?
 ```{r, messages=FALSE}
 unique(water_quality2$characteristic_name)
 ```
+
+
+
+```{r}
+water_quality = read_csv('clean_data/water_quality.csv')
+```
+```{r}
+water_quality2
+```
+
+
+```{r}
+water_quality
+```
+
+
+
+```{r}
+all_data %>% drop_na(location_name)
+```
+
+
+
+### Did the elk get arsenic poisoning
+
+
+```{r}
+arsenic_measures = names(all_data)[str_detect(names(all_data), 'Arsenic')]
+```
+
+
+```{r}
+arsenic_exposure = 
+  all_data %>% 
+  filter(
+    year == 2010,
+    month %in% c(7, 8)
+  )
+```
+
+
+
+'2010-08-24' GRTE_SNR01
+'2010-07-18'
+
+
+
+### Step 1: Download map
+
+Find the minimum and maximum latitude and longitude of Bob's journey. This will give us the range of map to download.
+
+```{r}
+min_lat = all_data |> pull(lat) |> min()
+max_lat = all_data |> pull(lat) |> max()
+rng_lat = abs(min_lat - max_lat)
+lowerleftlat = min_lat 
+upperrightlat = max_lat 
+
+
+min_long = all_data |> pull(long) |> min()
+max_long = all_data |> pull(long) |> max()
+rng_long = abs(min_long - max_long)
+lowerleftlon = min_long - rng_long 
+upperrightlon = max_long + rng_long
+```
+
+
+Define area by `c(lowerleftlon, lowerleftlat, upperrightlon, upperrightlat)`
+
+```{r}
+ myLocation <- c(left = lowerleftlon,
+                 bottom = lowerleftlat,
+                 right = upperrightlon,
+                 top = upperrightlat)
+```
+
+
+```{r}
+myMap <- get_stadiamap(
+  bbox=myLocation,
+  maptype = "stamen_terrain",
+  crop=FALSE)
+```
+
+
+```{r}
+water_quality_locations =
+  water_quality %>% 
+  filter(location_id %in% c('GRTE_SNR01', 'GRTE_SNR02')) %>% 
+  select(location_id, location_name, latitude, longitude) %>% 
+  distinct()
+```
+
+
+
+```{r}
+map = 
+  ggmap(myMap) 
+
+elk_ids2 = unique(arsenic_exposure$elk_id)
+num_colors = length(elk_ids2)    # Ensure we don't exceed palette limit
+path_colors = 
+  colorFactor(
+    palette = RColorBrewer::brewer.pal(num_colors, "Set1"),
+    domain = elk_ids2)
+
+for(id in elk_ids2){
+  
+  temp_elk = 
+    arsenic_exposure %>% 
+    filter(elk_id == id)
+  
+  map = 
+    map +
+    geom_path(
+      data = temp_elk, 
+      aes(x=long, y=lat, color = path_colors(id))) +
+      geom_line(alpha = 0)
+  
+}
+
+map = 
+  map + 
+  geom_point(
+    data = water_quality_locations,
+    aes(x = longitude, y = latitude))+ 
+  geom_text(
+    data = water_quality_locations,
+    aes(x = longitude, y = latitude, label = location_id),
+    nudge_x = 0.24)
+
+
+map
+```
+
+
+```{r}
+
+color = path_colors(id)
+  
+  
+  geom_path(
+  data = arsenic_exposure, 
+  aes(x=long, y=lat, color = factor(elk_id))+
+  geom_line(alpha = 0) +
+  scale_color_gradientn(colours = rainbow(12))
+
+```
+
 
