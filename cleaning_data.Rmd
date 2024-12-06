@@ -11,10 +11,11 @@ library(dplyr)
 library(tidyverse)
 library(stringr)
 library(raster)
-library(raster)
 library(sf)
 library(terra) 
 library(geosphere)
+library(leaflet)
+library(leaflet.extras2)
 ```
 
 ## Elk Data Source
@@ -28,7 +29,7 @@ The elk data contains a unique ID for each of the 17 elk. It includes a date-tim
 
 ```{r}
 elk = 
-  read_csv('../raw_data/Elk GPS collar data from National Elk Refuge 2006-2015.csv') |> 
+  read_csv('raw_data/Elk GPS collar data from National Elk Refuge 2006-2015.csv') |> 
   janitor::clean_names() |> 
   dplyr::mutate(
     day = day(dt),
@@ -56,10 +57,17 @@ elk =
 Now let's look at the paths for December because that was also a big movement month.
 
 ```{r}
+
 elk_icon <- makeIcon(
   iconUrl = "pics/elk_icon.png", # Replace with the URL of your moose image
   iconWidth = 30, iconHeight = 30
 )
+
+filtered_data = 
+  elk |>
+  filter(month == 12,
+         year == 2014)
+
 
 
 # Create a color palette (limited to 9 elk IDs for "Set1")
@@ -67,14 +75,6 @@ elk_ids = unique(filtered_data$elk_id)  # Get unique elk IDs
 num_colors = length(elk_ids)    # Ensure we don't exceed palette limit
 path_colors = colorFactor(palette = RColorBrewer::brewer.pal(num_colors, "Set1"), domain = elk_ids)
 
-```
-
-
-```{r}
-filtered_data = 
-  elk |>
-  filter(month == 12,
-         year == 2014)
 
 # Initialize leaflet map
 map <- filtered_data |>
@@ -169,8 +169,7 @@ map
 ```{r}
 elk = 
   elk %>% 
-  filter(date(elk$dt) != '2014-12-01') %>% 
-  nrow()
+  filter(date(elk$dt) != '2014-12-01')
 ```
 
 
@@ -181,8 +180,8 @@ Our second data set is the land cover data in the state of Wyoming published by 
 
 We use the [terra package](https://bookdown.org/mcwimberly/gdswr-book/coordinate-reference-systems.html#reprojecting-raster-data) to import and transform the data into latitude and longitude coordinates. We save a cleaned, cropped version of the land cover data. 
 
-```{r, eval=FALSE}
-land = rast('../raw_data/land_cover/land_cover.tif')
+```{r}
+land = rast('raw_data/land_cover/land_cover.tif')
 
 # Reprojecting in latitude and longitude
 land_coord = project(land, "EPSG:4326")
@@ -201,7 +200,6 @@ rng_lat = abs(min_lat - max_lat)
 lowerleftlat = min_lat - 0.1 * rng_lat
 upperrightlat = max_lat + 0.1 * rng_lat
 
-
 # cropping 
 small_land_coord = crop(
   land_coord, 
@@ -210,7 +208,7 @@ small_land_coord = crop(
 plot(small_land_coord)
 
 # writing raster
-terra::writeRaster(small_land_coord, '../clean_data/land_cover.tif')
+terra::writeRaster(small_land_coord, 'clean_data/land_cover.tif')
 ```
 
 
@@ -235,7 +233,7 @@ elk =
   elk |> 
   mutate(land_cover = elk_land_cover$land_cover)
 
-elk |> write.csv('../clean_data/elk.csv', row.names =  FALSE)
+elk |> write.csv('clean_data/elk.csv', row.names =  FALSE)
 ```
 
 ## Cleaning Water Quality Data
@@ -247,7 +245,7 @@ The water quality data is sourced from the Greater Yellowstone Network and publi
 This data set gives the locations that water was sampled from. We drop the `org_code` variable because it is homogenous. 
 ```{r}
 water_quality_locations = 
-  read_csv('../raw_data/water_quality/Locations.csv')|> 
+  read_csv('raw_data/water_quality/Locations.csv')|> 
   janitor::clean_names() |> 
   dplyr::select(
     location_id,
@@ -265,7 +263,7 @@ water_quality_locations =
 Here we read in the results of the water quality sampling. 
 ```{r}
 water_quality_results = 
-  read_csv('../raw_data/water_quality/Results.csv')|> 
+  read_csv('raw_data/water_quality/Results.csv')|> 
   janitor::clean_names()
 ```
 
@@ -346,8 +344,8 @@ water_quality2 =
     monthly_max = max(as.numeric(result_text),na.rm = TRUE)
   ) 
 
-water_quality |> write.csv('../clean_data/water_quality.csv', row.names = FALSE)
-water_quality2 |> write.csv('../clean_data/water_quality2.csv', row.names = FALSE)
+water_quality |> write.csv('clean_data/water_quality.csv', row.names = FALSE)
+water_quality2 |> write.csv('clean_data/water_quality2.csv', row.names = FALSE)
 
 
 clean_water = 
@@ -357,7 +355,7 @@ clean_water =
     values_from = c('monthly_mean', 'monthly_min', 'monthly_max')
   )
 
-write.csv(clean_water, '../clean_data/clean_water.csv', row.names = FALSE)
+write.csv(clean_water, 'clean_data/clean_water.csv', row.names = FALSE)
 ```
 
 
@@ -376,7 +374,7 @@ We read in the data, we filter for the four closest stations to the elk, we filt
 four_stations <- 
   c("SNAKE RIVER STATION, WY US", "MORAN 5 WNW, WY US", "BURRO HILL WYOMING, WY US", "MOOSE 1 NNE, WY US")
 
-weather = read_csv("../raw_data/raw_weather_data.csv") |> 
+weather = read_csv("raw_data/raw_weather_data.csv") |> 
   janitor::clean_names() |> 
   filter(
     name %in% four_stations,
@@ -398,7 +396,7 @@ weather = read_csv("../raw_data/raw_weather_data.csv") |>
   )
 
 
-weather |> write.csv('../clean_data/weather', row.names = FALSE)
+weather |> write.csv('clean_data/weather', row.names = FALSE)
 ```
 
 
@@ -427,7 +425,7 @@ all_data  |> drop_na(location_name)
 ```
 
 ```{r}
-all_data |> write.csv('../clean_data/all_data.csv', row.names =  FALSE)
+all_data |> write.csv('clean_data/all_data.csv', row.names =  FALSE)
 ```
 
 
