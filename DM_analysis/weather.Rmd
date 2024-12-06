@@ -77,7 +77,8 @@ four_stations_labels_plot <-
                             box.padding   = 0.35,
                             point.padding = 0.5,
                             segment.color = 'grey50',
-                            max.overlaps = 20)
+                            max.overlaps = 20) + 
+  labs(x = "Longitude", y = "Latitude")
 
 four_stations_labels_plot
 
@@ -88,7 +89,8 @@ four_stations_elk_mvmt_plot <-
     aes(x=long, y=lat),
     alpha = 0.5,
     color = "red") +
-  geom_point(data = reduced_weather_stations, aes(x = LONGITUDE, y = LATITUDE))
+  geom_point(data = reduced_weather_stations, aes(x = LONGITUDE, y = LATITUDE)) + 
+  labs(x = "Longitude", y = "Latitude")
   
 four_stations_elk_mvmt_plot
 ```
