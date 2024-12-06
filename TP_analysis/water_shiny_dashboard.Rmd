@@ -14,6 +14,9 @@ library(leaflet)
 ```
 
 
+Mapping Water Quality Over Time
+-----------------------------------------------------------------------
+
 ```{r}
 ui = fluidPage(
   titlePanel("Water Quality Over Time"),
@@ -47,6 +50,10 @@ ui = fluidPage(
   )
 )
 ```
+
+
+Water Quality Plot
+-----------------------------------------------------------------------
 
 ```{r}
 server = function(input, output) {

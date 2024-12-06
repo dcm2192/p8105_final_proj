@@ -67,24 +67,49 @@ water_quality |>
   arrange(desc(n))
 ```
 
+## Exploring Water Quality Near Elk Movement
+Of the many different locations the data set provides, there are six distinct locations surrounding Yellowstone National Park. I examined rivers and streams generally along the borders of the park and specifically at Snake River at Old Flagg Ranch 1000 Below Bridge and Snake River Below Site of New Visitor's Center as these two locations are at the heart of elk movement. 
+
+From these locations, I explored water contents such as calcium, arsenic, sodium, sulfur, phosphorus, potassium, magnesium, nitrogen, chloride, dissolved oxygen, and pH. These data measures were plotted against each other by location site. Additionally, water temperature was measured and plotted.
+
+It is important to examine data sets such as these when considering elk movement as these rivers and streams are their main water source. We can determine after discussing the elk movement and where they are frequently found, they are typically near major water sources and trek along these locations to guide their movement and sustain their journeys.
 
 ## Scatterplot of Each Water Characteristic
+
+### Calcium
+The first water content examined is calcium. Calcium is a mineral that keeps the body healthy by building strong bones and teeth, helping muscles move, helping nerves function, and helping blood vessels move blood. However, high levels of calcium can have an opposite effect such as causing poor muscle tone, poor kidney function, and abnormal heart rhythms. 
+
+In th case of elk, they need calcium to sustain their antlers, along with other minerals that will be discussed. Normal levels of calcium fall within the range of 8.5 and 10.2. 
 
 ```{r}
 calcium = 
   water_quality |> 
   filter(characteristic_name == 'Calcium mg/l') |> 
-  mutate(calcium = as.numeric(result_text)) # turning the vector numeric
+  mutate(calcium = as.numeric(result_text)) 
 
 
-ggplot(calcium, aes(x = date, y = calcium, color = location_id)) +
-  geom_point(alpha = 0.6) +
+plot_calcium = ggplot(calcium, aes(x = date, y = calcium, color = location_id)) +
+  geom_line(alpha = 0.6) +
   labs(
     title = "Scatter Plot of Calcium Levels Over Time", 
     x = "Date", 
     y = "Calcium (mg/l)") +
   theme(legend.position = "right")
+
+interactive_calcium = ggplotly(plot_calcium)
+
+interactive_calcium
 ```
+
+According to the plot, Madison River 1.21km West of MT/WY State Boundary and Madison River near West Yellowstone, MT contained consistent levels of calcium between 0 and 6.5-7 mg/l. This is slightly under the ideal range for calcium, but does not pose any health threats. 
+
+Additionally, the plot shows that Lamar River at USGS Gage near Ranger Station, Yellowstone River at Corwin Springs, Snake River Below Site of New Visitor's Center, and Snake River at Old Flagg Ranch 1000 Below Bridge each reached high levels of calcium, above the ideal range. Lamar River at USGS reached the highest level of calcium mg/l across all locations on May 4, 2011 with a level of 35.8 mg/l.
+
+The plot also suggests that generally in the colder months such as January and March, there was an increase in calcium levels and a decrease in the hotter months such as June and August across all locations.
+
+### Arsenic
+
+Next up is arsenic. Arsenic is a naturally occurring, toxic, metalloid element. Arsenic is highly toxic and long-term exposure can cause cancer and skin lesions. Although arsenic is highly toxic, the Environmental Protection Agency (EPA) has set the standard at 0.010 mg/l. 
 
 ```{r}
 arsenic = 
@@ -93,14 +118,32 @@ arsenic =
   mutate(arsenic = as.numeric(result_text)) 
 
 
-ggplot(arsenic, aes(x = date, y = arsenic, color = location_id)) +
-  geom_point(alpha = 0.6) +
+plot_arsenic = ggplot(arsenic, aes(x = date, y = arsenic, color = location_id)) +
+  geom_line(alpha = 0.6) +
   labs(
     title = "Scatter Plot of Arsenic Levels Over Time", 
     x = "Date", 
     y = "Arsenic (mg/l)") +
   theme(legend.position = "right")
+
+interactive_arsenic = ggplotly(plot_arsenic)
+
+interactive_arsenic
 ```
+
+According to the plot, the Lamar River at USGS Gage near Ranger Station, the Yellowstone River at Corwin Springs, and Snake River Below Site of New Visitor's Center each maintained a "safe" level of arsenic in their water sources. The highest arsenic levels from Snake River Below Site of New Visitor's Center was on July 26, 2022 at 0.0370 mg/l. From the Lamar River at USGS near Ranger Station, the highest arsenic levels was 0.0103 mg/l and 0.0496 at the Yellowstone River at Corwin Springs. 
+
+Madison River 1.21km West of MT/WY State Boundary contained little arsenic level data, however, it reached a peak of 0.3000 mg/l on February 6, 2012 and did not drop below 0.1520 after July 11, 2011. 
+
+Snake River at Old Flagg Ranch 1000 Below Bridge generally maintained steady arsenic levels that did not increase above 0.05200. However, there was a very significant spike on August 24, 2010 in which arsenic levels rose to 0.4140, more than 3 tenths above the standard level.
+
+Lastly, Madison River near West Yellowstone, MT has consistently reported significantly high levels of arsenic, the highest on February 26, 2017 at 0.3160 mg/l. Unlike calcium, there does not seem to be a significant correlation between time of year and arsenic levels.
+
+### Chloride
+
+Next up is chloride. Chloride is an electrolyte commonly found in blood. It keeps the proper balance of body fluids and maintains the bosy'd acid-base balance. Consumption of chloride is typically not harmful, however, if chloride is found in water, that typically means contaminants such as bacteria, nitrates, or even lead may be found as well. 
+
+In the case of elk, chloride levels can be safe between 0-44 mg/l, however, levels above 133 are potentially harmful is consumed for long periods of time and can lead to death. 
 
 ```{r}
 chloride = 
@@ -109,14 +152,28 @@ chloride =
   mutate(chloride = as.numeric(result_text))
 
 
-ggplot(chloride, aes(x = date, y = chloride, color = location_id)) +
-  geom_point(alpha = 0.6) +
+plot_chloride = ggplot(chloride, aes(x = date, y = chloride, color = location_id)) +
+  geom_line(alpha = 0.6) +
   labs(
     title = "Scatter Plot of Chloride Levels Over Time", 
     x = "Date", 
     y = "Chloride (mg/l)") +
   theme(legend.position = "right")
+
+interactive_chloride = ggplotly(plot_chloride)
+
+interactive_chloride
 ```
+
+After taking a look at the plot, the water source with the lowest levels of chloride is the Lamar River at USGS Gage near Ranger Station, consistenly ranging from 0-4 mg/l. Additionally, Snake River Below Site of New Visitor's Center also had relatively low levels steadly ranging from 0-6 mg/l and one spike to 14 mg/l on July 26, 2022. 
+
+Snake River at Old Flagg Ranch 1000 Below Bridge and the Yellowstone River at Corwin Springs had similar results in which chloride levels stayed roughly between 0-20 mg/l.
+
+Between all locations, Madison River 1.21km West of MT/WY State Boundary and Madison River near West Yellowstone, MT had the highest levels of chloride ranging from 0-74.5 mg/l and 0-73 mg/l, respectively. 
+
+### Dissolved Oxygen
+
+Next up is dissolved oxygen. Dissolved oxygen refers to 
 
 ```{r}
 dissolved_oxygen = 
@@ -125,13 +182,17 @@ dissolved_oxygen =
   mutate(dissolved_oxygen = as.numeric(result_text)) 
 
 
-ggplot(dissolved_oxygen, aes(x = date, y = dissolved_oxygen, color = location_id)) +
-  geom_point(alpha = 0.6) +
+plot_do = ggplot(dissolved_oxygen, aes(x = date, y = dissolved_oxygen, color = location_id)) +
+  geom_line(alpha = 0.6) +
   labs(
     title = "Scatter Plot of Dissolved Oxygen Levels Over Time", 
     x = "Date", 
     y = "Dissolved Oxygen (DO) mg/l") +
   theme(legend.position = "right")
+
+interactive_do = ggplotly(plot_do)
+
+interactive_do
 ```
 
 ```{r}
@@ -141,13 +202,17 @@ magnesium =
   mutate(magnesium = as.numeric(result_text)) 
 
 
-ggplot(magnesium, aes(x = date, y = magnesium, color = location_id)) +
-  geom_point(alpha = 0.6) +
+plot_magnesium = ggplot(magnesium, aes(x = date, y = magnesium, color = location_id)) +
+  geom_line(alpha = 0.6) +
   labs(
     title = "Scatter Plot of Magnesium Levels Over Time", 
     x = "Date", 
     y = "Magnesium (mg/l)") +
   theme(legend.position = "right")
+
+interactive_magnesium = ggplotly(plot_magnesium)
+
+interactive_magnesium
 ```
 
 ```{r}
@@ -157,13 +222,17 @@ nitrogen =
   mutate(nitrogen = as.numeric(result_text)) 
 
 
-ggplot(nitrogen, aes(x = date, y = nitrogen, color = location_id)) +
-  geom_point(alpha = 0.6) +
+plot_nitrogen = ggplot(nitrogen, aes(x = date, y = nitrogen, color = location_id)) +
+  geom_line(alpha = 0.6) +
   labs(
     title = "Scatter Plot of Nitrogen Levels Over Time", 
     x = "Date", 
     y = "Nitrogen (mg/l)") +
   theme(legend.position = "right")
+
+interactive_nitrogen = ggplotly(plot_nitrogen)
+
+interactive_nitrogen
 ```
 
 ```{r}
@@ -173,13 +242,17 @@ phosphorus =
   mutate(phosphorus = as.numeric(result_text)) 
 
 
-ggplot(phosphorus, aes(x = date, y = phosphorus, color = location_id)) +
-  geom_point(alpha = 0.6) +
+plot_phosphorus = ggplot(phosphorus, aes(x = date, y = phosphorus, color = location_id)) +
+  geom_line(alpha = 0.6) +
   labs(
     title = "Scatter Plot of Phosphorus Levels Over Time", 
     x = "Date", 
     y = "Phosphorus (mg/l)") +
   theme(legend.position = "right")
+
+interactive_phosphorus = ggplotly(plot_phosphorus)
+
+interactive_phosphorus
 ```
 
 ```{r}
@@ -189,13 +262,17 @@ potassium =
   mutate(potassium = as.numeric(result_text)) 
 
 
-ggplot(potassium, aes(x = date, y = potassium, color = location_id)) +
-  geom_point(alpha = 0.6) +
+plot_potassium = ggplot(potassium, aes(x = date, y = potassium, color = location_id)) +
+  geom_line(alpha = 0.6) +
   labs(
     title = "Scatter Plot of Potassium Levels Over Time", 
     x = "Date", 
     y = "Potassium (mg/l)") +
   theme(legend.position = "right")
+
+interactive_potassium = ggplotly(plot_potassium)
+
+interactive_potassium
 ```
 
 ```{r}
@@ -205,13 +282,17 @@ sodium =
   mutate(sodium = as.numeric(result_text)) 
 
 
-ggplot(sodium, aes(x = date, y = sodium, color = location_id)) +
-  geom_point(alpha = 0.6) +
+plot_sodium = ggplot(sodium, aes(x = date, y = sodium, color = location_id)) +
+  geom_line(alpha = 0.6) +
   labs(
     title = "Scatter Plot of Sodium Levels Over Time", 
     x = "Date", 
     y = "Sodium (mg/l)") +
   theme(legend.position = "right")
+
+interactive_sodium = ggplotly(plot_sodium)
+
+interactive_sodium
 ```
 
 ```{r}
@@ -221,13 +302,17 @@ sulfur =
   mutate(sulfur = as.numeric(result_text))
 
 
-ggplot(sulfur, aes(x = date, y = sulfur, color = location_id)) +
-  geom_point(alpha = 0.6) +
+plot_sulfur = ggplot(sulfur, aes(x = date, y = sulfur, color = location_id)) +
+  geom_line(alpha = 0.6) +
   labs(
     title = "Scatter Plot of Sulfur Levels Over Time", 
     x = "Date", 
     y = "Sulfur (mg/l)") +
   theme(legend.position = "right")
+
+interactive_sulfur = ggplotly(plot_sulfur)
+
+interactive_sulfur
 ```
 
 
@@ -238,15 +323,17 @@ water_temp =
   mutate(water_temp = as.numeric(result_text)) 
 
 
-ggplot(water_temp, aes(x = date, y = water_temp, color = location_id)) +
-  geom_point(alpha = 0.6) +
+plot_water = ggplot(water_temp, aes(x = date, y = water_temp, color = location_id)) +
+  geom_line(alpha = 0.6) +
   labs(
     title = "Scatter Plot of Water Temperature Levels Over Time", 
     x = "Date", 
     y = "Water Temperature deg C") +
   theme(legend.position = "right")
 
+interactive_water = ggplotly(plot_water)
 
+interactive_water
 ```
 
 ```{r}
