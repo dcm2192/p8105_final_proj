@@ -1,9 +1,10 @@
 ---
-title: "Weather Dashboard"
+title: "Weather Shiny Dashboard"
 output: 
   flexdashboard::flex_dashboard:
     orientation: columns
     vertical_layout: fill
+runtime: shiny
 ---
 
 ```{r setup, message = FALSE, include = FALSE}
@@ -15,6 +16,9 @@ library(ggmap)
 library(geosphere)
 library(lubridate)
 library(patchwork)
+library(leaflet)
+library(leaflet.extras2)
+library(shiny)
 ```
 
 ```{r data, message = FALSE, include = FALSE}
@@ -72,6 +76,45 @@ daily_elk <-
   )
 ```
 
+Column {.sidebar}
+-----------------------------------------------------------------------
+
+```{r}
+# select weather type
+weather_types = 
+  daily_elk |> 
+  select(-tmin, -tmax) |> 
+  pivot_longer(
+    tavg:snwd, 
+    names_to = "weather_type", 
+    values_to = "weather_value"
+  ) |> 
+  distinct(weather_type) |> 
+  pull()
+
+selectInput("weather_choice", label = "Select Weather Data",
+            choices = weather_types, selected = "prcp")
+
+renderPlotly({
+  daily_elk |> 
+    select(-tmin, -tmax) |> 
+    pivot_longer(
+      tavg:snwd, 
+      names_to = "weather_type", 
+      values_to = "weather_value"
+      ) |> 
+    distinct(weather_type) |> 
+    pull() |> 
+    filter(
+      weather_type == input[["weather_choice"]]
+      ) |> 
+    plot_ly(
+      x = ~prcp, y = ~dist_km, color = ~elk_id, type = 'scatter'
+      ) |> 
+    layout(xaxis = list(title = "Daily Precipitation (in)"), 
+           yaxis = list(title = "Daily Distance Traveled (km)"), legend = list(title = list(text = "Elk ID")))
+  })
+```
 
 Column {data-width=650}
 -----------------------------------------------------------------------
@@ -79,14 +122,14 @@ Column {data-width=650}
 ### Daily Distance Traveled by Elk vs. Daily Precipitation Total
 
 ```{r}
-elk_prcp_distkm_pts <- 
-  daily_elk |> 
-  ggplot(aes(x = prcp, y = dist_km)) + 
-  geom_point(aes(color = elk_id)) + 
-  geom_smooth(se = FALSE) + 
-  labs(x = "Daily Precipitation (in)", y = "Daily Distance Traveled (km)", color = "Elk ID")
-
-ggplotly(elk_prcp_distkm_pts)
+# elk_prcp_distkm_pts <- 
+#   daily_elk |> 
+#   ggplot(aes(x = prcp, y = dist_km)) + 
+#   geom_point(aes(color = elk_id)) + 
+#   geom_smooth(se = FALSE) + 
+#   labs(x = "Daily Precipitation (in)", y = "Daily Distance Traveled (km)", color = "Elk ID")
+# 
+# ggplotly(elk_prcp_distkm_pts)
 ```
 
 Column {data-width=350}
