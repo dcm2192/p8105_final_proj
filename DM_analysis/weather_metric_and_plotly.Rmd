@@ -159,6 +159,32 @@ reduced_weather |>
   )
 ```
 
+Avg temp plotly.
+```{r}
+# point + line
+reduced_weather |> 
+  select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
+  mutate(year = format(DATE, "%Y"), 
+         month = format(DATE, "%m")) |> 
+  group_by(year, month) |> 
+  summarize(year_month_tavg = mean(TAVG, na.rm = TRUE)) |> 
+  mutate(year_month = paste(year, month, sep = "-")) |> 
+  plot_ly(
+    x = ~month, y = ~year_month_tavg, color = ~as.factor(year), group = ~year, type = 'scatter', mode = 'lines'
+    )
+
+# year-month totals
+reduced_weather |> 
+  select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
+  mutate(year = format(DATE, "%Y"), 
+         month = format(DATE, "%m")) |> 
+  group_by(year, month) |> 
+  summarize(year_month_tavg = mean(TAVG, na.rm = TRUE)) |> 
+  mutate(year_month = paste(year, month, sep = "-")) |> 
+  plot_ly(
+    x = ~year_month, y = ~year_month_tavg, color = ~year, type = 'bar'
+  )
+```
 
 
 
