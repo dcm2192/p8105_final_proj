@@ -13,52 +13,6 @@ library(flexdashboard)
 library(leaflet)
 ```
 
-```{r}
-elk = read.csv(file = "./data/elk.csv") |> 
-  mutate(date = as.Date(paste(year, month, day, sep = "-")))
-
-water_quality = read.csv(file = "./data/water_quality.csv") |> 
-  mutate(date = as.Date(paste(year, month, day, sep = "-")))
-```
-
-
-sliderInput(
-  "year", 
-  label = h3("Choose Year"), 
-  min = 2006,
-  max = 2015,
-  value = 2006,
-  step = 1)
-
-sliderInput(
-  "month", 
-  label = h3("Choose Month"), 
-  min = 1,
-  max = 12,
-  value = 5,
-  step = 1)
-
-
-
-```{r}
-water_quality |> 
-  group_by(characteristic_name) |> 
-  summarize(n = n()) |> 
-  arrange(desc(n))
-```
-
-```{r}
-calcium = 
-  water_quality |> 
-  filter(characteristic_name == 'Calcium mg/l') |> 
-  mutate(calcium = as.numeric(result_text)) # turning the vector numeric
-
-
-calcium |>    
-  ggplot(aes(x = calcium)) + 
-  geom_histogram()
-```
-
 
 ```{r}
 ui = fluidPage(
@@ -83,7 +37,7 @@ ui = fluidPage(
       selectInput("characteristic", 
                   "Select Water Quality Characteristic:", 
                   choices = unique(water_quality$characteristic_name),
-                  selected = "Calcium mg/l")
+                  selected = " mg/l")
     ),
     
     mainPanel(
@@ -107,8 +61,8 @@ server = function(input, output) {
 
 output$elkMap = renderLeaflet({
   filtered_water_quality = water_quality |> 
-  filter(characteristic_name == input$characteristic),
-            format(date, "%Y") == as.character(input$year_slider), 
+  filter(characteristic_name == input$characteristic)
+            format(date, "%Y") == as.character(input$year_slider)
             format(date, "%m") == sprintf("02d", input$month_slider)
  
 if(nrow(filtered_water_quality) > 0) {
@@ -128,7 +82,7 @@ output$waterQualityPlot = renderPlot({
   
 if(nrow(data) > 0) {
 ggplot(data, aes(x = date, y = as.numeric(result_text))) +
-    geom_line() +
+    geom_point() +
     labs(
       title = paste("Water Quality of:", input$characteristic, "in", input$month_slider, input$year_slider),
       x = "Date",

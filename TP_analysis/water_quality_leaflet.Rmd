@@ -1,0 +1,40 @@
+---
+title: "Water Quality Leaflet"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+        echo = TRUE,
+        warning = FALSE,
+  fig.width = 6,
+  fig.asp = .6,
+  out.width = "90%"
+)
+
+theme_set(theme_minimal() +theme(legend.position = "bottom"))
+
+options(
+  ggplot2.continuous.color = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_color_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+```
+
+```{r}
+library(leaflet)
+library(tidyverse)
+```
+
+```{r}
+leaflet(data = elk) |> 
+  addTiles() |> 
+  addPolylines(~long, ~lat, color = "blue", weight = 2, opacity = 0.7) |> 
+  addCircleMarkers(data = water_quality, ~longitude, ~latitude,
+                   radius = 2, color = "red", fill = TRUE, fillOpacity = 0.5,
+                   popup = ~paste("Characteristic: ", characteristic_name)) |> 
+  addLegend(position = "bottomright", colors = c("blue", "red"), labels = c("Elk Path", "Characteristic Locations"))
+```
+
