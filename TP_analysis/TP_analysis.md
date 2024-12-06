@@ -34,8 +34,11 @@ library(shiny)
 ## Read in Data
 
 ``` r
-elk = read.csv(file = "./data/elk.csv")
-water_quality = read.csv(file = "./data/water_quality.csv")
+elk = read.csv(file = "./data/elk.csv") |> 
+  mutate(date = as.Date(paste(year, month, day, sep = "-")))
+
+water_quality = read.csv(file = "./data/water_quality.csv") |> 
+  mutate(date = as.Date(paste(year, month, day, sep = "-")))
 ```
 
 ## Elk Data
@@ -47,13 +50,13 @@ the time. The `lat` and `long` give the location.
 head(elk)
 ```
 
-    ##   elk_id year month day hour      lat      long
-    ## 1    572 2006     3   1   18 43.83287 -110.3667
-    ## 2    572 2006     3   1   20 43.83255 -110.3666
-    ## 3    572 2006     3   1   22 43.83247 -110.3664
-    ## 4    572 2006     3   2    0 43.83250 -110.3662
-    ## 5    572 2006     3   2    2 43.83120 -110.3636
-    ## 6    572 2006     3   2    4 43.83040 -110.3637
+    ##   elk_id year month day hour      lat      long       date
+    ## 1    572 2006     3   1   18 43.83287 -110.3667 2006-03-01
+    ## 2    572 2006     3   1   20 43.83255 -110.3666 2006-03-01
+    ## 3    572 2006     3   1   22 43.83247 -110.3664 2006-03-01
+    ## 4    572 2006     3   2    0 43.83250 -110.3662 2006-03-02
+    ## 5    572 2006     3   2    2 43.83120 -110.3636 2006-03-02
+    ## 6    572 2006     3   2    4 43.83040 -110.3637 2006-03-02
 
 ## Water Quality
 
@@ -80,13 +83,13 @@ head(water_quality)
     ## 4 -107.9187    BICA_BHR1_051790910B11 Field Msr/Obs          2005-06-28 2005
     ## 5 -107.9187    BICA_BHR1_051790910B11 Field Msr/Obs          2005-06-28 2005
     ## 6 -107.9187 BICA_BHR1_052341240B01^02 Field Msr/Obs          2005-08-22 2005
-    ##   month day          characteristic_name  result_text
-    ## 1     6  28 Flow, severity (choice list) ABOVE NORMAL
-    ## 2     6  28                           pH         8.05
-    ## 3     6  28   Specific conductance uS/cm          939
-    ## 4     6  28     Temperature, water deg C         9.14
-    ## 5     6  28                     Flow cfs         7200
-    ## 6     8  22 Flow, severity (choice list)       NORMAL
+    ##   month day          characteristic_name  result_text       date
+    ## 1     6  28 Flow, severity (choice list) ABOVE NORMAL 2005-06-28
+    ## 2     6  28                           pH         8.05 2005-06-28
+    ## 3     6  28   Specific conductance uS/cm          939 2005-06-28
+    ## 4     6  28     Temperature, water deg C         9.14 2005-06-28
+    ## 5     6  28                     Flow cfs         7200 2005-06-28
+    ## 6     8  22 Flow, severity (choice list)       NORMAL 2005-08-22
 
 This is an incredibly rich data set. I have only kept the 20 most common
 quantitative measurements, but there are so many more. I have kept this

@@ -1,0 +1,148 @@
+---
+title: "Water Shiny Dashboard"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+runtime: shiny
+---
+
+```{r}
+library(shiny)
+library(flexdashboard)
+library(leaflet)
+```
+
+```{r}
+elk = read.csv(file = "./data/elk.csv") |> 
+  mutate(date = as.Date(paste(year, month, day, sep = "-")))
+
+water_quality = read.csv(file = "./data/water_quality.csv") |> 
+  mutate(date = as.Date(paste(year, month, day, sep = "-")))
+```
+
+
+sliderInput(
+  "year", 
+  label = h3("Choose Year"), 
+  min = 2006,
+  max = 2015,
+  value = 2006,
+  step = 1)
+
+sliderInput(
+  "month", 
+  label = h3("Choose Month"), 
+  min = 1,
+  max = 12,
+  value = 5,
+  step = 1)
+
+
+
+```{r}
+water_quality |> 
+  group_by(characteristic_name) |> 
+  summarize(n = n()) |> 
+  arrange(desc(n))
+```
+
+```{r}
+calcium = 
+  water_quality |> 
+  filter(characteristic_name == 'Calcium mg/l') |> 
+  mutate(calcium = as.numeric(result_text)) # turning the vector numeric
+
+
+calcium |>    
+  ggplot(aes(x = calcium)) + 
+  geom_histogram()
+```
+
+
+```{r}
+ui = fluidPage(
+  titlePanel("Water Quality Over Time"),
+  
+  sidebarLayout(
+    sidebarPanel(
+      sliderInput("year_slider",
+                  "Select Year:",
+                  min = 2006,
+                  max = 2015,
+                  value = 2006,
+                  step = 1),
+                  
+      sliderInput("month_slider",
+                  "Select Month:",
+                  min = 1,
+                  max = 12,
+                  value = 1,
+                  step = 1),
+      
+      selectInput("characteristic", 
+                  "Select Water Quality Characteristic:", 
+                  choices = unique(water_quality$characteristic_name),
+                  selected = "Calcium mg/l")
+    ),
+    
+    mainPanel(
+      leafletOutput("elkMap"),
+      plotOutput("waterQualityPlot")
+    )
+  )
+)
+```
+
+```{r}
+server = function(input, output) {
+  
+  filtered_data = reactive({
+    water_quality |> 
+      filter(characteristic_name == input$characteristic,
+             format(date, "%Y") == as.character(input$year_slider),
+             format(date, "%m") == sprintf("%02d", input$month_slider)) |> 
+      mutate(result_text = as.numeric(result_text))
+  })
+
+output$elkMap = renderLeaflet({
+  filtered_water_quality = water_quality |> 
+  filter(characteristic_name == input$characteristic),
+            format(date, "%Y") == as.character(input$year_slider), 
+            format(date, "%m") == sprintf("02d", input$month_slider)
+ 
+if(nrow(filtered_water_quality) > 0) {
+  leaflet(filtered_water_quality) |> 
+    addTiles() |> 
+    addMarkers(~longitude, ~latitude, 
+               popup = ~paste("Characteristic: ", characteristic_name, 
+                              "<br>Value: ", result_text,
+                              "<br>Date: ", date))
+} else {
+  leaflet() |>  addTiles()
+}
+})
+
+output$waterQualityPlot = renderPlot({
+  data = filtered_data()
+  
+if(nrow(data) > 0) {
+ggplot(data, aes(x = date, y = as.numeric(result_text))) +
+    geom_line() +
+    labs(
+      title = paste("Water Quality of:", input$characteristic, "in", input$month_slider, input$year_slider),
+      x = "Date",
+      y = paste(input$characteristic, "(mg/l)")
+    )
+} else {
+  ggplot() +
+    labs(title = "No data available for the selected year and month")
+}  
+})
+}
+```
+
+
+```{r}
+shinyApp(ui = ui, server = server)
+```

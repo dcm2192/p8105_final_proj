@@ -8,16 +8,38 @@ output: github_document
 ```{r}
 library(tidyverse)
 library(ggmap)
-library(shiny)
+library(ggplot2)
 ```
 
+```{r}
+knitr::opts_chunk$set(
+        echo = TRUE,
+        warning = FALSE,
+  fig.width = 6,
+  fig.asp = .6,
+  out.width = "90%"
+)
+
+theme_set(theme_minimal() +theme(legend.position = "bottom"))
+
+options(
+  ggplot2.continuous.color = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_color_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+```
 
 
 ## Read in Data
 
 ```{r}
-elk = read.csv(file = "./data/elk.csv")
-water_quality = read.csv(file = "./data/water_quality.csv")
+elk = read.csv(file = "./data/elk.csv") |> 
+  mutate(date = as.Date(paste(year, month, day, sep = "-")))
+
+water_quality = read.csv(file = "./data/water_quality.csv") |> 
+  mutate(date = as.Date(paste(year, month, day, sep = "-")))
 ```
 
 ## Elk Data
@@ -289,5 +311,21 @@ water_ph =
 water_ph |>    
   ggplot(aes(x = water_ph)) + 
   geom_histogram()
+```
+
+```{r}
+location_data = water_quality |> 
+  filter(characteristic_name == "Calcium mg/l") 
+```
+
+```{r}
+ggplot(location_data, aes(x = year, y = result_text, color = month)) +
+  geom_point() +
+  facet_wrap(~ location_type) +
+  labs(
+    title = "Calcium Content by Type of Location",
+    x = "Year",
+    y = "Calcium Content (mg/l)"
+  )
 ```
 
