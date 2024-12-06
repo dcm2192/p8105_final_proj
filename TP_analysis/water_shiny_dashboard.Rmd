@@ -66,11 +66,17 @@ server = function(input, output) {
       mutate(result_text = as.numeric(result_text))
   })
 
+  filtered_elk = reactive ({
+    elk |> 
+      filter(format(date, "%Y") == as.character(input$year_slider),
+             format(date, "%m") == sprintf("%02d", input$month_slider))
+})
+  
 output$elkMap = renderLeaflet({
-  filtered_water_quality = water_quality |> 
-  filter(characteristic_name == input$characteristic)
-            format(date, "%Y") == as.character(input$year_slider)
-            format(date, "%m") == sprintf("02d", input$month_slider)
+  filtered_water_quality = filtered_data()
+  filtered_elk_data = filtered_elk() 
+  map = leaflet() |> 
+    addTiles()
  
 if(nrow(filtered_water_quality) > 0) {
   leaflet(filtered_water_quality) |> 
@@ -79,14 +85,22 @@ if(nrow(filtered_water_quality) > 0) {
                popup = ~paste("Characteristic: ", characteristic_name, 
                               "<br>Value: ", result_text,
                               "<br>Date: ", date))
-} else {
-  leaflet() |>  addTiles()
-}
+} 
+
+  if (nrow(filtered_elk_data) > 0) {
+    map = map |> addMarkers(
+      data = filtered_elk_data,
+      ~long, ~lat,
+      popup = ~paste("Elk Path", "<br>Date: ", date)
+    )
+  }
+  
+  map
 })
 
-output$waterQualityPlot = renderPlot({
-  data = filtered_data()
-  
+output$waterQualityPlot = renderPlot ({
+  data - filtered_data()
+
 if(nrow(data) > 0) {
 ggplot(data, aes(x = date, y = as.numeric(result_text))) +
     geom_point() +

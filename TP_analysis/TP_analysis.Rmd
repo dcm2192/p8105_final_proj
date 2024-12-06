@@ -67,6 +67,18 @@ water_quality |>
   arrange(desc(n))
 ```
 
+
+
+```{r}
+leaflet(data = elk) |> 
+  addTiles() |> 
+  addPolylines(~long, ~lat, color = "blue", weight = 2, opacity = 0.7) |> 
+  addCircleMarkers(data = water_quality, ~longitude, ~latitude,
+                   radius = 2, color = "red", fill = TRUE, fillOpacity = 0.5) |> 
+  addLegend(position = "bottomright", colors = c("blue", "red"), labels = c("Elk Path", "Characteristic Locations"))
+```
+
+
 ## Exploring Water Quality Near Elk Movement
 Of the many different locations the data set provides, there are six distinct locations surrounding Yellowstone National Park. I examined rivers and streams generally along the borders of the park and specifically at Snake River at Old Flagg Ranch 1000 Below Bridge and Snake River Below Site of New Visitor's Center as these two locations are at the heart of elk movement. 
 
@@ -141,7 +153,7 @@ Lastly, Madison River near West Yellowstone, MT has consistently reported signif
 
 ### Chloride
 
-Next up is chloride. Chloride is an electrolyte commonly found in blood. It keeps the proper balance of body fluids and maintains the bosy'd acid-base balance. Consumption of chloride is typically not harmful, however, if chloride is found in water, that typically means contaminants such as bacteria, nitrates, or even lead may be found as well. 
+Next up is chloride. Chloride is an electrolyte commonly found in blood. It keeps the proper balance of body fluids and maintains the body's acid-base balance. Consumption of chloride is typically not harmful, however, if chloride is found in water, that typically means contaminants such as bacteria, nitrates, or even lead may be found as well. 
 
 In the case of elk, chloride levels can be safe between 0-44 mg/l, however, levels above 133 are potentially harmful is consumed for long periods of time and can lead to death. 
 
@@ -175,7 +187,7 @@ Between all locations, Madison River 1.21km West of MT/WY State Boundary and Mad
 
 Next up is dissolved oxygen. Dissolved oxygen refers to the amount of oxygen gas present water, or oxygen molecules that have been absorbed from the atmosphere and are free floating in water. This is often used as an indicator of water quality, as low levels can be detrimental to aquatic life and high levels are considered good for drinking, improving taste and supporting aquatic life. 
 
-For the elk, cosnidering they receive their main drinking water from rivers surrounding Yellowstone National Park, a healthy range for dissolved oxygen is 6.5-8 mg/l. 
+For the elk, considering they receive their main drinking water from rivers surrounding Yellowstone National Park, a healthy range for dissolved oxygen is 6.5-8 mg/l. 
 
 It is typically seen that colder water will have high DO levels than water water, which means DO is usually higher in winter than summer. 
 
@@ -204,6 +216,10 @@ According to the plot, the Lamar River at USGS Gage near Ranger Station, Madison
 Aside from these four locations, Snake River at Old Flagg Ranch 1000 Below Bridge and Snake River Below Site of New Visitor's Center had very similar trends, each ranging relatively between 1.220-13.170 mg/l and -0.020-12.410 mg/l, respectively. However, in the summer of 2009, each area reported a spike to 52.5 mg/l, followed by a sharp fall the next month. 
 
 To note, a negative dissolved oxygen reading indicates an issue with the device used to measure the water. Near-zero conditions can also produce negative readings, which means the device should be recalibrated or replaced entirely.
+
+### Magnesium
+
+Next up is magnesium. Magnesium is mineral that is essential for healthy muscles, nerves, bones and blood sugar levels
 
 ```{r}
 magnesium = 
@@ -353,25 +369,17 @@ water_ph =
   mutate(water_ph = as.numeric(result_text)) 
 
 
-ggplot(water_ph, aes(x = date, y = water_ph, color = location_id)) +
-  geom_point(alpha = 0.6) +
+plot_ph = ggplot(water_ph, aes(x = date, y = water_ph, color = location_id)) +
+  geom_line(alpha = 0.6) +
   labs(
-    title = "Scatter Plot of pH Levels Over Time", 
+    title = "Scatter Plot of pH Over Time", 
     x = "Date", 
     y = "pH") +
   theme(legend.position = "right")
 
-water_ph |> 
-  mutate(text_label = str_c("Location: ", location_name, "pH Level: ", result_text)) |> 
-  plot_ly(
-    x = ~latitude, 
-    y = ~longitude, 
-    type = "scatter", 
-    mode = "markers",
-    color = ~location_name, 
-    text = ~text_label, 
-    alpha = 0.5, 
-    hoverinfo = "text")
+interactive_ph = ggplotly(plot_ph)
+
+interactive_ph
 ```
 
 
@@ -383,119 +391,18 @@ location_data = water_quality |>
 ```
 
 ```{r}
-ggplot(location_data, aes(x = date, y = result_text)) +
+plot_characteristics = ggplot(location_data, aes(x = date, y = result_text)) +
   geom_line(aes(color = location_id), size = 0.5) +
   facet_wrap(~ characteristic_name, scales = "free_y") +
   labs(
     title = "Water Quality Over Time",
     x = "Date",
     y = "Characteristic"
-  ) +
-  scale_colour_viridis_d()
-```
+  )
 
-```{r}
-characteristic_markers = function(map, water_quality, characteristic_name, pal, popup_info) {
-  map |> 
-    addCircleMarkers(
-      data = water_quality,
-      lng = ~longitude,
-      lat = ~latitude,
-      radius = 6,
-      color = ~pal(water_quality[[characteristic_name]]),
-      stroke = FALSE,
-      fillOpacity = 0.7,
-      popup = ~paste("Location: ", location_id,
-                     "<br>", characteristic_name, ": ", water_quality[[characteristic_name]], "mg/l"),
-      group = characteristic_name
-    )
-  return(map)
-}
-```
+interactive_char = ggplotly(plot_characteristics)
 
-```{r}
-leaflet_map = leaflet() |> 
-  addTiles()
-```
-
-```{r}
-pal_calcium = colorNumeric(palette = "Reds", domain = calcium$calcium)
-
-pal_arsenic = colorNumeric(palette = "Oranges", domain = arsenic$arsenic)
-
-pal_chloride = colorNumeric(palette = "Yellows", domain = chloride$chloride)
-
-pal_do = colorNumeric(palette = "Greens", domain = dissolved_oxygen$dissolved_oxygen)
-
-pal_magnesium = colorNumeric(palette = "Blues", domain = magnesium$magnesium)
-
-pal_nitrogen = colorNumeric(palette = "Purples", domain = nitrogen$nitrogen)
-
-pal_phosphorus = colorNumeric(palette = "Greys", domain = phosphorus$phosphorus)
-
-pal_potassium = colorNumeric(palette = "Accent", domain = potassium$potassium)
-
-pal_sodium = colorNumeric(palette = "Spectral", domain = sodium$sodium)
-
-pal_sulfur = colorNumeric(palette = "Pastel1", domain = sulfur$sulfur)
-
-pal_water = colorNumeric(palette = "BrBG", domain = water_temp$water_temp)
-```
-
-
-```{r}
-leaflet_map = leaflet_map |> 
-  
-characteristic_markers(calcium, "calcium", pal_calcium, "Calcium mg/l") |> 
-  
-characteristic_markers(arsenic, "arsenic", pal_arsenic, "Arsenic mg/l") |> 
-  
-characteristic_markers(chloride, "chloride", pal_chloride, "Chloride mg/l") |> 
-  
-characteristic_markers(dissolved_oxygen, "dissolved oxygen", pal_do, "Dissolved Oxygen (DO) mg/l") |> 
-  
-characteristic_markers(magnesium, "magnesium", pal_magnesium, "Magnesium mg/l") |> 
-  
-characteristic_markers(nitrogen, "nitrogen", pal_nitrogen, "Nitrogen mg/l") |> 
-  
-characteristic_markers(phosphorus, "phosphorus", pal_phosphorus, "Phosphorus mg/l") |> 
-  
-characteristic_markers(potassium, "potassium", pal_potassium, "Potassium mg/l") |> 
-  
-characteristic_markers(sodium, "sodium", pal_sodium, "Sodium mg/l") |> 
-  
-characteristic_markers(sulfur, "sulfur", pal_sulfur, "Sulfur mg/l") |> 
-  
-characteristic_markers(water_temp, "water temperature", pal_water, "Temperature, water deg C")
-```
-
-```{r}
-leaflet_map = leaflet_map |> 
-addLegend(position = "bottomright", pal = pal_calcium, values = ~calcium, title = "Calcium Concentration (mg/l)") |> 
-  
-addLegend(position = "bottomright", pal = pal_arsenic, values = ~arsenic, title = "Arsenic Concentration (mg/l)") |> 
-  
-addLegend(position = "bottomright", pal = pal_chloride, values = ~chloride, title = "Chloride Concentration (mg/l)") |> 
-  
-addLegend(position = "bottomright", pal = pal_do, values = ~dissolved_oxygen, title = "Dissolved Oxygen Concentration (DO) mg/l") |> 
-  
-addLegend(position = "bottomright", pal = pal_magnesium, values = ~magnesium, title = "Magnesium Concentration (mg/l)") |> 
-  
-addLegend(position = "bottomright", pal = pal_nitrogen, values = ~nitrogen, title = "Nitrogen Concentration (mg/l)") |> 
-  
-addLegend(position = "bottomright", pal = pal_phosphorus, values = ~phosphorus, title = "Phosphorus Concentration (mg/l)") |> 
-  
-addLegend(position = "bottomright", pal = pal_potassium, values = ~potassium, title = "Potassium Concentration (mg/l)") |> 
-  
-addLegend(position = "bottomright", pal = pal_sodium, values = ~sodium, title = "Sodium Concentration (mg/l)") |> 
-  
-addLegend(position = "bottomright", pal = pal_sulfur, values = ~sulfur, title = "Sulfur Concentration (mg/l)") |> 
-  
-addLegend(position = "bottomright", pal = pal_water, values = ~water_temp, title = "Water Temperature (deg C)")
-```
-
-```{r}
-leaflet_map
+interactive_char
 ```
 
 ## Create a static map plot
@@ -578,14 +485,4 @@ geom_point(
 )
 ```
 
-
-```{r}
-leaflet(data = elk) |> 
-  addTiles() |> 
-  addPolylines(~long, ~lat, color = "blue", weight = 2, opacity = 0.7) |> 
-  addCircleMarkers(data = water_quality, ~longitude, ~latitude,
-                   radius = 2, color = "red", fill = TRUE, fillOpacity = 0.5,
-                   popup = ~paste("Characteristic: ", characteristic_name)) |> 
-  addLegend(position = "bottomright", colors = c("blue", "red"), labels = c("Elk Path", "Characteristic Locations"))
-```
 
