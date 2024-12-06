@@ -1,7 +1,7 @@
 ---
 title: "weather!"
 author: "Dylan Morgan"
-output: github_document
+output: html_document
 ---
 
 Load packages.
@@ -10,11 +10,17 @@ library(tidyverse)
 library(ggmap)
 library(geosphere)
 library(lubridate)
+library(plotly)
 ```
 
 Elk data from Wayne.
 ```{r}
 elk = read_csv("./data/elk.csv")
+```
+
+all_data csv from Wayne.
+```{r}
+all_data <- read_csv("./data/all_data.csv")
 ```
 
 Load and clean up weather data.
@@ -75,10 +81,6 @@ four_stations_labels_plot <-
 
 four_stations_labels_plot
 
-ggsave(path = "./plots/", 
-       filename = "four_stations_labels_plot.png", 
-       plot = four_stations_labels_plot)
-
 four_stations_elk_mvmt_plot <- 
   ggplot() +
   geom_path(
@@ -89,10 +91,6 @@ four_stations_elk_mvmt_plot <-
   geom_point(data = reduced_weather_stations, aes(x = LONGITUDE, y = LATITUDE))
   
 four_stations_elk_mvmt_plot
-
-ggsave(path = "./plots/", 
-       filename = "four_stations_elk_mvmt_plot.png", 
-       plot = four_stations_elk_mvmt_plot)
 ```
 
 Reduce weather station data, explore weather data.
@@ -100,43 +98,11 @@ Reduce weather station data, explore weather data.
 reduced_weather <- 
   raw_weather |> 
   filter(NAME %in% four_stations)
-
-# reduced_weather |>
-#   group_by(NAME) |> 
-#   pivot_longer(
-#     TAVG:TMIN, 
-#     names_to = "temp_class", 
-#     values_to = "temp") |> 
-#   select(-c(WDF2:WT11)) |> 
-#   ggplot(aes(x = DATE, y = temp, color = temp_class)) + 
-#     geom_point() + 
-#   facet_grid(~factor(NAME))
-
 ```
-
-Are there any differences in weather patterns observed among the different stations that could have influenced elk movement patterns?
 
 What kinds of monthly weather patterns were visible over this time period?
 
-Were there any extreme weather events that occurred?
-
 Find patterns in temp, rainfall, snowfall over time. Factor by month. Avg rainfall total, snowfall total, snow depth total, temp avg.
-
-*Histogram or barchart?*
-
-Histogram of total precip
-Histogram of precip by year
-Histogram of precip by month
-Compared to histogram of elk movement by month
-Histogram of total snowfall
-Histogram of snowfall by year
-Histogram of snowfall by month
-Compared to Histogram of Elk movement by month 
-Histogram of daily temperatures by year
-Histogram of daily temperatures by month
-Scatterplot of daily elk movement versus snowfall
-Scatterplot of daily elk movement versus snowdepth
-Scatterplot of daily elk movement versus temperature
 
 Total precip -- avg totals among the four stations.
 Three ways to show data: faceted bar chart per year, point + line graph per year, year-month bar chart separated by year
@@ -154,8 +120,9 @@ reduced_weather |>
   ggplot(aes(x = month, y = station_precip_total_avg, fill = as.factor(year))) +
   geom_bar(stat = "identity") + 
   facet_wrap(vars(year), ncol = 2) + 
-  theme(legend.position = "none")
-
+  theme(legend.position = "none") + 
+  labs(x = "Month", y = "Total Precipitation (in)")
+  
 # point + line, separated by month and year
 reduced_weather |> 
   select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
@@ -168,8 +135,9 @@ reduced_weather |>
   mutate(year_month = paste(year, month, sep = "-")) |> 
   ggplot(aes(x = month, y = station_precip_total_avg, color = year, group = year)) + 
   geom_point(size = 2) + 
-  geom_line(linewidth = 1)
-
+  geom_line(linewidth = 1) + 
+  labs(x = "Month", y = "Total Precipitation (in)", color = "Year")
+  
 # year-month totals, separated by year
 reduced_weather |> 
   select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
@@ -182,10 +150,47 @@ reduced_weather |>
   mutate(year_month = paste(year, month, sep = "-")) |> 
   ggplot(aes(x = year_month, y = station_precip_total_avg, fill = as.factor(year))) +
   geom_bar(stat = "identity") + 
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+  labs(x = "Date (Year, Month)", y = "Total Precipitation (in)", fill = "Year")
+  
 ```
 
-Do the same for snowfall.
+Precip plotly.
+```{r}
+# point + line, separated by month and year
+reduced_weather |> 
+  select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
+  mutate(year = format(DATE, "%Y"), 
+         month = format(DATE, "%m")) |> 
+  group_by(NAME, year, month) |> 
+  summarize(station_precip_total = sum(PRCP, na.rm = TRUE)) |> 
+  group_by(year, month) |> 
+  summarize(station_precip_total_avg = mean(station_precip_total, na.rm = TRUE)) |> 
+  mutate(year_month = paste(year, month, sep = "-")) |> 
+  plot_ly(
+    x = ~month, y = ~station_precip_total_avg, color = ~year, group = ~year, type = 'scatter', mode = 'lines'
+    ) |> 
+  layout(xaxis = list(title = "Month"), 
+         yaxis = list(title = "Total Precipitation (in)"), legend = list(title = list(text = "Year")))
+
+# year-month totals, separated by year
+reduced_weather |> 
+  select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
+  mutate(year = format(DATE, "%Y"), 
+         month = format(DATE, "%m")) |> 
+  group_by(NAME, year, month) |> 
+  summarize(station_precip_total = sum(PRCP, na.rm = TRUE)) |> 
+  group_by(year, month) |> 
+  summarize(station_precip_total_avg = mean(station_precip_total, na.rm = TRUE)) |> 
+  mutate(year_month = paste(year, month, sep = "-")) |> 
+  plot_ly(
+    x = ~year_month, y = ~station_precip_total_avg, color = ~as.factor(year), type = "bar"
+    ) |> 
+  layout(xaxis = list(title = "Date (Year, Month)"), 
+         yaxis = list(title = "Total Precipitation (in)"), legend = list(title = list(text = "Year")))
+```
+
+Snowfall.
 ```{r}
 # faceted bar chart, separated by month and year -- KEEP STATIC, USE FOR ANALYSIS PAGE
 reduced_weather |> 
@@ -200,8 +205,9 @@ reduced_weather |>
   ggplot(aes(x = month, y = station_snowfall_total_avg, fill = as.factor(year))) +
   geom_bar(stat = "identity") + 
   facet_wrap(vars(year), ncol = 2) + 
-  theme(legend.position = "none")
-
+  theme(legend.position = "none") + 
+  labs(x = "Month", y = "Total Snowfall (in)")
+  
 # point + line -- MAKE DYNAMIC, USE FOR DASHBOARD
 reduced_weather |> 
   select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
@@ -214,7 +220,8 @@ reduced_weather |>
   mutate(year_month = paste(year, month, sep = "-")) |> 
   ggplot(aes(x = month, y = station_snowfall_total_avg, color = year, group = year)) + 
   geom_point(size = 2) + 
-  geom_line(linewidth = 1)
+  geom_line(linewidth = 1) + 
+  labs(x = "Month", y = "Total Snowfall (in)", color = "Year")
 
 # year-month totals by year -- MAKE DYNAMIC, USE FOR DASHBOARD
 reduced_weather |> 
@@ -228,7 +235,43 @@ reduced_weather |>
   mutate(year_month = paste(year, month, sep = "-")) |> 
   ggplot(aes(x = year_month, y = station_snowfall_total_avg, fill = as.factor(year))) + 
   geom_bar(stat = "identity") + 
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+  labs(x = "Date (Year, Month)", y = "Total Snowfall (in)", fill = "Year")
+```
+
+Snowfall plotly.
+```{r}
+# point + line
+reduced_weather |> 
+  select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
+  mutate(year = format(DATE, "%Y"), 
+         month = format(DATE, "%m")) |> 
+  group_by(NAME, year, month) |> 
+  summarize(station_snowfall_total = sum(SNOW, na.rm = TRUE)) |> 
+  group_by(year, month) |> 
+  summarize(station_snowfall_total_avg = mean(station_snowfall_total, na.rm = TRUE)) |> 
+  mutate(year_month = paste(year, month, sep = "-")) |> 
+  plot_ly(
+    x = ~month, y = ~station_snowfall_total_avg, color = ~as.factor(year), group = ~year, type = 'scatter', mode = 'lines'
+    ) |> 
+  layout(xaxis = list(title = "Month"), 
+         yaxis = list(title = "Total Snowfall (in)"), legend = list(title = list(text = "Year")))
+
+# year-month totals by year
+reduced_weather |> 
+  select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
+  mutate(year = format(DATE, "%Y"), 
+         month = format(DATE, "%m")) |> 
+  group_by(NAME, year, month) |> 
+  summarize(station_snowfall_total = sum(SNOW, na.rm = TRUE)) |> 
+  group_by(year, month) |> 
+  summarize(station_snowfall_total_avg = mean(station_snowfall_total, na.rm = TRUE)) |> 
+  mutate(year_month = paste(year, month, sep = "-")) |> 
+  plot_ly(
+    x = ~year_month, y = ~station_snowfall_total_avg, color = ~year, type = 'bar'
+    ) |> 
+  layout(xaxis = list(title = "Date (Year, Month)"), 
+         yaxis = list(title = "Total Snowfall (in)"), legend = list(title = list(text = "Year")))
 ```
 
 Snow depth.
@@ -246,7 +289,8 @@ reduced_weather |>
   ggplot(aes(x = month, y = station_snowdepth_total_avg, fill = as.factor(year))) +
   geom_bar(stat = "identity") + 
   facet_wrap(vars(year), ncol = 2) + 
-  theme(legend.position = "none")
+  theme(legend.position = "none") + 
+  labs(x = "Month", y = "Total Snow Depth (in)")
 
 # point + line -- MAKE DYNAMIC, USE FOR DASHBOARD
 reduced_weather |> 
@@ -260,7 +304,8 @@ reduced_weather |>
   mutate(year_month = paste(year, month, sep = "-")) |> 
   ggplot(aes(x = month, y = station_snowdepth_total_avg, color = year, group = year)) + 
   geom_point(size = 2) + 
-  geom_line(linewidth = 1)
+  geom_line(linewidth = 1) + 
+  labs(x = "Month", y = "Total Snow Depth (in)", color = "Year")
 
 # year-month totals -- MAKE DYNAMIC, USE FOR DASHBOARD
 reduced_weather |> 
@@ -274,7 +319,43 @@ reduced_weather |>
   mutate(year_month = paste(year, month, sep = "-")) |> 
   ggplot(aes(x = year_month, y = station_snowdepth_total_avg, fill = as.factor(year))) + 
   geom_bar(stat = "identity") + 
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+  labs(x = "Date (Year, Month)", y = "Total Snow Depth (in)", fill = "Year")
+```
+
+Snow depth plotly.
+```{r}
+# point + line
+reduced_weather |> 
+  select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
+  mutate(year = format(DATE, "%Y"), 
+         month = format(DATE, "%m")) |> 
+  group_by(NAME, year, month) |> 
+  summarize(station_snowdepth_total = sum(SNWD, na.rm = TRUE)) |> 
+  group_by(year, month) |> 
+  summarize(station_snowdepth_total_avg = mean(station_snowdepth_total, na.rm = TRUE)) |> 
+  mutate(year_month = paste(year, month, sep = "-")) |> 
+  plot_ly(
+    x = ~month, y = ~station_snowdepth_total_avg, color = ~as.factor(year), group = ~year, type = 'scatter', mode = 'lines'
+    ) |> 
+  layout(xaxis = list(title = "Month"), 
+         yaxis = list(title = "Total Snow Depth (in)"), legend = list(title = list(text = "Year")))
+
+# year-month totals
+reduced_weather |> 
+  select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
+  mutate(year = format(DATE, "%Y"), 
+         month = format(DATE, "%m")) |> 
+  group_by(NAME, year, month) |> 
+  summarize(station_snowdepth_total = sum(SNWD, na.rm = TRUE)) |> 
+  group_by(year, month) |> 
+  summarize(station_snowdepth_total_avg = mean(station_snowdepth_total, na.rm = TRUE)) |> 
+  mutate(year_month = paste(year, month, sep = "-")) |> 
+  plot_ly(
+    x = ~year_month, y = ~station_snowdepth_total_avg, color = ~year, type = 'bar'
+  ) |> 
+  layout(xaxis = list(title = "Date (Year, Month)"), 
+         yaxis = list(title = "Total Snow Depth (in)"), legend = list(title = list(text = "Year")))
 ```
 
 Avg temp. 
@@ -290,7 +371,8 @@ reduced_weather |>
   ggplot(aes(x = month, y = year_month_tavg, fill = as.factor(year))) +
   geom_bar(stat = "identity") + 
   facet_wrap(vars(year), ncol = 2) + 
-  theme(legend.position = "none")
+  theme(legend.position = "none") + 
+  labs(x = "Month", y = "Average Temperature (F)")
 
 # point + line -- MAKE DYNAMIC, USE FOR DASHBOARD
 reduced_weather |> 
@@ -302,7 +384,8 @@ reduced_weather |>
   mutate(year_month = paste(year, month, sep = "-")) |> 
   ggplot(aes(x = month, y = year_month_tavg, color = year, group = year)) + 
   geom_point(size = 2) + 
-  geom_line(linewidth = 1)
+  geom_line(linewidth = 1) + 
+  labs(x = "Month", y = "Average Temperature (F)", color = "Year")
 
 # year-month totals -- MAKE DYNAMIC, USE FOR DASHBOARD
 reduced_weather |> 
@@ -314,32 +397,52 @@ reduced_weather |>
   mutate(year_month = paste(year, month, sep = "-")) |> 
   ggplot(aes(x = year_month, y = year_month_tavg, fill = as.factor(year))) + 
   geom_bar(stat = "identity") + 
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+  labs(x = "Date (Year, Month)", y = "Average Temperature (F)", fill = "Year")
 ```
 
+Avg temp plotly.
+```{r}
+# point + line
+reduced_weather |> 
+  select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
+  mutate(year = format(DATE, "%Y"), 
+         month = format(DATE, "%m")) |> 
+  group_by(year, month) |> 
+  summarize(year_month_tavg = mean(TAVG, na.rm = TRUE)) |> 
+  mutate(year_month = paste(year, month, sep = "-")) |> 
+  plot_ly(
+    x = ~month, y = ~year_month_tavg, color = ~as.factor(year), group = ~year, type = 'scatter', mode = 'lines'
+    ) |> 
+  layout(xaxis = list(title = "Month"), 
+         yaxis = list(title = "Average Temperature (F)"), legend = list(title = list(text = "Year")))
+
+# year-month totals
+reduced_weather |> 
+  select(c(STATION, NAME, LATITUDE, LONGITUDE, DATE, PRCP, SNOW, SNWD, TAVG)) |> 
+  mutate(year = format(DATE, "%Y"), 
+         month = format(DATE, "%m")) |> 
+  group_by(year, month) |> 
+  summarize(year_month_tavg = mean(TAVG, na.rm = TRUE)) |> 
+  mutate(year_month = paste(year, month, sep = "-")) |> 
+  plot_ly(
+    x = ~year_month, y = ~year_month_tavg, color = ~year, type = 'bar'
+  ) |> 
+  layout(xaxis = list(title = "Date (Year, Month)"), 
+         yaxis = list(title = "Average Temperature (F)"), legend = list(title = list(text = "Year")))
+```
 
 Scatterplot of daily elk movement versus precip
 Scatterplot of daily elk movement versus snowfall
 Scatterplot of daily elk movement versus snow depth
 Scatterplot of daily elk movement versus temperature
 
-all data df.
-```{r}
-all_data <- read_csv("./data/all_data.csv")
-```
-
-Scatterplot of daily elk movement versus precip.
-```{r}
-all_data |> 
-  ggplot(aes(x = dt, y = dist_km, color = year, group = year)) + 
-  geom_point()
-```
-
 Daily elk.
 ```{r}
 daily_elk <- 
   all_data |> 
-  mutate(year_month_day = format(dt, "%Y-%m-%d")) |> 
+  mutate(year_month_day = format(dt, "%Y-%m-%d"), 
+         elk_id = as.character(elk_id)) |> 
   group_by(
     elk_id,
     year_month_day, 
@@ -359,87 +462,88 @@ daily_elk <-
   )
 ```
 
-Land cover.
-```{r}
-daily_elk |> 
-  ggplot(aes(x = land_cover)) + 
-  geom_histogram()
-```
-
-
 *FOR ALL OF THE PLOTS BELOW, MAKE STATIC AND DYNAMIC, AND USE ON BOTH ANALYSIS PAGE AND DASHBOARD*
 
 Elk mvmt vs precip.
 ```{r}
-daily_elk |> 
+elk_prcp_distkm_pts <- 
+  daily_elk |> 
   ggplot(aes(x = prcp, y = dist_km)) + 
   geom_point() + 
-  geom_smooth(se = FALSE)
+  geom_smooth(se = FALSE) + 
+  labs(x = "Daily Precipitation (in)", y = "Daily Distance Traveled (km)")
 
-daily_elk |> 
-  ggplot(aes(x = prcp, y = dist_km, color = factor(elk_id))) + 
-  geom_smooth(se = FALSE)
+style(elk_prcp_distkm_pts, hoverinfo = "none", traces = 2)
+
+elk_prcp_distkm_smooth <- 
+  daily_elk |> 
+  ggplot(aes(x = prcp, y = dist_km, color = elk_id)) + 
+  geom_smooth(se = FALSE) + 
+  labs(x = "Daily Precipitation (in)", y = "Daily Distance Traveled (km)", color = "Elk ID")
+
+ggplotly(elk_prcp_distkm_smooth)
 ```
 
 Elk mvmt vs. snowfall.
 ```{r}
-daily_elk |> 
+elk_snowfall_distkm_pts <- 
+  daily_elk |> 
   ggplot(aes(x = snow, y = dist_km)) + 
   geom_point() + 
-  geom_smooth(se = FALSE)
+  geom_smooth(se = FALSE) + 
+  labs(x = "Daily Snowfall (in)", y = "Daily Distance Traveled (km)")
 
-daily_elk |> 
-  ggplot(aes(x = snow, y = dist_km, color = as.factor(elk_id))) + 
-  geom_smooth(se = FALSE)
+style(elk_snowfall_distkm_pts, hoverinfo = "none", traces = 2)
+
+elk_snowfall_distkm_smooth <- 
+  daily_elk |> 
+  ggplot(aes(x = snow, y = dist_km, color = elk_id)) + 
+  geom_smooth(se = FALSE) + 
+  labs(x = "Daily Snowfall (in)", y = "Daily Distance Traveled (km)", color = "Elk ID")
+
+ggplotly(elk_snowfall_distkm_smooth)
 ```
 
 Elk mvmt vs. snow depth. 
 ```{r}
-daily_elk |> 
+elk_snowdepth_distkm_pts <- 
+  daily_elk |> 
   ggplot(aes(x = snwd, y = dist_km)) + 
   geom_point() + 
-  geom_smooth(se = FALSE)
+  geom_smooth(se = FALSE) + 
+  labs(x = "Daily Snow Depth (in)", y = "Daily Distance Traveled (km)")
 
-daily_elk |> 
-  ggplot(aes(x = snwd, y = dist_km, color = as.factor(elk_id))) + 
-  geom_smooth(se = FALSE)
+style(elk_snowdepth_distkm_pts, hoverinfo = "none", traces = 2)
+
+elk_snowdepth_distkm_smooth <- 
+  daily_elk |> 
+  ggplot(aes(x = snwd, y = dist_km, color = elk_id)) + 
+  geom_smooth(se = FALSE) + 
+  labs(x = "Daily Snow Depth (in)", y = "Daily Distance Traveled (km)", color = "Elk ID")
+
+ggplotly(elk_snowdepth_distkm_smooth)
 ```
 
 Elk mvmt vs avg temp.
 ```{r}
-daily_elk |> 
+elk_avgtemp_distkm_pts <- 
+  daily_elk |> 
   ggplot(aes(x = tavg, y = dist_km)) + 
   geom_point() + 
-  geom_smooth(se = FALSE)
+  geom_smooth(se = FALSE) + 
+  labs(x = "Average Daily Temperature (F)", y = "Daily Distance Traveled (km)")
 
-daily_elk |> 
-  ggplot(aes(x = tavg, y = dist_km, color = as.factor(elk_id))) + 
-  geom_smooth(se = FALSE)
+style(elk_avgtemp_distkm_pts, hoverinfo = "none", traces = 2)
+
+elk_avgtemp_distkm_smooth <- 
+  daily_elk |> 
+  ggplot(aes(x = tavg, y = dist_km, color = elk_id)) + 
+  geom_smooth(se = FALSE) + 
+  labs(x = "Average Daily Temperature (F)", y = "Daily Distance Traveled (km)", color = "Elk ID")
+
+ggplotly(elk_avgtemp_distkm_smooth)
 ```
 
-Elk mvmt vs tmin.
-```{r}
-daily_elk |> 
-  ggplot(aes(x = tmin, y = dist_km)) + 
-  geom_point() + 
-  geom_smooth(se = FALSE)
-
-daily_elk |> 
-  ggplot(aes(x = tmin, y = dist_km, color = as.factor(elk_id))) + 
-  geom_smooth(se = FALSE)
-```
-
-Elk mvmt vs tmax. 
-```{r}
-daily_elk |> 
-  ggplot(aes(x = tmax, y = dist_km)) + 
-  geom_point() + 
-  geom_smooth(se = FALSE)
-
-daily_elk |> 
-  ggplot(aes(x = tmax, y = dist_km, color = as.factor(elk_id))) + 
-  geom_smooth(se = FALSE)
-```
 
 
 
