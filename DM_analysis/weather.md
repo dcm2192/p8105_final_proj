@@ -591,11 +591,11 @@ daily_elk |>
 
 ``` r
 daily_elk |> 
-  ggplot(aes(x = prcp, y = dist_km, color = factor(year))) + 
+  ggplot(aes(x = prcp, y = dist_km, color = factor(elk_id))) + 
   geom_smooth(se = FALSE)
 ```
 
-    ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
+    ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
 
     ## Warning: Removed 143 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
@@ -623,14 +623,376 @@ daily_elk |>
 
 ``` r
 daily_elk |> 
-  ggplot(aes(x = snow, y = dist_km, color = as.factor(year))) + 
+  ggplot(aes(x = snow, y = dist_km, color = as.factor(elk_id))) + 
   geom_smooth(se = FALSE)
 ```
 
-    ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
+    ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
 
     ## Warning: Removed 1296 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : at -0.0575
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : radius 0.0033063
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : all data on boundary of neighborhood. make span bigger
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : pseudoinverse used at -0.0575
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : neighborhood radius 0.0575
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : reciprocal condition number 1
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : zero-width neighborhood. make span bigger
+
+    ## Warning: Failed to fit group 1.
+    ## Caused by error in `predLoess()`:
+    ## ! NA/NaN/Inf in foreign function call (arg 5)
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : at -0.0575
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : radius 0.0033063
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : all data on boundary of neighborhood. make span bigger
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : pseudoinverse used at -0.0575
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : neighborhood radius 0.0575
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : reciprocal condition number 1
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : zero-width neighborhood. make span bigger
+
+    ## Warning: Failed to fit group 2.
+    ## Caused by error in `predLoess()`:
+    ## ! NA/NaN/Inf in foreign function call (arg 5)
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : pseudoinverse used at -0.05
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : neighborhood radius 0.55
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : reciprocal condition number 2.0045e-30
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : There are other near singularities as well. 0.25
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : at -0.05
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : radius 0.0025
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : all data on boundary of neighborhood. make span bigger
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : pseudoinverse used at -0.05
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : neighborhood radius 0.05
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : reciprocal condition number 1
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : zero-width neighborhood. make span bigger
+
+    ## Warning: Failed to fit group 4.
+    ## Caused by error in `predLoess()`:
+    ## ! NA/NaN/Inf in foreign function call (arg 5)
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : at -0.065
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : radius 0.004225
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : all data on boundary of neighborhood. make span bigger
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : pseudoinverse used at -0.065
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : neighborhood radius 0.065
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : reciprocal condition number 1
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : zero-width neighborhood. make span bigger
+
+    ## Warning: Failed to fit group 7.
+    ## Caused by error in `predLoess()`:
+    ## ! NA/NaN/Inf in foreign function call (arg 5)
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : at -0.065
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : radius 0.004225
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : all data on boundary of neighborhood. make span bigger
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : pseudoinverse used at -0.065
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : neighborhood radius 0.065
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : reciprocal condition number 1
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : zero-width neighborhood. make span bigger
+
+    ## Warning: Failed to fit group 8.
+    ## Caused by error in `predLoess()`:
+    ## ! NA/NaN/Inf in foreign function call (arg 5)
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : at -0.065
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : radius 0.004225
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : all data on boundary of neighborhood. make span bigger
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : pseudoinverse used at -0.065
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : neighborhood radius 0.065
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : reciprocal condition number 1
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : zero-width neighborhood. make span bigger
+
+    ## Warning: Failed to fit group 9.
+    ## Caused by error in `predLoess()`:
+    ## ! NA/NaN/Inf in foreign function call (arg 5)
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : at -0.065
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : radius 0.004225
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : all data on boundary of neighborhood. make span bigger
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : pseudoinverse used at -0.065
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : neighborhood radius 0.065
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : reciprocal condition number 1
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : zero-width neighborhood. make span bigger
+
+    ## Warning: Failed to fit group 10.
+    ## Caused by error in `predLoess()`:
+    ## ! NA/NaN/Inf in foreign function call (arg 5)
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : at -0.065
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : radius 0.004225
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : all data on boundary of neighborhood. make span bigger
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : pseudoinverse used at -0.065
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : neighborhood radius 0.065
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : reciprocal condition number 1
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : zero-width neighborhood. make span bigger
+
+    ## Warning: Failed to fit group 11.
+    ## Caused by error in `predLoess()`:
+    ## ! NA/NaN/Inf in foreign function call (arg 5)
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : at -0.06
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : radius 0.0036
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : all data on boundary of neighborhood. make span bigger
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : pseudoinverse used at -0.06
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : neighborhood radius 0.06
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : reciprocal condition number 1
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : zero-width neighborhood. make span bigger
+
+    ## Warning: Failed to fit group 12.
+    ## Caused by error in `predLoess()`:
+    ## ! NA/NaN/Inf in foreign function call (arg 5)
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : at -0.065
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : radius 0.004225
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : all data on boundary of neighborhood. make span bigger
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : pseudoinverse used at -0.065
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : neighborhood radius 0.065
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : reciprocal condition number 1
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : zero-width neighborhood. make span bigger
+
+    ## Warning: Failed to fit group 13.
+    ## Caused by error in `predLoess()`:
+    ## ! NA/NaN/Inf in foreign function call (arg 5)
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : at -0.06
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : radius 0.0036
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : all data on boundary of neighborhood. make span bigger
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : pseudoinverse used at -0.06
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : neighborhood radius 0.06
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : reciprocal condition number 1
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : zero-width neighborhood. make span bigger
+
+    ## Warning: Failed to fit group 14.
+    ## Caused by error in `predLoess()`:
+    ## ! NA/NaN/Inf in foreign function call (arg 5)
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : at -0.06
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : radius 0.0036
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : all data on boundary of neighborhood. make span bigger
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : pseudoinverse used at -0.06
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : neighborhood radius 0.06
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : reciprocal condition number 1
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : zero-width neighborhood. make span bigger
+
+    ## Warning: Failed to fit group 15.
+    ## Caused by error in `predLoess()`:
+    ## ! NA/NaN/Inf in foreign function call (arg 5)
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : at -0.065
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : radius 0.004225
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : all data on boundary of neighborhood. make span bigger
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : pseudoinverse used at -0.065
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : neighborhood radius 0.065
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : reciprocal condition number 1
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : zero-width neighborhood. make span bigger
+
+    ## Warning: Failed to fit group 16.
+    ## Caused by error in `predLoess()`:
+    ## ! NA/NaN/Inf in foreign function call (arg 5)
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : at -0.06
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : radius 0.0036
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : all data on boundary of neighborhood. make span bigger
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : pseudoinverse used at -0.06
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : neighborhood radius 0.06
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : reciprocal condition number 1
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : zero-width neighborhood. make span bigger
+
+    ## Warning: Failed to fit group 17.
+    ## Caused by error in `predLoess()`:
+    ## ! NA/NaN/Inf in foreign function call (arg 5)
 
 ![](weather_files/figure-gfm/unnamed-chunk-15-2.png)<!-- -->
 
@@ -655,14 +1017,26 @@ daily_elk |>
 
 ``` r
 daily_elk |> 
-  ggplot(aes(x = snwd, y = dist_km, color = as.factor(year))) + 
+  ggplot(aes(x = snwd, y = dist_km, color = as.factor(elk_id))) + 
   geom_smooth(se = FALSE)
 ```
 
-    ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
+    ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
 
     ## Warning: Removed 185 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : pseudoinverse used at -0.16
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : neighborhood radius 1.16
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : reciprocal condition number 0
+
+    ## Warning in simpleLoess(y, x, w, span, degree = degree, parametric = parametric,
+    ## : There are other near singularities as well. 1
 
 ![](weather_files/figure-gfm/unnamed-chunk-16-2.png)<!-- -->
 
@@ -687,11 +1061,11 @@ daily_elk |>
 
 ``` r
 daily_elk |> 
-  ggplot(aes(x = tavg, y = dist_km, color = as.factor(year))) + 
+  ggplot(aes(x = tavg, y = dist_km, color = as.factor(elk_id))) + 
   geom_smooth(se = FALSE)
 ```
 
-    ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
+    ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
 
     ## Warning: Removed 143 rows containing non-finite outside the scale range
     ## (`stat_smooth()`).
@@ -731,3 +1105,33 @@ daily_elk |>
 ![](weather_files/figure-gfm/unnamed-chunk-18-2.png)<!-- -->
 
 Elk mvmt vs tmax.
+
+``` r
+daily_elk |> 
+  ggplot(aes(x = tmax, y = dist_km)) + 
+  geom_point() + 
+  geom_smooth(se = FALSE)
+```
+
+    ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
+
+    ## Warning: Removed 143 rows containing non-finite outside the scale range
+    ## (`stat_smooth()`).
+
+    ## Warning: Removed 143 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
+![](weather_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+
+``` r
+daily_elk |> 
+  ggplot(aes(x = tmax, y = dist_km, color = as.factor(elk_id))) + 
+  geom_smooth(se = FALSE)
+```
+
+    ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
+
+    ## Warning: Removed 143 rows containing non-finite outside the scale range
+    ## (`stat_smooth()`).
+
+![](weather_files/figure-gfm/unnamed-chunk-19-2.png)<!-- -->

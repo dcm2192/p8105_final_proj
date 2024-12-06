@@ -377,7 +377,7 @@ daily_elk |>
   geom_smooth(se = FALSE)
 
 daily_elk |> 
-  ggplot(aes(x = prcp, y = dist_km, color = factor(year))) + 
+  ggplot(aes(x = prcp, y = dist_km, color = factor(elk_id))) + 
   geom_smooth(se = FALSE)
 ```
 
@@ -389,7 +389,7 @@ daily_elk |>
   geom_smooth(se = FALSE)
 
 daily_elk |> 
-  ggplot(aes(x = snow, y = dist_km, color = as.factor(year))) + 
+  ggplot(aes(x = snow, y = dist_km, color = as.factor(elk_id))) + 
   geom_smooth(se = FALSE)
 ```
 
@@ -401,7 +401,7 @@ daily_elk |>
   geom_smooth(se = FALSE)
 
 daily_elk |> 
-  ggplot(aes(x = snwd, y = dist_km, color = as.factor(year))) + 
+  ggplot(aes(x = snwd, y = dist_km, color = as.factor(elk_id))) + 
   geom_smooth(se = FALSE)
 ```
 
@@ -413,7 +413,7 @@ daily_elk |>
   geom_smooth(se = FALSE)
 
 daily_elk |> 
-  ggplot(aes(x = tavg, y = dist_km, color = as.factor(year))) + 
+  ggplot(aes(x = tavg, y = dist_km, color = as.factor(elk_id))) + 
   geom_smooth(se = FALSE)
 ```
 
@@ -431,7 +431,14 @@ daily_elk |>
 
 Elk mvmt vs tmax. 
 ```{r}
+daily_elk |> 
+  ggplot(aes(x = tmax, y = dist_km)) + 
+  geom_point() + 
+  geom_smooth(se = FALSE)
 
+daily_elk |> 
+  ggplot(aes(x = tmax, y = dist_km, color = as.factor(elk_id))) + 
+  geom_smooth(se = FALSE)
 ```
 
 
