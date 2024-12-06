@@ -276,8 +276,7 @@ weather = read_csv("raw_data/raw_weather_data.csv") |>
     day = day(date)
   )
 
-
-weather |> write.csv('clean_data/weather', row.names = FALSE)
+weather |> write.csv('clean_data/weather.csv', row.names = FALSE)
 ```
 
 
