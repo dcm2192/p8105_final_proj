@@ -38,7 +38,7 @@ scale_fill_discrete = scale_fill_viridis_d
 
 We begin by importing the elk data. 
 ```{r}
-elk_df = read_csv("../clean_data/elk.csv") |>
+elk_df = read_csv("clean_data/elk.csv") |>
   mutate(datetime = make_datetime(year, month, day, hour),
          elk_id = factor(elk_id)) |>
   dplyr::select(elk_id, datetime, lat, long)
@@ -402,12 +402,66 @@ map <- map |>
 map
 ```
 
+### Trying for myself
 
-
-This code is just wrong
+reading in my data
 ```{r}
-elk = read_csv('clean_data/elk.csv')
+# load my data
+elk = 
+  read_csv('clean_data/elk.csv') |> 
+  mutate(elk_id = factor(elk_id))
+
+# filter for december 2014
+filtered_data =  
+  elk |> 
+  filter(month == 12,
+         year == 2014)
+
+# Create a color palette (limited to 9 elk IDs for "Set1")
+elk_ids = unique(filtered_data$elk_id)  # Get unique elk IDs
+num_colors = length(elk_ids)    # Ensure we don't exceed palette limit
+path_colors = colorFactor(palette = RColorBrewer::brewer.pal(num_colors, "Set1"), domain = elk_ids)
+
+# Initialize leaflet map
+map <- 
+  filtered_data |>
+  group_by(elk_id) |>
+  summarize(start_long = first(long), start_lat = first(lat),
+            end_long = last(long), end_lat = last(lat))|>
+  ungroup() |>
+  leaflet() |>
+  addProviderTiles(providers$CartoDB.Positron, group = "Base Map") |>
+  addProviderTiles(providers$Esri.NatGeoWorldMap, group = "NatGeo Map") |>
+  addMarkers(lng = ~start_long, lat = ~start_lat, icon = elk_icon, popup = ~paste("Start Point: Elk", elk_id)) |>
+  addMarkers(lng = ~end_long, lat = ~end_lat, icon = elk_icon, popup = ~paste("End Point: Elk ", elk_id))
+
+# Add lines for each elk's path
+for (id in elk_ids) {
+  elk_data <- filtered_data |> filter(elk_id == id)  # Subset data for each elk
+  map <- map |>
+    addPolylines(
+      data = elk_data,
+      lng = ~long, lat = ~lat,
+      color = path_colors(id),  # Assign unique color for each elk
+      weight = 2,
+      opacity = 0.8,
+      label = ~paste("Elk ID:", id)  # Label showing elk ID
+    )
+}
+
+# Add a legend for the elk IDs
+map <- map |>
+  addLegend(
+    position = "topright",
+    pal = path_colors,
+    values = elk_ids,
+    title = "Elk ID"
+  )
+
+# Print the map
+map
 ```
+
 
 
 

@@ -57,7 +57,6 @@ elk =
 Now let's look at the paths for December because that was also a big movement month.
 
 ```{r}
-
 elk_icon <- makeIcon(
   iconUrl = "pics/elk_icon.png", # Replace with the URL of your moose image
   iconWidth = 30, iconHeight = 30
@@ -67,8 +66,6 @@ filtered_data =
   elk |>
   filter(month == 12,
          year == 2014)
-
-
 
 # Create a color palette (limited to 9 elk IDs for "Set1")
 elk_ids = unique(filtered_data$elk_id)  # Get unique elk IDs
@@ -208,7 +205,7 @@ small_land_coord = crop(
 plot(small_land_coord)
 
 # writing raster
-terra::writeRaster(small_land_coord, 'clean_data/land_cover.tif')
+terra::writeRaster(small_land_coord, 'clean_data/land_cover.tif', overwrite=TRUE)
 ```
 
 
