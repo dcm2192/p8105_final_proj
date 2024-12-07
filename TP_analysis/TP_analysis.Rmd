@@ -269,6 +269,10 @@ interactive_nitrogen = ggplotly(plot_nitrogen)
 interactive_nitrogen
 ```
 
+According to the graph, Snake River at Old Flagg Ranch 1000 Below Bridge had 0 mg/l of nitrogen reported across all months and years. This most likely made it an ideal location for elk to migrate to and use as a main water source. Snake River Below Site of New Visitor's Center and Madison River near West Yellowstone, MT had very similar readings with two significant spikes. Each location had a spike on May 15, 2017 at 0.05 mg/l. Snake River Below Site of New Visitor's Center on February 26, 2017 at 0.03 mg/l on March 29, 2017 and Madison River near West Yellowstone, MT had a spike at 0.04 mg/l on February 26, 2017.
+
+The highest levels of nitrogen across all locations was at Yellowstone River at Corwin Springs with readings as high as 0.3 mg/l. Otherwise, none of the locations had reading above 1 mg/l, which means it was safe in terms of nitrogen for the elk to drink.
+
 ### Phosphorus
 
 Phosphorus is an essential mineral and component of bones, teeth, and DNA. It is needed to create proteins and repairs cells and tissues. However, high levels of phosphorus causes body changes that pull calcium out of the bones, making them weak. It can also lead to dangerous calium deposits in blood vessels, lungs, eyes, and heart, leading to death over a long period of time.
@@ -294,6 +298,10 @@ interactive_phosphorus = ggplotly(plot_phosphorus)
 
 interactive_phosphorus
 ```
+
+According to the graph, the water source in which majority of the elk were found had low levels of phosphorus, which is concerning in terms of muscle heatlh and bone growth. Only one of the two sites, Snake River Beloew Site of New Visitor's Center, the elk were found in had two readings that fell into the normal range. One reading was on May 15, 2019 with a reading of 0.325 mg/l and the other reading was on May 18, 2023 with a reading of 0.36 mg/l. 
+
+In terms of the other four locations, two locations, the Lamar River at USGS Gage near Ranger Station and Yellowstone River at Corwin Springs had readings above the acceptable limit of 0.45 mg/l, on May 16, 2023 with 0.880 mg/l and June 16, 2022 with 1.14 mg/l, respectively.
 
 ### Potassium
 
