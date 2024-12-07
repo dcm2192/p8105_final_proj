@@ -349,6 +349,8 @@ interactive_sodium
 
 ### Sulfur
 
+Sulfur is a chemical element most reactive with other elements, including a few that have already been discussed. It is known to be of low toxicity and poses low risks, but meant to build and fix DNA and protect from cell damage. However, if animals consume too much sulfur, it may be toxic and can be fatal. Signs can include brain cell death and brain damage. "Harmful" levels are above 250 mg/l, but this only significantly affects taste and odor.
+
 ```{r}
 sulfur = 
   water_quality |> 
