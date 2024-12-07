@@ -835,8 +835,17 @@ ggplotly(elk_avgtemp_distkm_smooth)
 WRITE ABOUT THE SOURCE
 
 ```{r, messages=FALSE}
-# long format
+# raw data, long format
+water_quality = read_csv('clean_data/water_quality.csv')
+
+# processed data, aggregated by year-month
 water_quality2 = read_csv('clean_data/water_quality2.csv')
+
+water_quality_locations =
+  water_quality %>% 
+  filter(location_id %in% c('GRTE_SNR01', 'GRTE_SNR02')) %>% 
+  select(location_id, location_name, latitude, longitude) %>% 
+  distinct()
 ```
 
 
@@ -881,9 +890,9 @@ water_quality2 |>
   filter(characteristic_name %in% c(
     'Chloride mg/l', 'Sodium mg/l',
     'Sulfur, sulfate (SO4) as SO4 mg/l',
-    'Potassium mg/l')) |> 
+    'Potassium mg/l', 'Arsenic mg/l')) |> 
   ggplot(aes(fill = location_id, x = monthly_mean)) + 
-  facet_wrap(.~ characteristic_name, scales = 'free_y')+
+  facet_wrap(.~ characteristic_name, scales = c('free_x'))+
   geom_histogram()
 ```
 
@@ -894,7 +903,7 @@ water_quality2 |>
   filter(characteristic_name %in% c(
     'Chloride mg/l', 'Sodium mg/l',
     'Sulfur, sulfate (SO4) as SO4 mg/l',
-    'Potassium mg/l')) |> 
+    'Potassium mg/l', 'Arsenic mg/l')) |> 
   ggplot(
     aes(x = factor(year), y = monthly_mean, fill = location_id)
   ) + 
@@ -903,140 +912,61 @@ water_quality2 |>
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 ```
 
-Examining water quality by month. I can't really interpret this graph due ot lack of data. 
-```{r, messages=FALSE}
-water_quality2 |> 
-  filter(characteristic_name %in% c(
-    'Chloride mg/l', 'Sodium mg/l',
-    'Sulfur, sulfate (SO4) as SO4 mg/l',
-    'Potassium mg/l')) |> 
-  ggplot(
-    aes(x = factor(month), y = monthly_mean, fill = location_id)
-  ) + 
-  facet_wrap(. ~ characteristic_name, scales = 'free_y') +
-  geom_boxplot() + 
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-```
-
-
-
-```{r, messages=FALSE}
-water_quality2 |> 
-  group_by(
-    location_id, 
-    year,
-    characteristic_name
-  ) |> 
-  summarize(vary = var(monthly_max, na.rm = TRUE)) |> 
-  drop_na(vary) |> 
-  arrange(desc(vary))
-```
-
-## Water Temperature
-
-Does water temperature effect migration?
-
-```{r, messages=FALSE}
-unique(water_quality2$characteristic_name)
-```
-
-
-
-```{r}
-water_quality = read_csv('clean_data/water_quality.csv')
-```
-```{r}
-water_quality2
-```
-
-
-```{r}
-water_quality
-```
-
-
-
-```{r}
-all_data %>% drop_na(location_name)
-```
-
-
 
 ### Did the elk get arsenic poisoning
 
 
+In July and August of 2010, there is a large spike in the amount of Arsenic at the GRTE_SNR01 location. 
 ```{r}
-arsenic_measures = names(all_data)[str_detect(names(all_data), 'Arsenic')]
+water_quality2 |> 
+  mutate(year_month = paste0(year, '-', month)) %>% 
+  filter(
+    characteristic_name  == 'Arsenic mg/l',
+    year %in% c(2009, 2010, 2011)) |> 
+  ggplot(aes(x = year_month, y = monthly_max, color = location_id)) +
+  geom_point() +
+  theme(axis.text.x = element_text(angle = 90))
+
 ```
 
-
+Mapping the Elk's location during that time, we see that they were indeed downstream of the GRTE_SNR01 location, and were likely exposed to elevated levels of Arsenic during this time. 
 ```{r}
+arsenic_measures = names(all_data)[str_detect(names(all_data), 'Arsenic')]
+
 arsenic_exposure = 
   all_data %>% 
   filter(
     year == 2010,
     month %in% c(7, 8)
   )
-```
 
-
-
-'2010-08-24' GRTE_SNR01
-'2010-07-18'
-
-
-
-### Step 1: Download map
-
-Find the minimum and maximum latitude and longitude of Bob's journey. This will give us the range of map to download.
-
-```{r}
-min_lat = all_data |> pull(lat) |> min()
-max_lat = all_data |> pull(lat) |> max()
+min_lat = arsenic_exposure |> pull(lat) |> min()
+max_lat = arsenic_exposure |> pull(lat) |> max()
 rng_lat = abs(min_lat - max_lat)
 lowerleftlat = min_lat 
 upperrightlat = max_lat 
 
 
-min_long = all_data |> pull(long) |> min()
-max_long = all_data |> pull(long) |> max()
+min_long = arsenic_exposure |> pull(long) |> min()
+max_long = arsenic_exposure |> pull(long) |> max()
 rng_long = abs(min_long - max_long)
 lowerleftlon = min_long - rng_long 
 upperrightlon = max_long + rng_long
-```
 
 
-Define area by `c(lowerleftlon, lowerleftlat, upperrightlon, upperrightlat)`
-
-```{r}
+# Define area by `c(lowerleftlon, lowerleftlat, upperrightlon, upperrightlat)`
  myLocation <- c(left = lowerleftlon,
-                 bottom = lowerleftlat,
+                 bottom = 43.5,
                  right = upperrightlon,
-                 top = upperrightlat)
-```
+                 top = 44.3)
 
 
-```{r}
 myMap <- get_stadiamap(
   bbox=myLocation,
   maptype = "stamen_terrain",
   crop=FALSE)
-```
 
 
-```{r}
-water_quality_locations =
-  water_quality %>% 
-  filter(location_id %in% c('GRTE_SNR01', 'GRTE_SNR02')) %>% 
-  select(location_id, location_name, latitude, longitude) %>% 
-  distinct()
-```
-
-
-
-```{r}
-map = 
-  ggmap(myMap) 
 
 elk_ids2 = unique(arsenic_exposure$elk_id)
 num_colors = length(elk_ids2)    # Ensure we don't exceed palette limit
@@ -1044,6 +974,8 @@ path_colors =
   colorFactor(
     palette = RColorBrewer::brewer.pal(num_colors, "Set1"),
     domain = elk_ids2)
+
+map = ggmap(myMap) 
 
 for(id in elk_ids2){
   
@@ -1068,24 +1000,8 @@ map =
   geom_text(
     data = water_quality_locations,
     aes(x = longitude, y = latitude, label = location_id),
-    nudge_x = 0.24)
+    nudge_x = 0.18)
 
 
 map
 ```
-
-
-```{r}
-
-color = path_colors(id)
-  
-  
-  geom_path(
-  data = arsenic_exposure, 
-  aes(x=long, y=lat, color = factor(elk_id))+
-  geom_line(alpha = 0) +
-  scale_color_gradientn(colours = rainbow(12))
-
-```
-
-
