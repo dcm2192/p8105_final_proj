@@ -103,7 +103,7 @@ calcium =
 plot_calcium = ggplot(calcium, aes(x = date, y = calcium, color = location_id)) +
   geom_line(alpha = 0.6) +
   labs(
-    title = "Scatter Plot of Calcium Levels Over Time", 
+    title = "Calcium Levels Over Time", 
     x = "Date", 
     y = "Calcium (mg/l)") +
   theme(legend.position = "right")
@@ -133,7 +133,7 @@ arsenic =
 plot_arsenic = ggplot(arsenic, aes(x = date, y = arsenic, color = location_id)) +
   geom_line(alpha = 0.6) +
   labs(
-    title = "Scatter Plot of Arsenic Levels Over Time", 
+    title = "Arsenic Levels Over Time", 
     x = "Date", 
     y = "Arsenic (mg/l)") +
   theme(legend.position = "right")
@@ -167,7 +167,7 @@ chloride =
 plot_chloride = ggplot(chloride, aes(x = date, y = chloride, color = location_id)) +
   geom_line(alpha = 0.6) +
   labs(
-    title = "Scatter Plot of Chloride Levels Over Time", 
+    title = "Chloride Levels Over Time", 
     x = "Date", 
     y = "Chloride (mg/l)") +
   theme(legend.position = "right")
@@ -201,7 +201,7 @@ dissolved_oxygen =
 plot_do = ggplot(dissolved_oxygen, aes(x = date, y = dissolved_oxygen, color = location_id)) +
   geom_line(alpha = 0.6) +
   labs(
-    title = "Scatter Plot of Dissolved Oxygen Levels Over Time", 
+    title = "Dissolved Oxygen Levels Over Time", 
     x = "Date", 
     y = "Dissolved Oxygen (DO) mg/l") +
   theme(legend.position = "right")
@@ -233,7 +233,7 @@ magnesium =
 plot_magnesium = ggplot(magnesium, aes(x = date, y = magnesium, color = location_id)) +
   geom_line(alpha = 0.6) +
   labs(
-    title = "Scatter Plot of Magnesium Levels Over Time", 
+    title = "Magnesium Levels Over Time", 
     x = "Date", 
     y = "Magnesium (mg/l)") +
   theme(legend.position = "right")
@@ -259,7 +259,7 @@ nitrogen =
 plot_nitrogen = ggplot(nitrogen, aes(x = date, y = nitrogen, color = location_id)) +
   geom_line(alpha = 0.6) +
   labs(
-    title = "Scatter Plot of Nitrogen Levels Over Time", 
+    title = "Nitrogen Levels Over Time", 
     x = "Date", 
     y = "Nitrogen (mg/l)") +
   theme(legend.position = "right")
@@ -285,7 +285,7 @@ phosphorus =
 plot_phosphorus = ggplot(phosphorus, aes(x = date, y = phosphorus, color = location_id)) +
   geom_line(alpha = 0.6) +
   labs(
-    title = "Scatter Plot of Phosphorus Levels Over Time", 
+    title = "Phosphorus Levels Over Time", 
     x = "Date", 
     y = "Phosphorus (mg/l)") +
   theme(legend.position = "right")
@@ -311,7 +311,7 @@ potassium =
 plot_potassium = ggplot(potassium, aes(x = date, y = potassium, color = location_id)) +
   geom_line(alpha = 0.6) +
   labs(
-    title = "Scatter Plot of Potassium Levels Over Time", 
+    title = "Potassium Levels Over Time", 
     x = "Date", 
     y = "Potassium (mg/l)") +
   theme(legend.position = "right")
@@ -337,7 +337,7 @@ sodium =
 plot_sodium = ggplot(sodium, aes(x = date, y = sodium, color = location_id)) +
   geom_line(alpha = 0.6) +
   labs(
-    title = "Scatter Plot of Sodium Levels Over Time", 
+    title = "Sodium Levels Over Time", 
     x = "Date", 
     y = "Sodium (mg/l)") +
   theme(legend.position = "right")
@@ -361,7 +361,7 @@ sulfur =
 plot_sulfur = ggplot(sulfur, aes(x = date, y = sulfur, color = location_id)) +
   geom_line(alpha = 0.6) +
   labs(
-    title = "Scatter Plot of Sulfur Levels Over Time", 
+    title = "Sulfur Levels Over Time", 
     x = "Date", 
     y = "Sulfur (mg/l)") +
   theme(legend.position = "right")
@@ -383,7 +383,7 @@ water_temp =
 plot_water = ggplot(water_temp, aes(x = date, y = water_temp, color = location_id)) +
   geom_line(alpha = 0.6) +
   labs(
-    title = "Scatter Plot of Water Temperature Levels Over Time", 
+    title = "Water Temperature Levels Over Time", 
     x = "Date", 
     y = "Water Temperature deg C") +
   theme(legend.position = "right")
@@ -410,7 +410,7 @@ water_ph =
 plot_ph = ggplot(water_ph, aes(x = date, y = water_ph, color = location_id)) +
   geom_line(alpha = 0.6) +
   labs(
-    title = "Scatter Plot of pH Over Time", 
+    title = "pH Over Time", 
     x = "Date", 
     y = "pH") +
   theme(legend.position = "right")
@@ -420,6 +420,9 @@ interactive_ph = ggplotly(plot_ph)
 interactive_ph
 ```
 
+According to the plot, the pH in water was relatively similar, ranging in the normal level of 6.5 to 8.5 mg/l, at the Lamar River at USGS Gage near Ranger Station, Madison River 1.21km West of MT/WY State Boundary, Madison River near West Yellowstone, MT, and Yellowstone River at Corwin Springs. The highest between these four sites was from Yellowstone River at Corwin Spring at 9.380 mg/l. This is slightly more basic than the ideal range, but is not of significant concern. The lowest reading between the four sites was at the Lamar River at USGS Gage near Ranger Station at 6.1 mg/l, which is slightly more acidic than the normal range, but is also not of high concern.
+
+Snake River at Old Flagg Ranch 1000 Below Bridge and Snake River Below Site of New Visitor's Center, where the elk were primarly found, saw similar readings to that of the four other stations, however, there was one instance in each of the location that saw readings similar to acid rain. The first at Snake River at Olg Flagg Ranch 1000 Below Bridge, which on October 19, 2006 had a reading of 3.46 mg/l. At Snake River Below Site of New Visitor's Center, the location had a reading of 5.57 mg/l on the same day.
 
 ## Water Quality Characteristics Over Time
 ```{r}
