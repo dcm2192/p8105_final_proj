@@ -153,7 +153,7 @@ Lastly, Madison River near West Yellowstone, MT has consistently reported signif
 
 ### Chloride
 
-Next up is chloride. Chloride is an electrolyte commonly found in blood. It keeps the proper balance of body fluids and maintains the body's acid-base balance. Consumption of chloride is typically not harmful, however, if chloride is found in water, that typically means contaminants such as bacteria, nitrates, or even lead may be found as well. 
+Next up is chloride. Chloride is an electrolyte commonly found in blood. It keeps the proper balance of body fluids and maintains the body's acid-base balance. Consumption of chloride is typically not harmful, however, if chloride is found in water, that typically means contaminants such as bacteria, nitrates, or even lead may be found as well. It is important to note that high levels of chloride can indicate lead contamination as chlorine and lead must combine in order to create chloride. Although the data does not report lead levels, this would be an area of concern. 
 
 In the case of elk, chloride levels can be safe between 0-44 mg/l, however, levels above 133 are potentially harmful is consumed for long periods of time and can lead to death. 
 
@@ -219,7 +219,9 @@ To note, a negative dissolved oxygen reading indicates an issue with the device 
 
 ### Magnesium
 
-Next up is magnesium. Magnesium is mineral that is essential for healthy muscles, nerves, bones and blood sugar levels
+Next up is magnesium. Magnesium is a mineral that is essential for healthy muscles, nerves, bones and blood sugar levels. However, without consuming enough over time, there is a potential for health risks. 
+
+Healthy levels of magnesium are generally between 0.18-0.26 mg/l, and if taking large amount of magensium or more than 3.1 mg/l, this enters the unsafe range. This may cause effects such as blood pressure, slowed breathing, or even death.
 
 ```{r}
 magnesium = 
@@ -241,6 +243,12 @@ interactive_magnesium = ggplotly(plot_magnesium)
 interactive_magnesium
 ```
 
+According to the plot, Madison River 1.21km West of MT/WY State Boundary and Madison River near West Yellowstone, MT had the lowest levels of magnesium across each of the locations. However, the levels did fluctuate over time. Specifically at Madison River 1.21km West of MT/WY State Boundary, the magnesium levels reached a high of 0.786 mg/l and consistently stayed around 0.7 mg/l. For Madison River near West Yellowstone, MT, the magnesium level reached a high of 1.0 mg/l in April, July, and October 2016, but the levels quickly decreased in November 2016 to 0 mg/l and stayed this way for the rest of the data. 
+
+### Nitrogen
+
+Nitrogen is an inert gas important for plant growth and a key additive in fertilizer. However, it is harmful as it can act like oxygen and lead to suffocation. There are safe levels, according to the EPA, at a maximum of 10 mg/l. 
+
 ```{r}
 nitrogen = 
   water_quality |> 
@@ -260,6 +268,12 @@ interactive_nitrogen = ggplotly(plot_nitrogen)
 
 interactive_nitrogen
 ```
+
+### Phosphorus
+
+Phosphorus is an essential mineral and component of bones, teeth, and DNA. It is needed to create proteins and repairs cells and tissues. However, high levels of phosphorus causes body changes that pull calcium out of the bones, making them weak. It can also lead to dangerous calium deposits in blood vessels, lungs, eyes, and heart, leading to death over a long period of time.
+
+Generally, phosphorus levels below 0.15 mg/l can lead to muscle weakness and impaired bone growth. High levels of phosphorus, also referred to as hyperphosphatemia, is at levels above 0.55 mg/l. A normal range is between 0.25 mg/l and 0.45 mg/l. 
 
 ```{r}
 phosphorus = 
@@ -281,6 +295,12 @@ interactive_phosphorus = ggplotly(plot_phosphorus)
 interactive_phosphorus
 ```
 
+### Potassium
+
+Potassium is a mineral and type of electrolyte the body needs to work properly. It helps nerves and heart function, as well as moves nutrients and waste around cells. However, high levels of potassium may be too much for the kidneys to balance, leading to heart damage and possibly death.
+
+High levels of potassium are considered above 10.8 mg/l and a normal range is 6.48 to 9.36 mg/l. Low levels of potassium, also referred to as hypokalemia, can cause muscle weakness and fatigue.
+
 ```{r}
 potassium = 
   water_quality |> 
@@ -300,6 +320,12 @@ interactive_potassium = ggplotly(plot_potassium)
 
 interactive_potassium
 ```
+
+### Sodium
+
+Sodium is a mineral and electrolyte needed for normal muscle and nerve functions and maintaining blood pressure. If sodium is too low, also referred to as hyponatremia, this can cause loss of energy, confusion, or possibly death negatively impacting movement of elk. Sever hypernatremia, or high levels of sodium, can have similar effects, and therefore, it is important to stay within the normal range.
+
+The normal range of sodium in water is below 20 mg/l, and higher than this can cause hypernatremia. 
 
 ```{r}
 sodium = 
@@ -321,6 +347,10 @@ interactive_sodium = ggplotly(plot_sodium)
 interactive_sodium
 ```
 
+### Sulfur
+
+Sulfur is a chemical element most reactive with other elements, including a few that have already been discussed. It is known to be of low toxicity and poses low risks, but meant to build and fix DNA and protect from cell damage. However, if animals consume too much sulfur, it may be toxic and can be fatal. Signs can include brain cell death and brain damage. "Harmful" levels are above 250 mg/l, but this only significantly affects taste and odor.
+
 ```{r}
 sulfur = 
   water_quality |> 
@@ -341,6 +371,7 @@ interactive_sulfur = ggplotly(plot_sulfur)
 interactive_sulfur
 ```
 
+### Water Temperature
 
 ```{r}
 water_temp = 
@@ -361,6 +392,13 @@ interactive_water = ggplotly(plot_water)
 
 interactive_water
 ```
+
+### Water pH
+
+pH of water measures how acidic or how basic the water is on a scale from 0-14, in which 0 is highly acidic and 14 is highly basic. Ideal water pH is 7, which indicates pure or neutral water. Typically rain has a pH between 5.0 and 5.5, and acid rain has a pH around 4.0, ten times more acidic than normal rain.
+
+The healthy level for pH of drinking water and what is commonly found in springs is between 6.5 and 8.5.
+
 
 ```{r}
 water_ph = 
