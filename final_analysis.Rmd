@@ -25,6 +25,7 @@ library(terra)
 library(ggmap)
 library(plotly)
 library(patchwork)
+library(tidyterra)
 
 knitr::opts_chunk$set(
   comment = '', fig.width = 8, fig.height = 6, out.width = "90%"
@@ -372,13 +373,6 @@ ggplot( aes(x = land_cover_bins, y = density_elk)) +
 ```
 
 
-
-```{r, messages=FALSE}
-library(tidyterra)
-```
-
-
-
 In this plot, we see that the elk spend most of their time in the low lying, well vegetated areas of Yellowstone.
 ```{r, messages=FALSE}
 ggplot() +
@@ -455,6 +449,10 @@ Among the key factors that we considered to be potentially influential to elk mi
 Given that there were numerous weather stations in the Yellowstone/Grand Teton area in Wyoming, several of which were contained within the various elk pathways we analyzed, we decided that the best way to effectively approximate the weather patterns across the entirety migration pathways would be to use the data provided by the four stations in the plots below, which span a wide coverage of the migration areas (shown in red).  
 
 ```{r}
+# API key
+register_stadiamaps(key = '29074900-bb6e-4a71-8f91-454c28190f88',
+                    write = FALSE)
+
 min_lat = all_data |> pull(lat) |> min()
 max_lat = all_data |> pull(lat) |> max()
 rng_lat = abs(min_lat - max_lat)
@@ -824,7 +822,9 @@ water_exploration |>
   ) |> 
   head(5)
 ```
-Examinging the data more closely, we see that GRTE_SNR02 has a consistently low level of these chemicals, while GRTE_SNR01 occasionally achieves higher levels of these chemicals.
+
+
+Examining the data more closely, we see that GRTE_SNR02 has a consistently low level of these chemicals, while GRTE_SNR01 occasionally achieves higher levels of these chemicals.
 ```{r, messages=FALSE}
 water_quality2 |> 
   filter(characteristic_name %in% c(
