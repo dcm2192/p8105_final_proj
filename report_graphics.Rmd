@@ -1,0 +1,872 @@
+---
+title: "Data Exploration"
+author: "The Herd"
+date: "2024-12-05"
+output: 
+  html_document:
+    code_folding: hide
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE, messages=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(message = FALSE)
+options(warn=-1)
+
+
+library(geosphere)
+library(leaflet)
+library(leaflet.extras2)
+library(lubridate)
+library(RColorBrewer)
+library(tidyverse)
+library(terra)
+library(ggmap)
+library(plotly)
+library(patchwork)
+library(tidyterra)
+library(patchwork)
+
+
+knitr::opts_chunk$set(
+  comment = '', fig.width = 8, fig.height = 6, out.width = "90%"
+)
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+```
+
+
+
+
+
+```{r, messages=FALSE}
+elk = read_csv("clean_data/elk.csv") |>
+  mutate(elk_id = factor(elk_id)) 
+```
+
+
+```{r}
+### Code for static maps
+
+# API key
+register_stadiamaps(key = '29074900-bb6e-4a71-8f91-454c28190f88',
+                    write = FALSE)
+
+min_lat = elk |> pull(lat) |> min()
+max_lat = elk |> pull(lat) |> max()
+rng_lat = abs(min_lat - max_lat)
+lowerleftlat = min_lat 
+upperrightlat = max_lat 
+
+min_long = elk |> pull(long) |> min()
+max_long = elk |> pull(long) |> max()
+rng_long = abs(min_long - max_long)
+lowerleftlon = min_long 
+upperrightlon = max_long 
+
+
+# Define area by `c(lowerleftlon, lowerleftlat, upperrightlon, upperrightlat)`
+myLocation <- c(left = lowerleftlon,
+                 bottom = lowerleftlat,
+                 right = upperrightlon,
+                 top = upperrightlat)
+
+
+myMap <- get_stadiamap(
+  bbox=myLocation,
+  maptype = "stamen_terrain",
+  crop=FALSE)
+```
+
+
+![elk]("pics/elk.png")
+
+## Elk Movement EDA
+
+Looking at total elk movement by month, we see see a clear relationship. The months of May through October see consistent monthly travel of approximately 100 kilometers. The months of March, April, November, and December see highly varied travel distances, ranging from tens of kilometers to over three hundred. 
+
+```{r, messages=FALSE}
+elk |>
+  mutate(month = month(dt, label = TRUE)) |> 
+  group_by(elk_id, year, month) |> 
+  summarize(
+    total_distance_km = sum(dist_km, na.rm = TRUE)
+  ) |>
+  ggplot(aes(x = factor(month), y = total_distance_km, fill = factor(month))) +
+  geom_violin() + 
+  labs(
+    title = "Total Movement by Month",
+    x = "Month", 
+    y = "Total Distance Traveled (km)", 
+    fill = "Month") +
+  theme(legend.position = 'none')
+```
+
+
+The elk have a consistent median travel distance of approximately 2.9 kilometers per day, though they may each travel up to 10 kilometers today. 
+
+```{r, messages=FALSE}
+daily_median = 
+  elk |>
+  mutate(date = date(dt)) |> 
+  group_by(elk_id, date) |>
+  summarize(daily_sum = sum(dist_km)) |>
+  drop_na() |>
+  pull(daily_sum) |>
+  median()
+  
+elk |>
+  mutate(date = date(dt)) |> 
+  group_by(elk_id, date) |>
+  summarize(daily_sum = sum(dist_km)) |>
+  ggplot(aes(x = elk_id, y = daily_sum)) +
+  geom_boxplot(outliers = FALSE) +
+  geom_hline(yintercept = daily_median, color = "blue") +
+  labs(title = "Daily Averages (km)",
+       x = "Elk ID",
+       y = "Distance (km)")
+```
+
+### Individual Elk Data Availibility
+
+We now examine the date ranges of individual elk. The data collected ranges from 2006 to 2015. We do not have data from all of the elk during that time period. Wild elk can only live up to twelve years, according to [worlddeer.ord](https://worlddeer.org/elk/), and each of these elk were tracked for one to three years. There is a lot of overlap of two groups of elk. In further analysis we will use the eight elk that were tracked in 2013 and 2014. 
+
+```{r, messages=FALSE}
+elk |>
+  group_by(elk_id) |>
+  summarize(
+    total_distance_km = sum(dist_km, na.rm = TRUE) 
+  ) |>
+  knitr::kable(digits = 0)
+
+# And maybe let's check how many data points we have
+
+elk |>
+  ggplot(aes(x = elk_id, fill = factor(year))) +
+  geom_bar() +
+  labs(title = "Total Data Points for Each Elk",
+       x = "Elk ID",
+       y = "# of data points",
+       fill = "Year") 
+
+elk_df_2013.2014 = 
+  elk |>
+  filter(dt >= as_date("2013-07-16") &
+         dt <= as_date("2014-12-30"),
+         elk_id %in% c(907, 909, 911, 913, 914, 916, 917, 918))
+```
+
+Plotting the elk tracked in 2013 and 2014, we see a similar trend of movement as with the entire sample, wherein the months of March, April, November, and December see the largest amount of movement, though individual elk movement varies. 
+
+```{r, messages=FALSE}
+
+elk_monthly = elk_df_2013.2014 |>
+  mutate(
+    month = month(dt, label = TRUE),  
+  ) |>
+  arrange(elk_id, dt)  
+
+# Calculate distances and group by year, season, and elk_id
+elk_distance_monthly = 
+  elk_monthly |>
+  group_by(elk_id, year, month) |>
+  summarize(
+    total_distance_km = sum(dist_km, na.rm = TRUE)
+  ) |>
+  ungroup() 
+
+
+elk_distance_monthly |>
+  ggplot(aes(x = as.numeric(month), y = total_distance_km, color = elk_id)) +
+  geom_point() +
+  geom_smooth(se = FALSE) +
+  scale_x_continuous(
+    breaks = 1:12,  # Numeric positions for each month
+    labels = month.name  # Use month names as labels
+  ) +
+  labs(title = "Elk Movement by Month 2013-07-16 to 2014-12-30",
+       x = "month",
+       y = "total distance (km)")
+```
+Given that there are a disperate number of data points in each month, this may effect the readings of total movement. However, when we normalize the movement measure by the number of data points, we still see the same pattern of March, April, November, and December having the largest movement. Therefore we will continue to use the raw movement data. 
+```{r, messages=FALSE}
+elk_distance_normalized = 
+  elk_monthly |>
+  group_by(elk_id, year, month) |>
+  summarize(
+    total_distance_km = sum(dist_km, na.rm = TRUE),
+    count = n()
+  ) |>
+  mutate(normal_distance = total_distance_km/count)
+
+elk_distance_normalized |>
+  ggplot(aes(x = as.numeric(month), y = normal_distance, color = elk_id)) +
+  geom_point() +
+  geom_smooth(se = FALSE) +
+  scale_x_continuous(
+    breaks = 1:12,  # Numeric positions for each month
+    labels = month.name  # Use month names as labels
+  ) +
+  labs(title = "Elk Movement by Month 2013-07-16 to 2014-12-30",
+       x = "month",
+       y = "normalized distance")
+```
+
+Using leaflet, we can create a geographic figure showing the elk's movement around geographic features, such as mountains and lakes. We can tell that the elk began their migration close together, followed a similar path up to Jackson Lake, and then chose different paths. Elk 916 stayed close to the lake for the rest of the month. Elk 911, 914, and 917 seemed to stay together during the entire period. 
+
+```{r, messages=FALSE}
+# Let's make a custom elk icon!!
+elk_icon <- makeIcon(
+  iconUrl = "pics/elk_icon.png", # Replace with the URL of your moose image
+  iconWidth = 30, iconHeight = 30
+)
+
+filtered_data = elk_df_2013.2014 |>
+  filter(month == 5)
+
+# Create a color palette (limited to 9 elk IDs for "Set1")
+elk_ids = unique(filtered_data$elk_id)  # Get unique elk IDs
+num_colors = length(elk_ids)    # Ensure we don't exceed palette limit
+path_colors = colorFactor(palette = RColorBrewer::brewer.pal(num_colors, "Set1"), domain = elk_ids)
+
+# Initialize leaflet map
+map <- filtered_data |>
+  group_by(elk_id) |>
+  summarize(start_long = first(long), start_lat = first(lat),
+            end_long = last(long), end_lat = last(lat))|>
+  ungroup() |>
+  leaflet() |>
+  addProviderTiles(providers$CartoDB.Positron, group = "Base Map") |>
+  addProviderTiles(providers$Esri.NatGeoWorldMap, group = "NatGeo Map") |>
+  addMarkers(lng = ~start_long, lat = ~start_lat, icon = elk_icon, popup = ~paste("Start Point: Elk", elk_id)) |>
+  addMarkers(lng = ~end_long, lat = ~end_lat, icon = elk_icon, popup = ~paste("End Point: Elk ", elk_id))
+
+# Add lines for each elk's path
+for (id in elk_ids) {
+  elk_data <- filtered_data |> filter(elk_id == id)  # Subset data for each elk
+  map <- map |>
+    addPolylines(
+      data = elk_data,
+      lng = ~long, lat = ~lat,
+      color = path_colors(id),  # Assign unique color for each elk
+      weight = 2,
+      opacity = 0.8,
+      label = ~paste("Elk ID:", id)  # Label showing elk ID
+    )
+}
+
+# Add a legend for the elk IDs
+map <- map |>
+  addLegend(
+    position = "topright",
+    pal = path_colors,
+    values = elk_ids,
+    title = "Elk ID"
+  )
+
+# Print the map
+map
+```
+
+
+
+# Land Cover Analysis
+
+We read in the combined data set from `all_data.csv`. This data set contains the same geographic data as the `elk.csv` data along with land cover data, temperature, and water quality readings in that same geographic area. The data processing steps to create this file can be found in the data cleaning page. T 
+```{r, messages=FALSE}
+all_data = read_csv('clean_data/all_data.csv')
+```
+
+
+We also read in the land cover data for the entire region. The yellow regions of the map are fully covered, many cases by water or snow. The large yellow regions represent Jackson lake, Yellowstone Lake, and Heart Lake. The green areas represent land covered by an abundance of foliage or smaller bodies of water, such as creeks. The dark blue and purple regions represent land with scant foliage cover, such as large rocks. 
+```{r, messages=FALSE}
+small_land_coord = rast('clean_data/land_cover.tif')
+
+plot(small_land_coord)
+```
+
+
+In order to get a better understanding of the elk's habits, we plot the relative frequency of the time that they spend at each land cover value divided by the density of that land cover value. In other words, we plot the time that the elk spend at a particular level of vegetation in relation to how common that level of vegetation is in the region. We begin by binning each land cover value for the region and the elk to find the densities. We divide the elk density by the regional density of each bin. Plotting, we see that elk prefer to spend their time in the regions of middling land cover.In this plot, we see that the elk spend most of their time in the low lying, well vegetated areas of Yellowstone.
+
+```{r, messages=FALSE}
+land_coord_df = as.data.frame(small_land_coord)
+
+# Define bin breaks
+land_cover_bins <- seq(min(land_coord_df$land_cover), max(land_coord_df$land_cover), length.out = 30)
+
+# Bin the vectors
+region_density <- cut(land_coord_df$land_cover, land_cover_bins, right = FALSE, labels = FALSE)
+elk_density <- cut(all_data$land_cover, land_cover_bins, right = FALSE, labels = FALSE)
+
+# Calculate sums within each bin
+sum1 <- tapply(land_coord_df$land_cover, region_density, sum, na.rm = TRUE) / sum(land_coord_df$land_cover)
+sum2 <- tapply(all_data$land_cover, elk_density, sum, na.rm = TRUE) / sum(all_data$land_cover)
+
+# Divide the sums of corresponding bins
+relative_land_cover =
+  data.frame(
+    land_cover_bins = land_cover_bins[-1], 
+    density_elk = sum2 / sum1)
+
+relative_land_cover |> 
+ggplot( aes(x = land_cover_bins, y = density_elk)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Relative Density of Elk by Land Cover", x = "Land Cover", y = "Elk Density") 
+```
+
+Graphing the two dimensional densities of the elk's 
+```{r, messages=FALSE}
+map_elk_density =
+  ggmap(myMap) + 
+  geom_density_2d(data = elk, aes(x=long, y=lat, color = 'red')) +
+  ylim(43.4 ,44.3) + 
+  xlim(-110.8, -110.2)  +
+  theme(legend.position = 'none')
+
+land_cover_elk_density=
+  ggplot() +
+  geom_spatraster(data = small_land_coord) + 
+  scale_fill_gradient2(low="white", high="lightgrey", guide="colorbar") + 
+  geom_density_2d(data = elk, aes(x=long, y=lat, color = 'red')) +
+  ylim(43.4 ,44.3) + 
+  xlim(-110.8, -110.2)  +
+  theme(legend.position = 'none')
+
+
+map_elk_density + land_cover_elk_density
+```
+
+
+
+Zooming in on the crossing, we see that the elk take one of three paths between Yellowstone national park and the Elk reserve. The first, and furthest West goes between Jackson Lake on the West and Pilgrim mountain to the East. The middle path follows Pilgrim Creek. The East path follows Pacific Creek. 
+```{r}
+map_elk_path = 
+  ggmap(myMap) + 
+  geom_path(data = elk, aes(x=long, y=lat, color = 'red'), alpha = 0.5) +
+  ylim(43.75 ,44.25) + 
+  xlim(-110.8, -110.2) +
+  theme(legend.position = 'none')
+
+land_cover_elk_path =
+  ggplot() +
+  geom_spatraster(data = small_land_coord) + 
+  geom_path(data = elk, aes(x=long, y=lat, color = 'red'), alpha = 0.5) +
+  scale_fill_gradient2(low="white", high="darkgrey", guide="colorbar") + 
+  ylim(43.75 ,44.25) + 
+  xlim(-110.8, -110.2)+
+  theme(legend.position = 'none')
+
+map_elk_path + land_cover_elk_path
+```
+
+
+# Analyzing Weather
+
+We read in the weather data and aggregate the elk data by day. 
+```{r data, message = FALSE, include = FALSE}
+daily_elk <- 
+  all_data |> 
+  mutate(year_month_day = format(dt, "%Y-%m-%d"), 
+         elk_id = as.character(elk_id)) |> 
+  group_by(
+    elk_id,
+    year_month_day, 
+    year,
+    month,
+    day,
+    tavg,
+    prcp,
+    snow,
+    snwd,
+    tmin,
+    tmax
+  ) |>
+  summarize(
+    dist_km = sum(dist_km, na.rm = TRUE), 
+    land_cover = mean(land_cover, na.rm = TRUE)
+  )
+
+
+four_stations =
+  c("SNAKE RIVER STATION, WY US", "MORAN 5 WNW, WY US", "BURRO HILL WYOMING, WY US", "MOOSE 1 NNE, WY US")
+
+weather =
+  read_csv("raw_data/raw_weather_data.csv") |> 
+  janitor::clean_names() |> 
+  select(
+    station, name, latitude, longitude, 
+    date, prcp, snow, snwd, tavg, tmin, tmax
+  ) |> 
+  mutate(year = year(date),
+         month = month(date)) |> 
+  filter(name %in% four_stations,
+         date >= '2006-01-01', 
+         date <= '2015-12-31') 
+
+weather_stations =
+  weather |>
+  group_by(name, latitude, longitude) |>
+  summarize(n_obs = n())
+```
+
+Among the key factors that we considered to be potentially influential to elk migration was local weather patterns, specifically precipitation (including rain and snow) and average temperature. For this, we analyzed weather station data provided by NOAA National Centers for Environmental Information, utilizing daily weather records from 2006 to 2015 (to correspond with our elk migration data).  
+
+**Selecting Appropriate Weather Stations**
+
+Given that there were numerous weather stations in the Yellowstone/Grand Teton area in Wyoming, several of which were contained within the various elk pathways we analyzed, we decided that the best way to effectively approximate the weather patterns across the entirety migration pathways would be to use the data provided by the four stations in the plots below, which span a wide coverage of the migration areas (shown in red).  
+
+```{r}
+ggmap(myMap) +
+  geom_point(
+    data = weather_stations,
+    aes(x = longitude, y = latitude)) +
+  ggrepel::geom_text_repel(
+    data = weather_stations,
+    aes(x = longitude, y = latitude, label = name))+
+  geom_path(
+    data = elk,
+    aes(x=long, y=lat),
+    alpha = 0.5,
+    color = "red") + 
+  labs(x = "longitude", y = "latitude")
+```  
+  
+
+Once we selected the appropriate weather stations and reduced our weather data set accordingly, we could then begin considering various weather-related research questions. These questions were grouped into two categories: analyzing the weather patterns visible in the study area over the 2006-2015 period, and relating the weather data with the elk migration data to see if there were any visible patterns and/or trends between the two.  
+
+**Evaluating Weather Patterns and Trends**
+In the `weather` dataset, we were mainly concerned with four weather variables: `prcp` (precipitation), `snow` (snowfall), `snwd` (snow depth), and `tavg` (average temperature). Each of these variables were visualized using the same graph types. For precipitation, snowfall, and snow depth, the daily measurements among the four weather stations were first aggregated by station, year, and month, to show the monthly totals among each station throughout the 2006-2015 period. These data sets were further condensed into average monthly totals of precipitation, snowfall and snow depth among the four stations; this method provided us with an estimated sum of these three variables covering a wide swath of the study area. Average temperature was calculated by aggregating daily average temperature measurements by month and year and taking the mean of these values. 
+
+Starting with precipitation patterns, the plots below show relatively consistent patterns in monthly rainfall throughout the given year, in which the summer months often saw less precipitation out of all other seasons, whereas late winter through spring showed generally higher precipitation. While the exact months of these highs and lows vary per year, the general pattern shown each year is a U-shaped distribution from the start of the year to the end.  
+
+```{r precip, echo = FALSE, message = FALSE}
+weather |> 
+  group_by(name, year, month) |> 
+  summarize(station_precip_total = sum(prcp, na.rm = TRUE)) |> 
+  group_by(year, month) |> 
+  summarize(station_precip_total_avg = mean(station_precip_total, na.rm = TRUE)) |> 
+  mutate(year_month = paste(year, month, sep = "-")) |> 
+  ggplot(aes(x = month, y = station_precip_total_avg, fill = as.factor(year))) +
+  geom_bar(stat = "identity") + 
+  facet_wrap(vars(year), ncol = 2) + 
+  theme(legend.position = "none") + 
+  labs(x = "Month", y = "Total Precipitation (in)")
+
+# point + line, separated by month and year
+weather |> 
+  group_by(name, year, month) |> 
+  summarize(station_precip_total = sum(prcp, na.rm = TRUE)) |> 
+  group_by(year, month) |> 
+  summarize(station_precip_total_avg = mean(station_precip_total, na.rm = TRUE)) |> 
+  mutate(year_month = paste(year, month, sep = "-")) |> 
+  plot_ly(
+    x = ~month, y = ~station_precip_total_avg, color = ~year, group = ~year, type = 'scatter', mode = 'lines'
+    ) |> 
+  layout(xaxis = list(title = "Month"), 
+         yaxis = list(title = "Total Precipitation (in)"), legend = list(title = list(text = "Year")))
+
+# year-month totals, separated by year
+weather |> 
+  group_by(name, year, month) |> 
+  summarize(station_precip_total = sum(prcp, na.rm = TRUE)) |> 
+  group_by(year, month) |> 
+  summarize(station_precip_total_avg = mean(station_precip_total, na.rm = TRUE)) |> 
+  mutate(year_month = paste(year, month, sep = "-")) |> 
+  plot_ly(
+    x = ~year_month, y = ~station_precip_total_avg, color = ~as.factor(year), type = "bar"
+    ) |> 
+  layout(xaxis = list(title = "Date (Year, Month)"), 
+         yaxis = list(title = "Total Precipitation (in)"), legend = list(title = list(text = "Year")))
+
+
+```
+
+Perhaps not surprisingly, snowfall and snow depth were both highest in the winter and early spring months and non-existent in the summer months through early fall. There were slight differences between these two variables such that the highest snow depth measurements were visible for longer (more months out of the year) than when the highest snowfall measurements were visible. These patterns are apparent when comparing the plots side-by-side below. These snow patterns are expected for this area and help validate the reasonability of our weather data.    
+
+```{r snowfall and snow depth, echo = FALSE, message = FALSE}
+### snowfall ###
+# faceted bar chart, separated by month and year -- KEEP STATIC, USE FOR ANALYSIS PAGE
+snowfall_facet_bar <- 
+  weather |> 
+  group_by(name, year, month) |> 
+  summarize(station_snowfall_total = sum(snow, na.rm = TRUE)) |> 
+  group_by(year, month) |> 
+  summarize(station_snowfall_total_avg = mean(station_snowfall_total, na.rm = TRUE)) |> 
+  mutate(year_month = paste(year, month, sep = "-")) |> 
+  ggplot(aes(x = month, y = station_snowfall_total_avg, fill = as.factor(year))) +
+  geom_bar(stat = "identity") + 
+  facet_wrap(vars(year), ncol = 2) + 
+  theme(legend.position = "none") + 
+  labs(x = "Month", y = "Total Snowfall (in)")
+  
+# point + line
+snowfall_line_plotly <- 
+  weather |> 
+  group_by(name, year, month) |> 
+  summarize(station_snowfall_total = sum(snow, na.rm = TRUE)) |> 
+  group_by(year, month) |> 
+  summarize(station_snowfall_total_avg = mean(station_snowfall_total, na.rm = TRUE)) |> 
+  mutate(year_month = paste(year, month, sep = "-")) |> 
+  plot_ly(
+    x = ~month, y = ~station_snowfall_total_avg, color = ~as.factor(year), group = ~year, type = 'scatter', mode = 'lines'
+    ) |> 
+  layout(xaxis = list(title = "Month"), 
+         yaxis = list(title = "Total Snowfall (in)"), legend = list(title = list(text = "Year")))
+
+# year-month totals by year
+snowfall_bar_plotly <- 
+  weather |> 
+  group_by(name, year, month) |> 
+  summarize(station_snowfall_total = sum(snow, na.rm = TRUE)) |> 
+  group_by(year, month) |> 
+  summarize(station_snowfall_total_avg = mean(station_snowfall_total, na.rm = TRUE)) |> 
+  mutate(year_month = paste(year, month, sep = "-")) |> 
+  plot_ly(
+    x = ~year_month, y = ~station_snowfall_total_avg, color = ~year, type = 'bar'
+    ) |> 
+  layout(xaxis = list(title = "Date (Year, Month)"), 
+         yaxis = list(title = "Total Snowfall (in)"), legend = list(title = list(text = "Year")))
+
+### snow depth ###
+# faceted bar chart, separated by month and year -- KEEP STATIC, USE FOR ANALYSIS PAGE
+snowdepth_facet_bar <- 
+  weather |> 
+  group_by(name, year, month) |> 
+  summarize(station_snowdepth_total = sum(snwd, na.rm = TRUE)) |> 
+  group_by(year, month) |> 
+  summarize(station_snowdepth_total_avg = mean(station_snowdepth_total, na.rm = TRUE)) |> 
+  mutate(year_month = paste(year, month, sep = "-")) |> 
+  ggplot(aes(x = month, y = station_snowdepth_total_avg, fill = as.factor(year))) +
+  geom_bar(stat = "identity") + 
+  facet_wrap(vars(year), ncol = 2) + 
+  theme(legend.position = "none") + 
+  labs(x = "Month", y = "Total Snow Depth (in)")
+
+# point + line
+snowdepth_line_plotly <- 
+  weather |> 
+  group_by(name, year, month) |> 
+  summarize(station_snowdepth_total = sum(snwd, na.rm = TRUE)) |> 
+  group_by(year, month) |> 
+  summarize(station_snowdepth_total_avg = mean(station_snowdepth_total, na.rm = TRUE)) |> 
+  mutate(year_month = paste(year, month, sep = "-")) |> 
+  plot_ly(
+    x = ~month, y = ~station_snowdepth_total_avg, color = ~as.factor(year), group = ~year, type = 'scatter', mode = 'lines'
+    ) |> 
+  layout(xaxis = list(title = "Month"), 
+         yaxis = list(title = "Total Snow Depth (in)"), legend = list(title = list(text = "Year")))
+
+# year-month totals
+snowdepth_bar_plotly <- 
+  weather |> 
+  group_by(name, year, month) |> 
+  summarize(station_snowdepth_total = sum(snwd, na.rm = TRUE)) |> 
+  group_by(year, month) |> 
+  summarize(station_snowdepth_total_avg = mean(station_snowdepth_total, na.rm = TRUE)) |> 
+  mutate(year_month = paste(year, month, sep = "-")) |> 
+  plot_ly(
+    x = ~year_month, y = ~station_snowdepth_total_avg, color = ~year, type = 'bar'
+  ) |> 
+  layout(xaxis = list(title = "Date (Year, Month)"), 
+         yaxis = list(title = "Total Snow Depth (in)"), legend = list(title = list(text = "Year")))
+
+
+(snowfall_facet_bar + snowdepth_facet_bar)
+snowfall_line_plotly
+snowdepth_line_plotly
+snowfall_bar_plotly
+snowdepth_bar_plotly
+```
+
+Finally, when visualizing the monthly average temperatures (see below), we see a consistent pattern each year in which the monthly temperatures rise to their peaks in the summer months (July, specifically) and gradually decline after this peak, and the lowest temperatures occurred in January and December. As was the case with our snow data, this is a surprising pattern for Wyoming, and helps validate our data by ensuring that no unexpected shifts in seasonal patterns occurred over the years.  
+
+```{r avg temp, echo = FALSE, message = FALSE}
+# faceted bar chart, separated by month and year -- KEEP STATIC, USE FOR ANALYSIS PAGE
+weather |> 
+  group_by(year, month) |> 
+  summarize(year_month_tavg = mean(tavg, na.rm = TRUE)) |> 
+  mutate(year_month = paste(year, month, sep = "-")) |> 
+  ggplot(aes(x = month, y = year_month_tavg, fill = as.factor(year))) +
+  geom_bar(stat = "identity") + 
+  facet_wrap(vars(year), ncol = 2) + 
+  theme(legend.position = "none") + 
+  labs(x = "Month", y = "Average Temperature (F)")
+
+# point + line
+weather |> 
+  group_by(year, month) |> 
+  summarize(year_month_tavg = mean(tavg, na.rm = TRUE)) |> 
+  mutate(year_month = paste(year, month, sep = "-")) |> 
+  plot_ly(
+    x = ~month, y = ~year_month_tavg, color = ~as.factor(year), group = ~year, type = 'scatter', mode = 'lines'
+    ) |> 
+  layout(xaxis = list(title = "Month"), 
+         yaxis = list(title = "Average Temperature (F)"), legend = list(title = list(text = "Year")))
+
+# year-month totals
+weather |> 
+  group_by(year, month) |> 
+  summarize(year_month_tavg = mean(tavg, na.rm = TRUE)) |> 
+  mutate(year_month = paste(year, month, sep = "-")) |> 
+  plot_ly(
+    x = ~year_month, y = ~year_month_tavg, color = ~year, type = 'bar'
+  ) |> 
+  layout(xaxis = list(title = "Date (Year, Month)"), 
+         yaxis = list(title = "Average Temperature (F)"), legend = list(title = list(text = "Year")))
+```
+
+**Analyzing Weather Data and Elk Migration Patterns**
+
+After examining the weather data by itself, we then visualized these datasets with the elk migration data to see if there were any visible patterns or trends that emerged. More specifically, we wanted to see if changes in each of the four weather measurements affected the total distance traveled by each elk on a given day, and we did so by plotting the total daily distance traveled as the dependent variable against each of the four weather measurements as the dependent variable.  
+
+Following the same order as the previous section, we first plotted the daily distance traveled by the elk against the daily precipitation recordings. In the scatterplot below, we see that the daily distance traveled varied more widely when the daily precipitation measurement was lowest, and that this variation decreased as precipitation levels increased. The smooth-mean line (shown in blue below) across all years appears to have a slight positive slope; this is also reflected in the smooth-mean line graph separated by each elk, which shows that several of the elk appear to increase their distance traveled as precipitation increases. Given that many of the other elk do not follow this same trend, and the smooth-mean lines appear to vary from one another, it is not clear to say whether precipitation increases saw an increase in distance traveled by elk.    
+```{r precip vs dist, echo = FALSE, message = FALSE}
+elk_prcp_distkm_pts <- 
+  daily_elk |> 
+  ggplot(aes(x = prcp, y = dist_km)) + 
+  geom_point() + 
+  geom_smooth(se = FALSE) + 
+  labs(x = "Daily Precipitation (in)", y = "Daily Distance Traveled (km)")
+
+style(elk_prcp_distkm_pts, hoverinfo = "none", traces = 2)
+
+elk_prcp_distkm_smooth <- 
+  daily_elk |> 
+  ggplot(aes(x = prcp, y = dist_km, color = as.factor(elk_id))) + 
+  geom_smooth(se = FALSE) + 
+  labs(x = "Daily Precipitation (in)", y = "Daily Distance Traveled (km)", color = "Elk ID")
+
+ggplotly(elk_prcp_distkm_smooth)
+```
+
+Similar to the precipitation plot, the snowfall scatterplot also shows greater variation of daily distance traveled among elk at lower snowfall measurements than at higher snowfall measurements. The smooth-mean trend (blue line) does not appear to have much of a positive or negative trend, and while there are only three elk available with associated snowfall data, the smooth-mean trends for each elk follow a similar pattern in which they traveled longer distances on days with lower snowfall, followed by a sharp decline in distance traveled on days with snowfall starting at between approximately 0.3 (Elk 706) and 1.2 in (Elk 654), followed by a gradual increase in distance traveled on days with snowfall starter at or greater than approximately 1.2 (Elk 706) and 3.5 in (Elk 654).  
+
+```{r snowfall vs dist, echo = FALSE, message = FALSE}
+elk_snowfall_distkm_pts <- 
+  daily_elk |> 
+  ggplot(aes(x = snow, y = dist_km)) + 
+  geom_point() + 
+  geom_smooth(se = FALSE) + 
+  labs(x = "Daily Snowfall (in)", y = "Daily Distance Traveled (km)")
+
+style(elk_snowfall_distkm_pts, hoverinfo = "none", traces = 2)
+```
+
+For snow depth, the overall mean-smooth trend does not show a clear positive or negative trend of distance traveled in response to changes in snow depth. However, when examining the mean-smooth trends of each elk , we see similar patterns among all elk, in which there is a rapid increase in distance traveled on days with lower snow depth (between 0 and ~10-15 in for most elk), followed by a rapid decrease in distance traveled among elk on days with snow depth between ~15 and 35-45 in for most elk, then rapid increases in distance traveled for snow depths beyond this point.  
+
+```{r snow depth vs dist, echo = FALSE, message = FALSE}
+elk_snowdepth_distkm_pts <- 
+  daily_elk |> 
+  ggplot(aes(x = snwd, y = dist_km)) + 
+  geom_point() + 
+  geom_smooth(se = FALSE) + 
+  labs(x = "Daily Snow Depth (in)", y = "Daily Distance Traveled (km)")
+
+style(elk_snowdepth_distkm_pts, hoverinfo = "none", traces = 2)
+
+elk_snowdepth_distkm_smooth <- 
+  daily_elk |> 
+  ggplot(aes(x = snwd, y = dist_km, color = elk_id)) + 
+  geom_smooth(se = FALSE) + 
+  labs(x = "Daily Snow Depth (in)", y = "Daily Distance Traveled (km)", color = "Elk ID")
+
+ggplotly(elk_snowdepth_distkm_smooth)
+```
+
+Lastly, after examining the relationship between daily distance traveled and average daily temperature, we can see a slight downward trend in daily distance traveled among elk as average daily temperature increases, as shown by the main blue mean-smooth line that shows a slightly negative overall slope. This negative relationship is visible in the other plot in which daily distance traveled in response to average temperature is shown for each elk. In this plot, we can see that in general, most elk traveled less on a given day as the average daily temperature increased, and some elk showed a slight uptick in daily distance traveled in the middle of the two temperature extremes (between approximately 25 and 40 degrees F for most elk), before a sharp decline in distance traveled on days with temperatures greater than this range.  
+
+```{r avg temp vs dist, echo = FALSE, warning = FALSE}
+elk_avgtemp_distkm_pts <- 
+  daily_elk |> 
+  ggplot(aes(x = tavg, y = dist_km)) + 
+  geom_point() + 
+  geom_smooth(se = FALSE) + 
+  labs(x = "Average Daily Temperature (F)", y = "Daily Distance Traveled (km)")
+
+style(elk_avgtemp_distkm_pts, hoverinfo = "none", traces = 2)
+
+elk_avgtemp_distkm_smooth <- 
+  daily_elk |> 
+  ggplot(aes(x = tavg, y = dist_km, color = elk_id)) + 
+  geom_smooth(se = FALSE) + 
+  labs(x = "Average Daily Temperature (F)", y = "Daily Distance Traveled (km)", color = "Elk ID")
+
+ggplotly(elk_avgtemp_distkm_smooth)
+```
+
+
+
+
+
+# Analyzing Water Quality
+
+```{r, messages=FALSE}
+# raw data, long format
+water_quality = read_csv('clean_data/water_quality.csv')
+
+# processed data, aggregated by year-month
+water_quality2 = read_csv('clean_data/water_quality2.csv')
+
+water_quality_locations =
+  water_quality %>% 
+  filter(location_id %in% c('GRTE_SNR01', 'GRTE_SNR02')) %>% 
+  select(location_id, location_name, latitude, longitude) %>% 
+  distinct()
+```
+
+
+
+```{r, messages=FALSE}
+water_exploration = 
+  water_quality2 |> 
+  group_by(
+    location_id,
+    characteristic_name
+  ) |> 
+  summarize(
+    all_time_mean = mean(monthly_mean, na.rm = TRUE),
+    all_time_var = var(monthly_mean, na.rm = TRUE)) |> 
+  pivot_wider(
+    names_from = location_id,
+    values_from = c(all_time_mean, all_time_var)
+  ) |> 
+  mutate(
+    standardized_difference =  abs(all_time_mean_GRTE_SNR01 - all_time_mean_GRTE_SNR02) / sqrt(all_time_var_GRTE_SNR01 + all_time_var_GRTE_SNR02)
+  )
+```
+
+
+The site GRTE_SNR01 has higher Chloride, Sodium, Sulfur, Arsenic, and Potassium than GRTE_SNR02.
+
+
+
+Examining the data more closely, we see that GRTE_SNR02 has a consistently low level of these chemicals, while GRTE_SNR01 occasionally achieves higher levels of these chemicals.
+```{r, messages=FALSE}
+water_quality2 |> 
+  filter(characteristic_name %in% c(
+    'Chloride mg/l', 'Sodium mg/l',
+    'Sulfur, sulfate (SO4) as SO4 mg/l',
+    'Potassium mg/l', 'Arsenic mg/l')) |> 
+  ggplot(aes(fill = location_id, x = monthly_mean)) + 
+  facet_wrap(.~ characteristic_name, scales = c('free_x'))+
+  geom_histogram()
+```
+
+
+Examining water quality by year. There was not any significant increase or decrease of these minerals at either location. 
+```{r, messages=FALSE}
+water_quality2 |> 
+  filter(characteristic_name %in% c(
+    'Chloride mg/l', 'Sodium mg/l',
+    'Sulfur, sulfate (SO4) as SO4 mg/l',
+    'Potassium mg/l', 'Arsenic mg/l')) |> 
+  ggplot(
+    aes(x = factor(year), y = monthly_mean, fill = location_id)
+  ) + 
+  facet_wrap(. ~ characteristic_name, scales = 'free_y') +
+  geom_boxplot() + 
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+
+### Did the elk get arsenic poisoning
+
+
+In July and August of 2010, there is a large spike in the amount of Arsenic at the GRTE_SNR01 location. 
+```{r}
+water_quality2 |> 
+  mutate(year_month = paste0(year, '-', month)) %>% 
+  filter(
+    characteristic_name  == 'Arsenic mg/l',
+    year %in% c(2009, 2010, 2011)) |> 
+  ggplot(aes(x = year_month, y = monthly_max, color = location_id)) +
+  geom_point() +
+  theme(axis.text.x = element_text(angle = 90))
+
+```
+
+Mapping the Elk's location during that time, we see that they were indeed downstream of the GRTE_SNR01 location, and were likely exposed to elevated levels of Arsenic during this time. 
+```{r}
+arsenic_measures = names(all_data)[str_detect(names(all_data), 'Arsenic')]
+
+arsenic_exposure = 
+  all_data %>% 
+  filter(
+    year == 2010,
+    month %in% c(7, 8)
+  )
+
+min_lat = arsenic_exposure |> pull(lat) |> min()
+max_lat = arsenic_exposure |> pull(lat) |> max()
+rng_lat = abs(min_lat - max_lat)
+lowerleftlat = min_lat 
+upperrightlat = max_lat 
+
+
+min_long = arsenic_exposure |> pull(long) |> min()
+max_long = arsenic_exposure |> pull(long) |> max()
+rng_long = abs(min_long - max_long)
+lowerleftlon = min_long - rng_long 
+upperrightlon = max_long + rng_long
+
+
+# Define area by `c(lowerleftlon, lowerleftlat, upperrightlon, upperrightlat)`
+ myLocation <- c(left = lowerleftlon,
+                 bottom = 43.5,
+                 right = upperrightlon,
+                 top = 44.3)
+
+
+myMap <- get_stadiamap(
+  bbox=myLocation,
+  maptype = "stamen_terrain",
+  crop=FALSE)
+
+
+
+elk_ids2 = unique(arsenic_exposure$elk_id)
+num_colors = length(elk_ids2)    # Ensure we don't exceed palette limit
+path_colors = 
+  colorFactor(
+    palette = RColorBrewer::brewer.pal(num_colors, "Set1"),
+    domain = elk_ids2)
+
+map = ggmap(myMap) 
+
+for(id in elk_ids2){
+  
+  temp_elk = 
+    arsenic_exposure %>% 
+    filter(elk_id == id)
+  
+  map = 
+    map +
+    geom_path(
+      data = temp_elk, 
+      aes(x=long, y=lat, color = path_colors(id))) +
+      geom_line(alpha = 0)
+  
+}
+
+map = 
+  map + 
+  geom_point(
+    data = water_quality_locations,
+    aes(x = longitude, y = latitude))+ 
+  geom_text(
+    data = water_quality_locations,
+    aes(x = longitude, y = latitude, label = location_id),
+    nudge_x = 0.25)
+
+
+map
+```
