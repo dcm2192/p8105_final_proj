@@ -8,13 +8,23 @@ runtime: shiny
 ---
 
 ```{r}
+library(tidyverse)
 library(shiny)
 library(flexdashboard)
 library(leaflet)
 ```
 
+```{r}
+elk = read.csv(file = "./data/elk.csv") |> 
+  mutate(date = as.Date(paste(year, month, day, sep = "-")))
 
-Mapping Water Quality Over Time
+water_quality = read.csv(file = "./data/water_quality.csv") |> 
+  mutate(date = as.Date(paste(year, month, day, sep = "-"))) |> 
+  filter(location_id %in% c("GRTE_SNR01", "GRTE_SNR02", "YELL_LM000.5M", "YELL_YS549.7M", "YELL_MD133.2T", "YELL_MDR"))
+```
+
+
+
 -----------------------------------------------------------------------
 
 ```{r}
@@ -27,33 +37,48 @@ ui = fluidPage(
                   "Select Year:",
                   min = 2006,
                   max = 2015,
-                  value = 2006,
+                  value = 2013,
                   step = 1),
                   
       sliderInput("month_slider",
                   "Select Month:",
                   min = 1,
                   max = 12,
-                  value = 1,
+                  value = 5,
                   step = 1),
       
       selectInput("characteristic", 
                   "Select Water Quality Characteristic:", 
                   choices = unique(water_quality$characteristic_name),
-                  selected = " mg/l")
+                  selected = "Arsenic mg/l")
     ),
     
     mainPanel(
-      leafletOutput("elkMap"),
-      plotOutput("waterQualityPlot")
+      leafletOutput("elkMap", height = 500),
+      plotOutput("waterQualityPlot", height = 400)
     )
   )
 )
 ```
 
 
-Water Quality Plot
+Column {data-width=650}
 -----------------------------------------------------------------------
+
+### Water Quality Plot
+
+```{r}
+elk_icon = makeIcon(
+  iconUrl = "data/elk_icon.png", 
+  iconWidth = 30, 
+  iconHeight = 30)
+
+water_icon = makeIcon(
+  iconUrl = "data/water_droplet.png",
+  iconWidth = 30,
+  iconHeight = 30)
+```
+
 
 ```{r}
 server = function(input, output) {
@@ -75,26 +100,40 @@ server = function(input, output) {
 output$elkMap = renderLeaflet({
   filtered_water_quality = filtered_data()
   filtered_elk_data = filtered_elk() 
+  
   map = leaflet() |> 
     addTiles()
  
 if(nrow(filtered_water_quality) > 0) {
-  leaflet(filtered_water_quality) |> 
-    addTiles() |> 
-    addMarkers(~longitude, ~latitude, 
-               popup = ~paste("Characteristic: ", characteristic_name, 
-                              "<br>Value: ", result_text,
-                              "<br>Date: ", date))
-} 
-
+  map = map |> 
+    addMarkers(
+      data = filtered_water_quality,
+      ~longitude, ~latitude,
+      icon = water_icon,
+      popup = ~paste("Characteristic: ", characteristic_name,
+                     "<br>Value: ", result_text,
+                     "<br>Date: ", date),
+      group = "Water Quality"
+    )
+}
+  
+  
   if (nrow(filtered_elk_data) > 0) {
     map = map |> addMarkers(
       data = filtered_elk_data,
       ~long, ~lat,
-      popup = ~paste("Elk Path", "<br>Date: ", date)
+      icon = elk_icon, 
+    popup = ~paste("Elk Path", "<br>Date: ", date),
+    group = "Elk Path"
     )
   }
   
+map = map |> 
+  addLayersControl(
+    overlayGroups = c("Water Quality", "Elk Path"),
+    options = layersControlOptions(collapsed = FALSE)
+  )
+
   map
 })
 
