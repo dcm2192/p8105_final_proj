@@ -371,27 +371,6 @@ interactive_sulfur = ggplotly(plot_sulfur)
 interactive_sulfur
 ```
 
-### Water Temperature
-
-```{r}
-water_temp = 
-  water_quality |> 
-  filter(characteristic_name == 'Temperature, water deg C') |> 
-  mutate(water_temp = as.numeric(result_text)) 
-
-
-plot_water = ggplot(water_temp, aes(x = date, y = water_temp, color = location_id)) +
-  geom_line(alpha = 0.6) +
-  labs(
-    title = "Water Temperature Levels Over Time", 
-    x = "Date", 
-    y = "Water Temperature deg C") +
-  theme(legend.position = "right")
-
-interactive_water = ggplotly(plot_water)
-
-interactive_water
-```
 
 ### Water pH
 
@@ -423,6 +402,28 @@ interactive_ph
 According to the plot, the pH in water was relatively similar, ranging in the normal level of 6.5 to 8.5 mg/l, at the Lamar River at USGS Gage near Ranger Station, Madison River 1.21km West of MT/WY State Boundary, Madison River near West Yellowstone, MT, and Yellowstone River at Corwin Springs. The highest between these four sites was from Yellowstone River at Corwin Spring at 9.380 mg/l. This is slightly more basic than the ideal range, but is not of significant concern. The lowest reading between the four sites was at the Lamar River at USGS Gage near Ranger Station at 6.1 mg/l, which is slightly more acidic than the normal range, but is also not of high concern.
 
 Snake River at Old Flagg Ranch 1000 Below Bridge and Snake River Below Site of New Visitor's Center, where the elk were primarly found, saw similar readings to that of the four other stations, however, there was one instance in each of the location that saw readings similar to acid rain. The first at Snake River at Olg Flagg Ranch 1000 Below Bridge, which on October 19, 2006 had a reading of 3.46 mg/l. At Snake River Below Site of New Visitor's Center, the location had a reading of 5.57 mg/l on the same day.
+
+### Water Temperature
+
+```{r}
+water_temp = 
+  water_quality |> 
+  filter(characteristic_name == 'Temperature, water deg C') |> 
+  mutate(water_temp = as.numeric(result_text)) 
+
+
+plot_water = ggplot(water_temp, aes(x = date, y = water_temp, color = location_id)) +
+  geom_line(alpha = 0.6) +
+  labs(
+    title = "Water Temperature Levels Over Time", 
+    x = "Date", 
+    y = "Water Temperature deg C") +
+  theme(legend.position = "right")
+
+interactive_water = ggplotly(plot_water)
+
+interactive_water
+```
 
 ## Water Quality Characteristics Over Time
 ```{r}
