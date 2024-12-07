@@ -1,12 +1,14 @@
 ---
 title: "Water Quality Analysis"
 author: "Tamara Pichardo"
-output: html_document
+output: 
+  html_document:
+    code_folding: hide
 ---
 
 
 ## Load Packages
-```{r}
+```{r message = FALSE}
 library(tidyverse)
 library(ggmap)
 library(plotly)
@@ -14,7 +16,7 @@ library(leaflet)
 library(sp)
 ```
 
-```{r}
+```{r message = FALSE}
 knitr::opts_chunk$set(
         echo = TRUE,
         warning = FALSE,
@@ -86,7 +88,7 @@ From these locations, I explored water contents such as calcium, arsenic, sodium
 
 It is important to examine data sets such as these when considering elk movement as these rivers and streams are their main water source. We can determine after discussing the elk movement and where they are frequently found, they are typically near major water sources and trek along these locations to guide their movement and sustain their journeys.
 
-## Scatterplot of Each Water Characteristic
+## Scatterplot of Each Water Characteristic   
 
 ### Calcium
 The first water content examined is calcium. Calcium is a mineral that keeps the body healthy by building strong bones and teeth, helping muscles move, helping nerves function, and helping blood vessels move blood. However, high levels of calcium can have an opposite effect such as causing poor muscle tone, poor kidney function, and abnormal heart rhythms. 
@@ -117,7 +119,7 @@ According to the plot, Madison River 1.21km West of MT/WY State Boundary and Mad
 
 Additionally, the plot shows that Lamar River at USGS Gage near Ranger Station, Yellowstone River at Corwin Springs, Snake River Below Site of New Visitor's Center, and Snake River at Old Flagg Ranch 1000 Below Bridge each reached high levels of calcium, above the ideal range. Lamar River at USGS reached the highest level of calcium mg/l across all locations on May 4, 2011 with a level of 35.8 mg/l.
 
-The plot also suggests that generally in the colder months such as January and March, there was an increase in calcium levels and a decrease in the hotter months such as June and August across all locations.
+The plot also suggests that generally in the colder months such as January and March, there was an increase in calcium levels and a decrease in the hotter months such as June and August across all locations.    
 
 ### Arsenic
 
@@ -149,7 +151,7 @@ Madison River 1.21km West of MT/WY State Boundary contained little arsenic level
 
 Snake River at Old Flagg Ranch 1000 Below Bridge generally maintained steady arsenic levels that did not increase above 0.05200. However, there was a very significant spike on August 24, 2010 in which arsenic levels rose to 0.4140, more than 3 tenths above the standard level.
 
-Lastly, Madison River near West Yellowstone, MT has consistently reported significantly high levels of arsenic, the highest on February 26, 2017 at 0.3160 mg/l. Unlike calcium, there does not seem to be a significant correlation between time of year and arsenic levels.
+Lastly, Madison River near West Yellowstone, MT has consistently reported significantly high levels of arsenic, the highest on February 26, 2017 at 0.3160 mg/l. Unlike calcium, there does not seem to be a significant correlation between time of year and arsenic levels.   
 
 ### Chloride
 
@@ -181,7 +183,7 @@ After taking a look at the plot, the water source with the lowest levels of chlo
 
 Snake River at Old Flagg Ranch 1000 Below Bridge and the Yellowstone River at Corwin Springs had similar results in which chloride levels stayed roughly between 0-20 mg/l.
 
-Between all locations, Madison River 1.21km West of MT/WY State Boundary and Madison River near West Yellowstone, MT had the highest levels of chloride ranging from 0-74.5 mg/l and 0-73 mg/l, respectively. 
+Between all locations, Madison River 1.21km West of MT/WY State Boundary and Madison River near West Yellowstone, MT had the highest levels of chloride ranging from 0-74.5 mg/l and 0-73 mg/l, respectively.   
 
 ### Dissolved Oxygen (DO)
 
@@ -299,7 +301,7 @@ interactive_phosphorus = ggplotly(plot_phosphorus)
 interactive_phosphorus
 ```
 
-According to the graph, the water source in which majority of the elk were found had low levels of phosphorus, which is concerning in terms of muscle heatlh and bone growth. Only one of the two sites, Snake River Beloew Site of New Visitor's Center, the elk were found in had two readings that fell into the normal range. One reading was on May 15, 2019 with a reading of 0.325 mg/l and the other reading was on May 18, 2023 with a reading of 0.36 mg/l. 
+According to the graph, the water source in which majority of the elk were found had low levels of phosphorus, which is concerning in terms of muscle heatlh and bone growth. Only one of the two sites, Snake River Below Site of New Visitor's Center, the elk were found in had two readings that fell into the normal range. One reading was on May 15, 2019 with a reading of 0.325 mg/l and the other reading was on May 18, 2023 with a reading of 0.36 mg/l. 
 
 In terms of the other four locations, two locations, the Lamar River at USGS Gage near Ranger Station and Yellowstone River at Corwin Springs had readings above the acceptable limit of 0.45 mg/l, on May 16, 2023 with 0.880 mg/l and June 16, 2022 with 1.14 mg/l, respectively.
 
@@ -329,6 +331,8 @@ interactive_potassium = ggplotly(plot_potassium)
 interactive_potassium
 ```
 
+According to the graph, Snake River at Old Flagg Ranch 1000 Below Bridge in which elk use as a water source and Snake River Below Site of New Visitor's Center did not reach the minimum of the normal range, indicating that these main water sources could have resulted in insufficient levels of potassium for the elk. This could have caused hypokalemia and contributed to any slowdown in elk movement.
+
 ### Sodium
 
 Sodium is a mineral and electrolyte needed for normal muscle and nerve functions and maintaining blood pressure. If sodium is too low, also referred to as hyponatremia, this can cause loss of energy, confusion, or possibly death negatively impacting movement of elk. Sever hypernatremia, or high levels of sodium, can have similar effects, and therefore, it is important to stay within the normal range.
@@ -355,6 +359,12 @@ interactive_sodium = ggplotly(plot_sodium)
 interactive_sodium
 ```
 
+According to the graph, the Lamar River at USGS Gage near Ranger Station and Snake River Below Site of New Visitor's Center had similar trends in which sodium levels stayed beneath 12 mg/l generally, with one exception on July 26, 2022 at the Snake River Below Site of New Visitor's Center. 
+
+The other four locations had levels consistently above 20 mg/l, indicating exposure to these water could result in salt poisoning by high levels of sodium. This includes the Snake River at Old Flagg Ranch 1000 Below Bridge location most elk travel near that fluctuated between 0 and 45 mg/l.
+
+It is important to note that data fluctuated in correlation with winter and summer months. This could indicate that in the winter when roads are more dangerous to drive on due to weather patterns and need to be salted, some of the runoff makes its way into these water sources. 
+
 ### Sulfur
 
 Sulfur is a chemical element most reactive with other elements, including a few that have already been discussed. It is known to be of low toxicity and poses low risks, but meant to build and fix DNA and protect from cell damage. However, if animals consume too much sulfur, it may be toxic and can be fatal. Signs can include brain cell death and brain damage. "Harmful" levels are above 250 mg/l, but this only significantly affects taste and odor.
@@ -379,6 +389,7 @@ interactive_sulfur = ggplotly(plot_sulfur)
 interactive_sulfur
 ```
 
+According to the graph, none of the locations reached above the harmful level of 250 mg/l, which means that elk were most likely not affected by the sulfur content in each location. It seems that each location also fluctuated based on time of the year, as it became hotter, sulfur increased and colder sulfur decreased.
 
 ### Water pH
 
