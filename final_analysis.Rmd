@@ -12,6 +12,8 @@ output:
 ```{r setup, include=FALSE, messages=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_chunk$set(message = FALSE)
+options(warn=-1)
+
 
 library(geosphere)
 library(leaflet)
@@ -37,8 +39,6 @@ options(
 
 scale_colour_discrete = scale_colour_viridis_d
 scale_fill_discrete = scale_fill_viridis_d
-
-options(warn=-1)
 ```
 
 
@@ -51,26 +51,8 @@ elk = read_csv("clean_data/elk.csv") |>
 
 ## Exploring Geographic Elk Movement
 
+We begin exploratory data analysis by examining the geographic elk data.  We examine the latitude and longitude for the individual elk each year. We find the elk with the furthest ranging longitude. We can see that the elk with the furthest ranging longitude are elk 900, 917, and 916. Elk 917 shows up in this list 3 times for the years 2013, 2014, and 2015. This elk is ranging farther each year.
 
-In 2013 the elk traveled much farther in longitude than the other years. In 2011, the elk did not go nearly as far East as in other years. In 2010 and 2011 there was more sparse travel and it looks like the elk liked to hang out in the far North and far South spots. The data in 2006 looks like it is not as rich and there might be missing data points here.
-
-```{r, messages=FALSE}
-elk |>
-  ggplot(aes(x = long, y = lat, color = elk_id)) + 
-  geom_point(alpha = 0.3) +
-  facet_grid(~ year) +  
-  labs(
-    title = "Elk Migration by Year",
-    x = "longitude",
-    y = "latitude",
-    color = "Elk ID"
-  ) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 75))
-```
-
-
-We examine the latitude and longitude for the individual elk each year. We find the elk the furthest ranging longitude. We can see that our top 3 movers in terms of longitude are Elk 900, 917, and 916. Elk 917 shows up in this list 3 times for the years 2013, 2014, and 2015. This elk is exploring farther each year!
 ```{r, messages=FALSE}
 elk |>
   group_by(elk_id, year) |>
@@ -79,9 +61,7 @@ elk |>
   head(n= 10) |>
   knitr::kable(col.names = c("Elk ID", "Year", "longitude Range"))
 ```
-
-
-Now we look at the top movers in terms of latitude. Again we see elk 917 showing up as a top move in terms of latitude for the years 2013, 2014, and 2015 with the range going up each year.This elk is quite the explorer! We can also see that this elk has very similar results to elk 916 for 2013 and 2014. 
+Looking at the furthest ranging latitudes, we again see elk 917 ranging furthest in the years 2013, 2014, and 2015 with the range going up each year.
 
 ```{r, messages=FALSE}
 elk |>
@@ -111,9 +91,7 @@ elk |>
 ```
 
 
-It looks like there is quite a lot of variance in the movement of different elk. What is really interesting is that December is a big moving month! And November is right behind December in terms of total movement. I wonder if this is a pattern that elk have of moving when the temperature drops, or if there is something skewing the data like this. 
-
-Let's look at the daily averages and how this compares for each of the elk. We are going to only look at the IQR so we can see what the movement is like on most days. It looks like most days they move around
+The elk have a consistent median travel distance of approximately 2.9 kilometers per day, though they may each travel up to 10 kilometers today. 
 
 ```{r, messages=FALSE}
 daily_median = 
@@ -167,6 +145,8 @@ elk_distances_seasonal |>
   pivot_wider(names_from = season, values_from = total_distance_km) |>
   knitr::kable(col.names = c("Elk ID", "Year", "Fall", "Spring", "Summer", "Winter"))
 ```
+### Examining Data 
+
 Now I am curious what the overlap of the elk are? The data collected is between 2006 and 2015, but we do not have data from all of the elk ids during that time period. It turns out that wild elk can only live up to 10-12 years, according to [worlddeer.ord](https://worlddeer.org/elk/). So let's find out what the time range is for each of these elk.
 
 One thing I want to check is if the number of data points for each elk is skewing the data. Let's see how the number of data points spread across the time frame.
@@ -830,7 +810,6 @@ ggplotly(elk_avgtemp_distkm_smooth)
 
 
 # Analyzing Water Quality
-
 
 WRITE ABOUT THE SOURCE
 
