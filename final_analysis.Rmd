@@ -73,6 +73,8 @@ elk |>
 ```
 
 Looking at total elk movement by month, we see see a clear relationship. The months of May through October see consistent monthly travel of approximately 100 kilometers. The months of March, April, November, and December see highly varied travel distances, ranging from tens of kilometers to over three hundred. 
+
+keeper
 ```{r, messages=FALSE}
 elk |>
   mutate(month = month(dt, label = TRUE)) |> 
@@ -92,6 +94,8 @@ elk |>
 
 
 The elk have a consistent median travel distance of approximately 2.9 kilometers per day, though they may each travel up to 10 kilometers today. 
+
+keep
 
 ```{r, messages=FALSE}
 daily_median = 
@@ -151,6 +155,8 @@ Now I am curious what the overlap of the elk are? The data collected is between 
 
 One thing I want to check is if the number of data points for each elk is skewing the data. Let's see how the number of data points spread across the time frame.
 
+
+Maybe
 ```{r, messages=FALSE}
 elk |>
   group_by(elk_id) |>
@@ -304,49 +310,6 @@ From the leaflet we can tell that the elk all started somewhat close together an
 
 Now let's look at the paths for December because that was also a big movement month. There appears to be one elk, elk id 911 that traveled between Yellowstone National Park and the National elk refuge, whereas no other elk made the same journey in that month. 
 
-```{r, messages=FALSE}
-filtered_data = elk_df_2013.2014 |>
-  filter(month == 12,
-         year == 2014)
-
-# Initialize leaflet map
-map <- filtered_data |>
-  group_by(elk_id) |>
-  summarize(start_long = first(long), start_lat = first(lat),
-            end_long = last(long), end_lat = last(lat))|>
-  ungroup() |>
-  leaflet() |>
-  addProviderTiles(providers$CartoDB.Positron, group = "Base Map") |>
-  addProviderTiles(providers$Esri.NatGeoWorldMap, group = "NatGeo Map") |>
-  addMarkers(lng = ~start_long, lat = ~start_lat, icon = elk_icon, popup = ~paste("Start Point: Elk", elk_id)) |>
-  addMarkers(lng = ~end_long, lat = ~end_lat, icon = elk_icon, popup = ~paste("End Point: Elk ", elk_id))
-
-# Add lines for each elk's path
-for (id in elk_ids) {
-  elk_data <- filtered_data |> filter(elk_id == id)  # Subset data for each elk
-  map <- map |>
-    addPolylines(
-      data = elk_data,
-      lng = ~long, lat = ~lat,
-      color = path_colors(id),  # Assign unique color for each elk
-      weight = 2,
-      opacity = 0.8,
-      label = ~paste("Elk ID:", id)  # Label showing elk ID
-    )
-}
-
-# Add a legend for the elk IDs
-map <- map |>
-  addLegend(
-    position = "topright",
-    pal = path_colors,
-    values = elk_ids,
-    title = "Elk ID"
-  )
-
-# Print the map
-map
-```
 
 
 # Land Cover Analysis
@@ -363,6 +326,8 @@ small_land_coord = rast('clean_data/land_cover.tif')
 
 plot(small_land_coord)
 ```
+
+Patchwork combine these
 
 Below is a histogram of the distribution of land cover in the entire region. The most common land cover value is 137, representing sparse vegetation. The second most common value is 500, representing thick vegetation or grasses. The maximum value of 583 represents land covered by water.
 ```{r, messages=FALSE}
@@ -414,31 +379,12 @@ library(tidyterra)
 
 
 
-```{r, messages=FALSE}
-alice =
-  all_data |> 
-  select(elk_id, year, month, day, hour, lat, long, dist_km, land_cover) |> 
-  filter(elk_id == 572)
-```
-
-
-
-scale_color_gradient
-
-```{r, messages=FALSE}
-ggplot() +
-  geom_spatraster(data = small_land_coord) +
-  scale_fill_gradient2(low="white", high="darkgrey", guide="colorbar")
-```
-
-
-
 In this plot, we see that the elk spend most of their time in the low lying, well vegetated areas of Yellowstone.
 ```{r, messages=FALSE}
 ggplot() +
   geom_spatraster(data = small_land_coord) + 
   scale_fill_gradient2(low="white", high="darkgrey", guide="colorbar") + 
-  geom_point(data = elk, aes(x=long, y=lat, color = 'red'), alpha = 0.3)
+   geom_density_2d(data = elk, aes(x=long, y=lat, color = 'red'), alpha = 0.1)
 ```
 
 
@@ -508,36 +454,51 @@ Among the key factors that we considered to be potentially influential to elk mi
 
 Given that there were numerous weather stations in the Yellowstone/Grand Teton area in Wyoming, several of which were contained within the various elk pathways we analyzed, we decided that the best way to effectively approximate the weather patterns across the entirety migration pathways would be to use the data provided by the four stations in the plots below, which span a wide coverage of the migration areas (shown in red).  
 
-```{r station plots, echo = FALSE}
-four_stations_labels_plot <- 
-  ggplot(data = weather_stations,
-         aes(x = longitude, y = latitude)) +
-  geom_point() + 
-  labs(x = "longitude", y = "latitude") + 
-  ggrepel::geom_label_repel(aes(label = name),
-                            box.padding   = 0.35,
-                            point.padding = 0.5,
-                            segment.color = 'grey50',
-                            max.overlaps = 20)
+```{r}
+min_lat = all_data |> pull(lat) |> min()
+max_lat = all_data |> pull(lat) |> max()
+rng_lat = abs(min_lat - max_lat)
+lowerleftlat = min_lat 
+upperrightlat = max_lat 
 
-four_stations_elk_mvmt_plot <- 
-  ggplot() +
+min_long = all_data |> pull(long) |> min()
+max_long = all_data |> pull(long) |> max()
+rng_long = abs(min_long - max_long)
+lowerleftlon = min_long - rng_long 
+upperrightlon = max_long + rng_long
+
+
+# Define area by `c(lowerleftlon, lowerleftlat, upperrightlon, upperrightlat)`
+myLocation <- c(left = lowerleftlon,
+                 bottom = lowerleftlat,
+                 right = upperrightlon,
+                 top = upperrightlat)
+
+
+myMap <- get_stadiamap(
+  bbox=myLocation,
+  maptype = "stamen_terrain",
+  crop=FALSE)
+
+ggmap(myMap) +
+  geom_point(
+    data = weather_stations,
+    aes(x = longitude, y = latitude)) +
+  ggrepel::geom_text_repel(
+    data = weather_stations,
+    aes(x = longitude, y = latitude, label = name))+
   geom_path(
     data = elk,
     aes(x=long, y=lat),
     alpha = 0.5,
     color = "red") + 
-  labs(x = "longitude", y = "latitude") + 
-  geom_point(data = weather_stations, aes(x = longitude, y = latitude))
+  labs(x = "longitude", y = "latitude")
+```  
   
-  
-four_stations_elk_mvmt_plot + four_stations_labels_plot
-```
 
 Once we selected the appropriate weather stations and reduced our weather data set accordingly, we could then begin considering various weather-related research questions. These questions were grouped into two categories: analyzing the weather patterns visible in the study area over the 2006-2015 period, and relating the weather data with the elk migration data to see if there were any visible patterns and/or trends between the two.  
 
 **Evaluating Weather Patterns and Trends**
-
 In the `weather` dataset, we were mainly concerned with four weather variables: `prcp` (precipitation), `snow` (snowfall), `snwd` (snow depth), and `tavg` (average temperature). Each of these variables were visualized using the same graph types. For precipitation, snowfall, and snow depth, the daily measurements among the four weather stations were first aggregated by station, year, and month, to show the monthly totals among each station throughout the 2006-2015 period. These data sets were further condensed into average monthly totals of precipitation, snowfall and snow depth among the four stations; this method provided us with an estimated sum of these three variables covering a wide swath of the study area. Average temperature was calculated by aggregating daily average temperature measurements by month and year and taking the mean of these values. 
 
 Starting with precipitation patterns, the plots below show relatively consistent patterns in monthly rainfall throughout the given year, in which the summer months often saw less precipitation out of all other seasons, whereas late winter through spring showed generally higher precipitation. While the exact months of these highs and lows vary per year, the general pattern shown each year is a U-shaped distribution from the start of the year to the end.  
